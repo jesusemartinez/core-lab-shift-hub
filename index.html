@@ -994,15 +994,22 @@ async function initAuth(){
     var spUser = getSPUserFromAccount(account);
     $('authStatus').textContent='Matching user: '+spUser.name+' ('+spUser.email+')';
     await loadAllData();
+    console.log('SP User name:', JSON.stringify(spUser.name), 'email:', spUser.email);
+    console.log('All users:', JSON.stringify(Object.entries(users).map(function(x){return[x[0],x[1].fullName];})));
     var ini=null;
     // Try exact name match first
-    for(var k in users){if(users[k].fullName===spUser.name){ini=k;break;}}
+    for(var k in users){if(users[k].fullName===spUser.name){ini=k;console.log('Exact match:',k);break;}}
     // Try case-insensitive match
-    if(!ini){for(var k in users){if(users[k].fullName.toLowerCase()===spUser.name.toLowerCase()){ini=k;break;}}}
-    // Try matching by email prefix (jesusm@ -> look for Jesus M...)
-    if(!ini&&spUser.email){var prefix=spUser.email.split('@')[0].toLowerCase();for(var k in users){if(prefix.includes(users[k].fullName.split(' ')[0].toLowerCase())){ini=k;break;}}}
-    // Try partial match (Microsoft might return "LastName, FirstName" format)
-    if(!ini){var parts=spUser.name.split(/[,\s]+/).filter(Boolean);for(var k in users){var uParts=users[k].fullName.split(/\s+/);if(parts.some(function(p){return uParts.some(function(u){return u.toLowerCase()===p.toLowerCase();})})&&parts.length>=2){ini=k;break;}}}
+    if(!ini){for(var k in users){if(users[k].fullName.toLowerCase()===spUser.name.toLowerCase()){ini=k;console.log('Case-insensitive match:',k);break;}}}
+    // Try matching by email prefix to initials (e.g. jesusem@ -> look for initials)
+    if(!ini&&spUser.email){
+      var emailUser=spUser.email.split('@')[0].toLowerCase();
+      // Check if email starts with the user's name parts
+      for(var k in users){
+        var fn=users[k].fullName.toLowerCase().split(/\s+/);
+        if(fn.length>=2&&emailUser.startsWith(fn[0])&&emailUser.includes(fn[1].charAt(0))){ini=k;console.log('Email match:',k);break;}
+      }
+    }
     if(!ini){
       ini=spUser.name.split(' ').filter(Boolean).map(function(p){return p[0].toUpperCase();}).join('');
       var base=ini,num=2;while(users[ini]){ini=base+num;num++;}
