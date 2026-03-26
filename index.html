@@ -388,7 +388,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   <div class="hdr-right">
     <div class="hdr-chip" id="clockChip"></div>
     <div class="hdr-chip" id="countChip">0</div>
-    <div class="hdr-chip" id="backupChip" style="font-size:9px;opacity:.7;cursor:help;" title="Auto-backup"><span class="mi" style="font-size:12px;vertical-align:middle;">backup</span> <span id="backupTime">--</span></div>
+    <div class="hdr-chip" id="backupChip" style="font-size:9px;opacity:.7;cursor:help;" title="SharePoint Connected"><span class="mi" style="font-size:12px;vertical-align:middle;">cloud_done</span> <span id="backupTime">SP</span></div>
     <div class="bell-btn" id="bellBtn" onclick="toggleBell(event)">
       <span class="mi" style="font-size:18px;">notifications</span>
       <div class="bell-badge" id="bellBadge">0</div>
@@ -475,9 +475,19 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   <div class="page" id="pageAdmin">
     <h2 style="font-size:16px;font-weight:800;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:6px;"><span class="mi">admin_panel_settings</span> User Administration</h2>
     <div style="background:var(--white);border-radius:var(--rl);border:1px solid var(--g200);padding:14px;box-shadow:var(--shadow-1);" id="adminList"></div>
-    <div class="backup-box"><h4><span class="mi mi-sm">cloud_done</span> SharePoint Connected</h4>
-      <p style="font-size:10px;color:var(--g500);margin-bottom:4px;">All data is stored in SharePoint Lists and automatically synced. No manual backup needed.</p>
-      <p style="font-size:10px;color:var(--g500);">Data refreshes from SharePoint every 60 seconds.</p>
+    <div class="backup-box"><h4><span class="mi mi-sm">cloud_done</span> SharePoint Connection</h4>
+      <p style="font-size:10px;color:var(--g500);margin-bottom:8px;">Data syncs from SharePoint every 60 seconds. Use the buttons below for manual operations.</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+        <button class="btn btn-p" onclick="manualSync()"><span class="mi mi-xs">sync</span> Force Sync Now</button>
+        <span style="font-size:10px;color:var(--g400);align-self:center;" id="lastSyncLabel">Last sync: --</span>
+      </div>
+      <h4 style="margin-top:12px;"><span class="mi mi-sm">backup</span> Backup &amp; Restore</h4>
+      <p style="font-size:10px;color:var(--g500);margin-bottom:8px;">Download a full backup of all SharePoint data as JSON. Restore if something goes wrong.</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn btn-s" onclick="exportSPBackup()"><span class="mi mi-xs">download</span> Export Full Backup</button>
+        <button class="btn btn-s" onclick="document.getElementById('restoreFile').click()"><span class="mi mi-xs">upload</span> Restore from Backup</button>
+        <input type="file" id="restoreFile" accept=".json" onchange="restoreSPBackup(event)" style="display:none;">
+      </div>
     </div>
   </div>
 </div>
@@ -1013,6 +1023,7 @@ async function initAuth(){
     }
     var u=users[ini];
     me={initials:ini,fullName:u.fullName,role:u.role};
+    lastSyncTime=new Date();uBD();
     $('authBg').style.display='none';
     refreshUI();
     toast('Welcome, '+u.fullName+' ('+ini+') - MS name: '+spUser.name);
@@ -1037,8 +1048,96 @@ function changePassword(){const o=$('profOldPw').value,n=$('profNewPw').value;if
 // === ADMIN ===
 function renderAdmin(){const l=$('adminList'),ua=Object.entries(users).sort((a,b)=>a[1].fullName.localeCompare(b[1].fullName));l.innerHTML=ua.map(([ini,u])=>{const isMe=me&&ini===me.initials;return'<div class="admin-row">'+avH(ini,26)+'<div class="admin-name">'+esc(u.fullName)+' <span style="font-size:9px;color:var(--g400);">('+ini+')</span>'+(u.isAdmin?' <span style="font-size:8px;background:var(--teal);color:var(--white);padding:1px 5px;border-radius:3px;">ADMIN</span>':'')+'</div><select style="font-size:10px;padding:3px 6px;" onchange="chgRole(\''+ini+'\',this.value)"'+(isMe?' disabled':'')+'><option value="MLS1"'+(u.role==='MLS1'?' selected':'')+'>MLS1</option><option value="MLS2"'+(u.role==='MLS2'?' selected':'')+'>MLS2</option><option value="MLS Lead"'+(u.role==='MLS Lead'?' selected':'')+'>MLS Lead</option><option value="Lab Manager"'+(u.role==='Lab Manager'?' selected':'')+'>Lab Manager</option></select></div>';}).join('');}
 function chgRole(i,r){users[i].role=r;spSaveUser(i,users[i]).catch(function(e){console.error(e);});addH('edit','Role change: '+users[i].fullName+' -> '+r,'');renderAdmin();toast(users[i].fullName+' is now '+r);}
-function backupData(){const d={entries,history:hist,users,notifications:notifs,dismissed,announcements,exportDate:new Date().toISOString(),exportedBy:me?me.fullName:''};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download='CLSH_Backup_'+new Date().toISOString().split('T')[0]+'.json';a.click();toast('Backup exported');}
-function restoreData(ev){const f=ev.target.files[0];if(!f)return;if(!confirm('REPLACE all data?')){ev.target.value='';return;}const r=new FileReader();r.onload=function(e){try{const d=JSON.parse(e.target.result);if(!d.entries||!d.users){toast('Invalid');return;}entries=d.entries||[];hist=d.history||[];users=d.users||{};notifs=d.notifications||{};dismissed=d.dismissed||{};announcements=d.announcements||[];users[ADMIN_INI].isAdmin=true;saveAll();refreshUI();toast('Restored');}catch(err){toast('Failed');}};r.readAsText(f);ev.target.value='';}
+function backupData(){exportSPBackup();}
+function restoreData(ev){restoreSPBackup(ev);}
+
+async function manualSync(){
+  toast('Syncing with SharePoint...');
+  try{
+    await loadAllData();
+    lastSyncTime=new Date();uBD();
+    $('lastSyncLabel').textContent='Last sync: '+lastSyncTime.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',second:'2-digit'});
+    renderAll();
+    toast('Synced: '+entries.length+' entries, '+announcements.length+' announcements, '+hist.length+' audit records');
+  }catch(e){
+    console.error('Manual sync failed:',e);
+    toast('Sync failed: '+e.message);
+  }
+}
+
+function exportSPBackup(){
+  var d={
+    entries:entries,
+    history:hist,
+    users:users,
+    announcements:announcements,
+    notifications:notifs,
+    dismissed:dismissed,
+    exportDate:new Date().toISOString(),
+    exportedBy:me?me.fullName:'',
+    source:'SharePoint',
+    site:SP_SITE,
+    version:'2.0'
+  };
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));
+  a.download='CLSH_Backup_'+new Date().toISOString().split('T')[0]+'.json';
+  a.click();
+  toast('Backup exported ('+entries.length+' entries, '+announcements.length+' announcements)');
+}
+
+async function restoreSPBackup(ev){
+  var f=ev.target.files[0];if(!f)return;
+  if(!confirm('WARNING: This will REPLACE all data in SharePoint.\n\nThis cannot be undone. Continue?')){ev.target.value='';return;}
+  if(!confirm('FINAL CONFIRMATION: Overwrite all SharePoint data?')){ev.target.value='';return;}
+  var reader=new FileReader();
+  reader.onload=async function(e){
+    try{
+      var d=JSON.parse(e.target.result);
+      if(!d.entries||!d.users){toast('Invalid backup file');return;}
+      toast('Restoring to SharePoint... This may take a moment.');
+
+      // Clear existing SP data
+      var [oldEntries,oldAnns,oldAudit]=await Promise.all([
+        spGet('ShiftEntries'),spGet('Announcements'),spGet('AuditLog')
+      ]);
+      toast('Clearing old data ('+oldEntries.length+' entries)...');
+      await Promise.all(oldEntries.map(function(i){return spDelete('ShiftEntries',i.Id);}));
+      await Promise.all(oldAnns.map(function(i){return spDelete('Announcements',i.Id);}));
+      await Promise.all(oldAudit.map(function(i){return spDelete('AuditLog',i.Id);}));
+
+      // Write new data
+      toast('Writing entries...');
+      for(var i=0;i<(d.entries||[]).length;i++){
+        await spAdd('ShiftEntries',entryToSP(d.entries[i]));
+      }
+      toast('Writing announcements...');
+      for(var i=0;i<(d.announcements||[]).length;i++){
+        await spAdd('Announcements',annToSP(d.announcements[i]));
+      }
+      toast('Writing audit log...');
+      for(var i=0;i<Math.min((d.history||[]).length,500);i++){
+        await spAdd('AuditLog',auditToSP(d.history[i]));
+      }
+      // Update users
+      toast('Writing users...');
+      for(var ini in (d.users||{})){
+        await spSaveUser(ini,d.users[ini]);
+      }
+
+      // Reload
+      await loadAllData();
+      lastSyncTime=new Date();uBD();
+      refreshUI();
+      toast('Restore complete: '+entries.length+' entries, '+announcements.length+' announcements');
+    }catch(err){
+      console.error('Restore failed:',err);
+      toast('Restore failed: '+err.message);
+    }
+  };
+  reader.readAsText(f);
+  ev.target.value='';
+}
 
 // === PAGE NAV ===
 function switchPage(p){document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));$('page'+p.charAt(0).toUpperCase()+p.slice(1)).classList.add('active');
@@ -1280,10 +1379,18 @@ function exportPDF(){try{var{jsPDF}=window.jspdf,doc=new jsPDF({orientation:'lan
 function dlF(c,n,t){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=n;a.click();}
 
 // === AUTO-BACKUP ===
-var BK_MINS=3,lastBT=null;
-function runAutoBackup(){try{var s={entries,history:hist,users,notifications:notifs,dismissed,announcements,timestamp:new Date().toISOString()};var r=ld('rcl7_autobackups',[]);r.unshift(s);if(r.length>3)r=r.slice(0,3);sv('rcl7_autobackups',r);var dl=ld('rcl7_dailybackup',[]),td=new Date().toISOString().split('T')[0];if(!dl.some(d=>d.timestamp&&d.timestamp.startsWith(td))){s.type='daily';dl.unshift(s);if(dl.length>7)dl=dl.slice(0,7);sv('rcl7_dailybackup',dl);}lastBT=new Date();uBD();}catch(e){$('backupTime').textContent='err';}}
-function uBD(){if(!lastBT)return;$('backupTime').textContent=lastBT.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});var nt=new Date(lastBT.getTime()+BK_MINS*60000);$('backupChip').title='Last: '+lastBT.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',second:'2-digit'})+'\nNext: '+nt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+'\nEvery '+BK_MINS+' min\nSnapshots: '+ld('rcl7_autobackups',[]).length+'/3\nDaily: '+ld('rcl7_dailybackup',[]).length+'/7';}
-function checkRecovery(){if(entries.length===0){var r=ld('rcl7_autobackups',[]),d=ld('rcl7_dailybackup',[]);var b=r.length&&r[0].entries&&r[0].entries.length?r[0]:(d.length&&d[0].entries&&d[0].entries.length?d[0]:null);if(b&&confirm('No entries found, but backup with '+b.entries.length+' entries exists.\nRestore?')){entries=b.entries||[];hist=b.history||[];notifs=b.notifications||{};dismissed=b.dismissed||{};announcements=b.announcements||[];saveAll();return true;}}return false;}
+var lastSyncTime=null;
+function runAutoBackup(){/* No-op in SP version */}
+function uBD(){
+  if(lastSyncTime){
+    $('backupTime').textContent='Synced '+lastSyncTime.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    $('backupChip').title='SharePoint Connected\nLast sync: '+lastSyncTime.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',second:'2-digit'})+'\nAuto-refresh: every 60s';
+  }else{
+    $('backupTime').textContent='SP';
+    $('backupChip').title='SharePoint Connected\nAuto-refresh: every 60s';
+  }
+}
+function checkRecovery(){return false;}
 
 function uClk(){$('clockChip').textContent=new Date().toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}
 
@@ -1292,7 +1399,7 @@ function startApp(){
   if(typeof msal==='undefined'){setTimeout(startApp,200);return;}
   initAuth();rMT();uClk();setInterval(uClk,60000);
 runAutoBackup();setInterval(runAutoBackup,BK_MINS*60000);setInterval(uBD,30000);
-setInterval(async function(){try{await loadAllData();renderAll();}catch(e){}},60000);
+setInterval(async function(){try{await loadAllData();lastSyncTime=new Date();uBD();renderAll();}catch(e){}},60000);
 ['searchBox','fShift','fCat','fPri'].forEach(id=>{$(id).addEventListener(id==='searchBox'?'input':'change',renderLog);});
 }
 startApp();
