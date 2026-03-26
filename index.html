@@ -852,6 +852,8 @@ async function loadAllData() {
     announcements = spAnns.map(spToAnn);
     hist = spAudit.map(spToAudit);
     users = {};
+    console.log('Raw SP users:', JSON.stringify(spUsers.map(function(u){return Object.keys(u).filter(function(k){return k!=='__metadata'&&!k.startsWith('odata');});})));
+    if(spUsers.length>0)console.log('First user raw:', JSON.stringify(Object.fromEntries(Object.entries(spUsers[0]).filter(function(e){return e[0]!=='__metadata'&&!e[0].startsWith('odata');}))));
     spUsers.forEach(function(item) {
       users[item.Title] = spToUser(item);
     });
