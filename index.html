@@ -992,10 +992,17 @@ async function initAuth(){
     }
     $('authStatus').textContent='Getting user info...';
     var spUser = getSPUserFromAccount(account);
-    $('authStatus').textContent='Loading data from SharePoint...';
+    $('authStatus').textContent='Matching user: '+spUser.name+' ('+spUser.email+')';
     await loadAllData();
     var ini=null;
+    // Try exact name match first
     for(var k in users){if(users[k].fullName===spUser.name){ini=k;break;}}
+    // Try case-insensitive match
+    if(!ini){for(var k in users){if(users[k].fullName.toLowerCase()===spUser.name.toLowerCase()){ini=k;break;}}}
+    // Try matching by email prefix (jesusm@ -> look for Jesus M...)
+    if(!ini&&spUser.email){var prefix=spUser.email.split('@')[0].toLowerCase();for(var k in users){if(prefix.includes(users[k].fullName.split(' ')[0].toLowerCase())){ini=k;break;}}}
+    // Try partial match (Microsoft might return "LastName, FirstName" format)
+    if(!ini){var parts=spUser.name.split(/[,\s]+/).filter(Boolean);for(var k in users){var uParts=users[k].fullName.split(/\s+/);if(parts.some(function(p){return uParts.some(function(u){return u.toLowerCase()===p.toLowerCase();})})&&parts.length>=2){ini=k;break;}}}
     if(!ini){
       ini=spUser.name.split(' ').filter(Boolean).map(function(p){return p[0].toUpperCase();}).join('');
       var base=ini,num=2;while(users[ini]){ini=base+num;num++;}
@@ -1006,7 +1013,7 @@ async function initAuth(){
     me={initials:ini,fullName:u.fullName,role:u.role};
     $('authBg').style.display='none';
     refreshUI();
-    toast('Welcome, '+u.fullName);
+    toast('Welcome, '+u.fullName+' ('+ini+') - MS name: '+spUser.name);
   }catch(e){
     console.error('Auth failed:',e);
     $('loginErr').textContent='Authentication failed: '+(e.message||'Unknown error')+'. Make sure popups are allowed.';
