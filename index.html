@@ -807,7 +807,9 @@ function spToUser(item,fm) {
   fm=fm||_fieldMaps['HubUsers']||{};
   var g=function(n){return spVal(item,n,fm);};
   var admin=g('IsAdmin');
-  return {fullName:g('FullName')||'',role:g('Role')||'MLS1',isAdmin:admin==='Yes'||admin===true,nickname:g('Nickname')||'',picture:g('PictureData')||'',password:'',_spId:item.Id};
+  var pic=g('PictureData')||'';
+  if(pic==='n/a'||pic==='0'||pic==='null'||pic.length<20)pic='';
+  return {fullName:g('FullName')||'',role:g('Role')||'MLS1',isAdmin:admin==='Yes'||admin===true,nickname:g('Nickname')||'',picture:pic,password:'',_spId:item.Id};
 }
 
 function auditToSP(h) {
