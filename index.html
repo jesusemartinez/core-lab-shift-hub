@@ -649,6 +649,7 @@ async function spAdd(listName, data) {
   var digest = await getDigest();
   var meta = await getListItemType(listName);
   data.__metadata = { type: meta };
+  console.log('SP ADD to', listName, ':', JSON.stringify(data));
   var r = await spFetch(SP_API + "/getbytitle('" + listName + "')/items", {
     method: 'POST',
     headers: {
@@ -657,6 +658,11 @@ async function spAdd(listName, data) {
     },
     body: JSON.stringify(data)
   });
+  if (!r.ok) {
+    var errText = await r.text();
+    console.error('SP ADD FAILED ('+r.status+'):', errText);
+    throw new Error('SP ADD failed: '+r.status);
+  }
   return await r.json();
 }
 
@@ -664,6 +670,7 @@ async function spUpdate(listName, id, data) {
   var digest = await getDigest();
   var meta = await getListItemType(listName);
   data.__metadata = { type: meta };
+  console.log('SP UPDATE', listName, id, ':', JSON.stringify(data));
   var r = await spFetch(SP_API + "/getbytitle('" + listName + "')/items(" + id + ")", {
     method: 'POST',
     headers: {
@@ -674,6 +681,11 @@ async function spUpdate(listName, id, data) {
     },
     body: JSON.stringify(data)
   });
+  if (!r.ok) {
+    var errText = await r.text();
+    console.error('SP UPDATE FAILED ('+r.status+'):', errText);
+    throw new Error('SP UPDATE failed: '+r.status);
+  }
   return r.ok;
 }
 
@@ -725,7 +737,9 @@ function spSet(fieldMap, pairs) {
   var obj = {};
   pairs.forEach(function(p) {
     var key = (fieldMap && fieldMap[p[0]]) || p[0];
-    obj[key] = p[1];
+    var val = p[1];
+    if (val === null || val === undefined) val = '';
+    obj[key] = val;
   });
   return obj;
 }
