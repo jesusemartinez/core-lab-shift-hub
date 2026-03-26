@@ -9,6 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 <style>
 /* === Core Lab Shift Hub - Complete Styles === */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -540,29 +541,85 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 <canvas id="confettiCanvas"></canvas>
 
 <script>
-// === SHAREPOINT API LAYER ===
+// === MSAL + SHAREPOINT API LAYER ===
+var MSAL_CONFIG = {
+  auth: {
+    clientId: '24c43cdb-d15a-42ff-9883-cd8c19965a54',
+    authority: 'https://login.microsoftonline.com/f6b6dd5b-f02f-441a-99a0-162ac5060bd2',
+    redirectUri: window.location.origin + window.location.pathname
+  },
+  cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
+};
+
+var msalInstance = null;
 var SP_SITE = 'https://uwnetid.sharepoint.com/sites/og_uw_renton_central_laboratory_-_core_lab';
 var SP_API = SP_SITE + '/_api/web/lists';
-var SP_DIGEST = '';
 var SP_USER = null;
+
+async function initMSAL() {
+  msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
+  // Handle redirect callback
+  try { await msalInstance.handleRedirectPromise(); } catch(e) { console.error('Redirect error:', e); }
+  // Check if already signed in
+  var accounts = msalInstance.getAllAccounts();
+  if (accounts.length > 0) {
+    msalInstance.setActiveAccount(accounts[0]);
+    return accounts[0];
+  }
+  return null;
+}
+
+async function loginMSAL() {
+  try {
+    var result = await msalInstance.loginPopup({
+      scopes: ['https://uwnetid.sharepoint.com/AllSites.Write', 'User.Read']
+    });
+    msalInstance.setActiveAccount(result.account);
+    return result.account;
+  } catch(e) {
+    console.error('Login failed:', e);
+    throw e;
+  }
+}
+
+async function getToken() {
+  var account = msalInstance.getActiveAccount();
+  if (!account) throw new Error('No active account');
+  try {
+    var result = await msalInstance.acquireTokenSilent({
+      scopes: ['https://uwnetid.sharepoint.com/AllSites.Write'],
+      account: account
+    });
+    return result.accessToken;
+  } catch(e) {
+    // Silent failed, try popup
+    var result = await msalInstance.acquireTokenPopup({
+      scopes: ['https://uwnetid.sharepoint.com/AllSites.Write']
+    });
+    return result.accessToken;
+  }
+}
+
+async function spFetch(url, options) {
+  var token = await getToken();
+  var headers = Object.assign({
+    'Accept': 'application/json;odata=verbose',
+    'Authorization': 'Bearer ' + token
+  }, options && options.headers || {});
+  var opts = Object.assign({}, options || {}, { headers: headers });
+  return fetch(url, opts);
+}
 
 // Get request digest for write operations
 async function getDigest() {
-  var r = await fetch(SP_SITE + '/_api/contextinfo', {
-    method: 'POST', headers: { 'Accept': 'application/json;odata=verbose' }, credentials: 'include'
-  });
+  var r = await spFetch(SP_SITE + '/_api/contextinfo', { method: 'POST' });
   var d = await r.json();
-  SP_DIGEST = d.d.GetContextWebInformation.FormDigestValue;
-  return SP_DIGEST;
+  return d.d.GetContextWebInformation.FormDigestValue;
 }
 
-// Get current SharePoint user
-async function getSPUser() {
-  var r = await fetch(SP_SITE + '/_api/web/currentuser', {
-    headers: { 'Accept': 'application/json;odata=verbose' }, credentials: 'include'
-  });
-  var d = await r.json();
-  SP_USER = { email: d.d.Email, name: d.d.Title, loginName: d.d.LoginName };
+// Get current user info from account
+function getSPUserFromAccount(account) {
+  SP_USER = { email: account.username, name: account.name || account.username.split('@')[0] };
   return SP_USER;
 }
 
@@ -572,78 +629,64 @@ async function spGet(listName, filter, select, top) {
   if (filter) url += '&$filter=' + encodeURIComponent(filter);
   if (select) url += '&$select=' + select;
   url += '&$orderby=Id desc';
-  var r = await fetch(url, {
-    headers: { 'Accept': 'application/json;odata=verbose' }, credentials: 'include'
-  });
+  var r = await spFetch(url);
   var d = await r.json();
   return d.d.results || [];
 }
 
 async function spAdd(listName, data) {
-  if (!SP_DIGEST) await getDigest();
+  var digest = await getDigest();
   var meta = await getListItemType(listName);
   data.__metadata = { type: meta };
-  var r = await fetch(SP_API + "/getbytitle('" + listName + "')/items", {
+  var r = await spFetch(SP_API + "/getbytitle('" + listName + "')/items", {
     method: 'POST',
     headers: {
-      'Accept': 'application/json;odata=verbose',
       'Content-Type': 'application/json;odata=verbose',
-      'X-RequestDigest': SP_DIGEST
+      'X-RequestDigest': digest
     },
-    credentials: 'include',
     body: JSON.stringify(data)
   });
-  if (r.status === 403) { await getDigest(); return spAdd(listName, data); }
   return await r.json();
 }
 
 async function spUpdate(listName, id, data) {
-  if (!SP_DIGEST) await getDigest();
+  var digest = await getDigest();
   var meta = await getListItemType(listName);
   data.__metadata = { type: meta };
-  var r = await fetch(SP_API + "/getbytitle('" + listName + "')/items(" + id + ")", {
+  var r = await spFetch(SP_API + "/getbytitle('" + listName + "')/items(" + id + ")", {
     method: 'POST',
     headers: {
-      'Accept': 'application/json;odata=verbose',
       'Content-Type': 'application/json;odata=verbose',
-      'X-RequestDigest': SP_DIGEST,
+      'X-RequestDigest': digest,
       'IF-MATCH': '*',
       'X-HTTP-Method': 'MERGE'
     },
-    credentials: 'include',
     body: JSON.stringify(data)
   });
-  if (r.status === 403) { await getDigest(); return spUpdate(listName, id, data); }
   return r.ok;
 }
 
 async function spDelete(listName, id) {
-  if (!SP_DIGEST) await getDigest();
-  var r = await fetch(SP_API + "/getbytitle('" + listName + "')/items(" + id + ")", {
+  var digest = await getDigest();
+  var r = await spFetch(SP_API + "/getbytitle('" + listName + "')/items(" + id + ")", {
     method: 'POST',
     headers: {
-      'Accept': 'application/json;odata=verbose',
-      'X-RequestDigest': SP_DIGEST,
+      'X-RequestDigest': digest,
       'IF-MATCH': '*',
       'X-HTTP-Method': 'DELETE'
-    },
-    credentials: 'include'
+    }
   });
   return r.ok;
 }
 
-// Cache list item entity types
 var _listTypes = {};
 async function getListItemType(listName) {
   if (_listTypes[listName]) return _listTypes[listName];
-  var r = await fetch(SP_API + "/getbytitle('" + listName + "')?$select=ListItemEntityTypeFullName", {
-    headers: { 'Accept': 'application/json;odata=verbose' }, credentials: 'include'
-  });
+  var r = await spFetch(SP_API + "/getbytitle('" + listName + "')?$select=ListItemEntityTypeFullName");
   var d = await r.json();
   _listTypes[listName] = d.d.ListItemEntityTypeFullName;
   return _listTypes[listName];
 }
-
 
 // === SP DATA MAPPERS ===
 // Convert app objects <-> SharePoint list items
@@ -930,10 +973,14 @@ function doLogin(){const ini=$('loginIni').value.trim().toUpperCase(),pw=$('logi
 function doLogout(){if(!confirm('Sign out?'))return;me=null;localStorage.removeItem(K.S);$('authBg').style.display='flex';showLoginView();}
 async function initAuth(){
   try{
-    $('authStatus').textContent='Authenticating with Microsoft 365...';
-    await getDigest();
+    $('authStatus').textContent='Initializing authentication...';
+    var account = await initMSAL();
+    if(!account){
+      $('authStatus').textContent='Signing in to Microsoft 365...';
+      account = await loginMSAL();
+    }
     $('authStatus').textContent='Getting user info...';
-    var spUser=await getSPUser();
+    var spUser = getSPUserFromAccount(account);
     $('authStatus').textContent='Loading data from SharePoint...';
     await loadAllData();
     var ini=null;
@@ -951,12 +998,12 @@ async function initAuth(){
     toast('Welcome, '+u.fullName);
   }catch(e){
     console.error('Auth failed:',e);
-    $('loginErr').textContent='Failed to connect to SharePoint. Make sure you are signed into Microsoft 365.';
+    $('loginErr').textContent='Authentication failed: '+(e.message||'Unknown error')+'. Make sure popups are allowed.';
     $('loginErr').style.display='block';
     $('authStatus').textContent='Connection failed';
   }
 }
-function doLogout(){if(!confirm('Sign out?'))return;me=null;window.location.reload();}
+function doLogout(){if(!confirm('Sign out?'))return;if(msalInstance){msalInstance.logoutPopup().catch(function(){});}me=null;localStorage.clear();window.location.reload();}
 function refreshUI(){if(!me)return;uHA();uBell();$('navAdmin').style.display=isAdm()?'flex':'none';$('clearHistBtn').style.display=isAdm()?'inline-flex':'none';$('annBtn').style.display=isLead()?'inline-flex':'none';renderAll();setTimeout(function(){checkMandatoryReads();},300);}
 
 // === PROFILE ===
