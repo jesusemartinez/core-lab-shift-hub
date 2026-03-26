@@ -812,16 +812,14 @@ function spToUser(item,fm) {
 
 function auditToSP(h) {
   var fm=_fieldMaps['AuditLog']||{};
-  var obj=spSet(fm,[['Title',gid()],['Text',(h.text||'').slice(0,255)],['Detail',(h.detail||'').slice(0,255)],['User',h.user||''],['Timestamp',h.timestamp||new Date().toISOString()]]);
-  // "Type" is a reserved word in SharePoint, manually set field_1
-  obj['field_1']=h.type||'';
+  var obj=spSet(fm,[['Title',gid()],['LogType',h.type||''],['Text',(h.text||'').slice(0,255)],['Detail',(h.detail||'').slice(0,255)],['User',h.user||''],['Timestamp',h.timestamp||new Date().toISOString()]]);
   return obj;
 }
 
 function spToAudit(item,fm) {
   fm=fm||_fieldMaps['AuditLog']||{};
   var g=function(n){return spVal(item,n,fm);};
-  return {type:item.field_1||g('Type')||'',text:g('Text')||'',detail:g('Detail')||'',user:g('User')||'',timestamp:g('Timestamp')||'',_spId:item.Id};
+  return {type:g('LogType')||'',text:g('Text')||'',detail:g('Detail')||'',user:g('User')||'',timestamp:g('Timestamp')||'',_spId:item.Id};
 }
 
 function tryParse(s, def) {
