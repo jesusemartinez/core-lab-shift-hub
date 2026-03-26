@@ -1035,7 +1035,15 @@ async function initAuth(){
   }
 }
 function doLogout(){if(!confirm('Sign out?'))return;if(msalInstance){msalInstance.logoutPopup().catch(function(){});}me=null;localStorage.clear();window.location.reload();}
-function refreshUI(){if(!me)return;uHA();uBell();$('navAdmin').style.display=isAdm()?'flex':'none';$('clearHistBtn').style.display=isAdm()?'inline-flex':'none';$('annBtn').style.display=isLead()?'inline-flex':'none';renderAll();setTimeout(function(){checkMandatoryReads();},300);}
+function refreshUI(){if(!me)return;uHA();uBell();$('navAdmin').style.display=isAdm()?'flex':'none';$('clearHistBtn').style.display=isAdm()?'inline-flex':'none';$('annBtn').style.display=isLead()?'inline-flex':'none';renderAll();
+// Restore last tab, but reset to announcements on new day
+var today=new Date().toISOString().split('T')[0];
+var lastTab='ann',lastDate='';
+try{lastTab=localStorage.getItem('rcl7_lastTab')||'ann';lastDate=localStorage.getItem('rcl7_lastTabDate')||'';}catch(e){}
+if(lastDate!==today){lastTab='ann';}
+if(lastTab==='admin'&&!isAdm())lastTab='ann';
+switchPage(lastTab);
+setTimeout(function(){checkMandatoryReads();},300);}
 
 // === PROFILE ===
 function openProfile(){if(!me)return;var u=users[me.initials];$('profNick').value=u.nickname||'';$('profOldPw').value='';$('profNewPw').value='';$('profInfo').textContent=me.initials+' / '+u.fullName+' / '+u.role+(u.isAdmin?' (Admin)':'');var p=$('profPicPreview');if(u.picture){p.innerHTML='<img src="'+u.picture+'">';p.style.width='56px';p.style.borderRadius='50%';p.style.padding='0';p.style.fontSize='0';}else if(u.nickname){p.innerHTML=esc(u.nickname);p.style.width='auto';p.style.minWidth='56px';p.style.borderRadius='28px';p.style.padding='0 14px';p.style.fontSize='16px';}else{p.innerHTML=esc(me.initials);p.style.width='56px';p.style.borderRadius='50%';p.style.padding='0';p.style.fontSize='20px';}$('profModalBg').classList.add('open');}
@@ -1145,7 +1153,9 @@ if(p==='dash'){$('navDash').classList.add('active');renderDash();}
 else if(p==='ann'){$('navAnn').classList.add('active');renderAnn();}
 else if(p==='log'){$('navLog').classList.add('active');renderLog();}
 else if(p==='audit'){$('navAudit').classList.add('active');renderAudit();}
-else if(p==='admin'){$('navAdmin').classList.add('active');renderAdmin();}}
+else if(p==='admin'){$('navAdmin').classList.add('active');renderAdmin();}
+// Persist last tab
+try{localStorage.setItem('rcl7_lastTab',p);localStorage.setItem('rcl7_lastTabDate',new Date().toISOString().split('T')[0]);}catch(e){}}
 
 function renderAll(){renderDash();renderAnn();renderLog();$('countChip').textContent=entries.length+' entries';}
 
