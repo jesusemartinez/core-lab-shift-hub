@@ -213,10 +213,34 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   <div class="scan-input-wrap">
     <div class="field" style="margin-bottom:12px">
       <label>Barcode / UPC</label>
-      <input type="text" id="scan-input" class="scan-field"
-        placeholder="Scan label or type barcode here..."
-        autocomplete="off" autocorrect="off" spellcheck="false">
+      <div style="display:flex;gap:8px;align-items:stretch">
+        <input type="text" id="scan-input" class="scan-field" style="flex:1"
+          placeholder="Scan label or type barcode here..."
+          autocomplete="off" autocorrect="off" spellcheck="false">
+        <button id="camera-btn" onclick="startCamera()" style="
+          background:var(--bg-input);border:1px solid var(--border);border-radius:8px;
+          color:var(--text);font-size:22px;padding:0 14px;cursor:pointer;flex-shrink:0;
+          display:flex;align-items:center;justify-content:center;
+          -webkit-tap-highlight-color:transparent;" title="Scan with camera">📷</button>
+      </div>
     </div>
+    <!-- Camera view (hidden by default) -->
+    <div id="camera-container" style="display:none;margin-bottom:12px;border-radius:12px;overflow:hidden;position:relative;background:#000">
+      <video id="camera-video" style="width:100%;max-height:220px;object-fit:cover;display:block" playsinline autoplay muted></video>
+      <div style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center">
+        <div style="width:70%;height:40%;border:2px solid rgba(16,185,129,.8);border-radius:8px;box-shadow:0 0 0 2000px rgba(0,0,0,.4)"></div>
+      </div>
+      <button onclick="stopCamera()" style="
+        position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);
+        border:none;color:#fff;border-radius:6px;padding:6px 10px;
+        font-size:12px;cursor:pointer;">✕ Close</button>
+      <div id="camera-status" style="position:absolute;bottom:8px;left:0;right:0;text-align:center;color:rgba(255,255,255,.8);font-size:12px">
+        Point camera at barcode
+      </div>
+    </div>
+    <!-- Fallback file input for iOS -->
+    <input type="file" id="camera-file-input" accept="image/*" capture="environment"
+      style="display:none" onchange="handleCameraFile(this)">
     <button class="btn btn-primary" onclick="lookupBarcode()">🔍 Look Up Item</button>
     <div style="margin:14px 0"><div class="divider">or</div></div>
     <button class="btn btn-ghost" onclick="resetManualScreen();goScreen('screen-manual')">✏️ Enter Manually</button>
@@ -914,7 +938,7 @@ async function lookupBarcode(){
           };
           // Also create an inventory row for it
           try{
-            var invData = invFields({
+            var newInvData = invFields({
               Instrument: instrument,
               ItemType: 'Supply',
               Unit: 'ea',
@@ -925,7 +949,7 @@ async function lookupBarcode(){
               IsActive: 'Yes'
             });
             invData.Title = upcData.title;
-            var invRes = await spPost(SP.lists.inventory, invData);
+            var invRes = await spPost(SP.lists.inventory, newInvData);
             var invJson = await invRes.json();
             currentItem.ID = invJson.d ? invJson.d.ID : invJson.ID;
             currentItem.InStock = 0;
@@ -1180,6 +1204,105 @@ function showSuccessScreen(){
 // ============================================================
 // MANUAL CATALOG TOGGLE
 // ============================================================
+
+// ============================================================
+// CAMERA BARCODE SCANNING
+// ============================================================
+var cameraStream = null;
+var barcodeDetector = null;
+var cameraAnimFrame = null;
+
+async function startCamera(){
+  var container = document.getElementById('camera-container');
+  var video = document.getElementById('camera-video');
+  var status = document.getElementById('camera-status');
+
+  // Check BarcodeDetector support (Android Chrome, some desktop)
+  var hasBarcodeDetector = 'BarcodeDetector' in window;
+
+  if(!hasBarcodeDetector){
+    // iOS / unsupported — use file input with camera capture
+    document.getElementById('camera-file-input').click();
+    return;
+  }
+
+  try{
+    // Request camera access
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    video.srcObject = cameraStream;
+    container.style.display = 'block';
+    document.getElementById('camera-btn').textContent = '⏹';
+    document.getElementById('camera-btn').onclick = stopCamera;
+
+    // Init BarcodeDetector
+    barcodeDetector = new BarcodeDetector({
+      formats: ['code_128','code_39','data_matrix','ean_13','ean_8','qr_code','upc_a','upc_e']
+    });
+
+    // Start scanning loop
+    scanCameraFrame(video, status);
+  } catch(e){
+    console.error('Camera error:', e);
+    showToast('Camera access denied — use file input instead', true);
+    document.getElementById('camera-file-input').click();
+  }
+}
+
+async function scanCameraFrame(video, status){
+  if(!cameraStream) return;
+  try{
+    var barcodes = await barcodeDetector.detect(video);
+    if(barcodes && barcodes.length > 0){
+      var code = barcodes[0].rawValue;
+      document.getElementById('scan-input').value = code;
+      stopCamera();
+      showToast('Barcode scanned');
+      lookupBarcode();
+      return;
+    }
+  } catch(e){}
+  cameraAnimFrame = requestAnimationFrame(() => scanCameraFrame(video, status));
+}
+
+function stopCamera(){
+  if(cameraStream){
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  if(cameraAnimFrame){ cancelAnimationFrame(cameraAnimFrame); cameraAnimFrame = null; }
+  var container = document.getElementById('camera-container');
+  var video = document.getElementById('camera-video');
+  if(container) container.style.display = 'none';
+  if(video) video.srcObject = null;
+  var btn = document.getElementById('camera-btn');
+  if(btn){ btn.textContent = '📷'; btn.onclick = startCamera; }
+}
+
+async function handleCameraFile(input){
+  // iOS fallback — use BarcodeDetector on captured image if available
+  var file = input.files[0];
+  if(!file) return;
+  if('BarcodeDetector' in window){
+    try{
+      var bitmap = await createImageBitmap(file);
+      var detector = new BarcodeDetector({
+        formats: ['code_128','code_39','data_matrix','ean_13','ean_8','qr_code','upc_a','upc_e']
+      });
+      var barcodes = await detector.detect(bitmap);
+      if(barcodes && barcodes.length > 0){
+        document.getElementById('scan-input').value = barcodes[0].rawValue;
+        showToast('Barcode detected');
+        lookupBarcode();
+        input.value = '';
+        return;
+      }
+    } catch(e){ console.warn('Image decode error:', e); }
+  }
+  showToast('Could not read barcode from image — try again or type manually', true);
+  input.value = '';
+}
 
 // ============================================================
 // SCAN INPUT — ENTER KEY & AUTO-SUBMIT
