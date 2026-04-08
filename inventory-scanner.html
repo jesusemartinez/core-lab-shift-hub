@@ -760,8 +760,6 @@ function resetManualScreen(){
 function autoFillManualScreen(parsed, raw){
   // Pre-fill barcode field and check Add to Catalog
   document.getElementById('manual-barcode').value = raw;
-  document.getElementById('manual-add-catalog').checked = true;
-  document.getElementById('manual-barcode-field').style.display = 'flex';
 
   // Pre-fill expiry if parsed
   if(parsed.expiry){
