@@ -771,14 +771,14 @@ async function initAuth(){
     var account = msalInstance.getActiveAccount();
     if(account){
       document.getElementById('user-name-display').textContent = account.name || account.username;
-      document.getElementById('sp-user-text').textContent = account.name || '';
-      isAdmin = (account.username || '').toLowerCase() === ADMIN_EMAIL.toLowerCase();
+      var und = document.getElementById('user-name-display'); if(und) und.textContent = account.name || account.username;
+      var sut = document.getElementById('sp-user-text'); if(sut) sut.textContent = account.name || '';
       var navName = document.getElementById('nav-user-name');
       if(navName) navName.textContent = account.name || account.username || '';
     }
     await testSPConnection();
     hideLoading();
-    goScreen('screen-scan');
+    goScreen('screen-action');
     setTimeout(()=>document.getElementById('scan-input').focus(), 200);
   } catch(e){
     hideLoading();
