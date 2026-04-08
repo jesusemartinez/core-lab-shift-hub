@@ -340,6 +340,59 @@ body{display:flex;flex-direction:column}
   </div>
 </div>
 
+<!-- ===== ACTION SELECT SCREEN ===== -->
+<div class="screen" id="screen-action">
+  <div class="hdr">
+    <div>
+      <div class="hdr-title">Inventory Scanner</div>
+      <div class="hdr-sub" id="user-name-display">Renton Core Lab · UW Medicine DLMP</div>
+    </div>
+  </div>
+  <div class="status-bar">
+    <span><span class="status-dot" id="sp-dot"></span><span id="sp-status-text">Connecting...</span></span>
+    <span id="sp-user-text" style="font-size:10px"></span>
+  </div>
+  <div class="install-banner" id="install-banner">
+    <span style="font-size:13px;color:#fff">Add to home screen</span>
+    <div style="display:flex;gap:8px">
+      <button onclick="installApp()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">Install</button>
+      <button onclick="dismissInstall()" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:20px;cursor:pointer;padding:0 4px;line-height:1">×</button>
+    </div>
+  </div>
+  <div style="padding:20px 20px 8px">
+    <div style="font-size:13px;color:var(--text-muted);font-weight:600;letter-spacing:.05em;text-transform:uppercase">What are you doing?</div>
+  </div>
+  <div class="action-grid">
+    <div class="action-card receive" onclick="selectAction('receive')">
+      <div class="action-icon receive">
+        <span class="material-icons-outlined" style="font-size:28px;color:var(--teal-light)">add_circle</span>
+      </div>
+      <div>
+        <div class="action-title" style="color:var(--teal-light)">Receive</div>
+        <div class="action-desc">Adding new stock — shipment arrived, restocking</div>
+      </div>
+    </div>
+    <div class="action-card remove" onclick="selectAction('remove')">
+      <div class="action-icon remove">
+        <span class="material-icons-outlined" style="font-size:28px;color:#F87171">remove_circle</span>
+      </div>
+      <div>
+        <div class="action-title" style="color:#F87171">Remove</div>
+        <div class="action-desc">Pulling from stock — used up, expired, discarded</div>
+      </div>
+    </div>
+    <div class="action-card adjust" onclick="selectAction('adjust')">
+      <div class="action-icon adjust">
+        <span class="material-icons-outlined" style="font-size:28px;color:#FCD34D">tune</span>
+      </div>
+      <div>
+        <div class="action-title" style="color:#FCD34D">Adjust</div>
+        <div class="action-desc">Correct the count — physical inventory, discrepancy</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ===== SCAN SCREEN ===== -->
 <div class="screen" id="screen-scan">
   <div class="hdr">
@@ -350,6 +403,10 @@ body{display:flex;flex-direction:column}
   </div>
 
 
+  <div id="action-indicator" class="action-indicator receive">
+    <span class="material-icons-outlined" style="font-size:18px">add_circle</span>
+    <span id="action-indicator-text">Receiving stock</span>
+  </div>
   <div class="scan-area">
     <div class="scan-icon-box">
       <span class="material-icons-outlined" style="font-size:52px;color:var(--teal-light)">qr_code_scanner</span>
@@ -1494,7 +1551,9 @@ async function handleCameraFile(input){
 // ============================================================
 function goScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  var el=document.getElementById(id);
+  if(el) el.classList.add('active');
+  else console.warn('goScreen: missing id',id);
 }
 
 // ============================================================
