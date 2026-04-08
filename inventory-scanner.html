@@ -2,1203 +2,1274 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Core Lab Inventory Scanner</title>
+<link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Inventory Scanner">
-<meta name="theme-color" content="#4C1D95">
-<link rel="manifest" href="manifest.json">
-<title>Renton Inventory Scanner</title>
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="192x192" href="inventory-scanner-icon-192.png">
+<link rel="apple-touch-icon" href="inventory-scanner-icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --purple:#4C1D95;--purple-light:#7C3AED;
-  --teal:#0D7A5F;--teal-light:#10B981;
-  --receive:#0D7A5F;--remove:#B91C1C;--adjust:#92400E;
-  --bg:#1A1C20;--bg-card:#242629;--bg-input:#2E3035;
-  --border:#3A3D44;--text:#F0F1F4;--text-secondary:#A0A6B4;--text-muted:#5E6478;
-  --radius:14px;--font:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --purple:#4b2e83;--purple-light:#7c6aad;--purple-dark:#3b1e73;
+  --gold:#b7a57a;--gold-light:#d4c9a8;
+  --teal:#00837e;--teal-light:#e0f5f4;
+  --navy:#1b3a5c;
+  --red:#c4122f;--red-light:#fde8ea;
+  --amber:#e87722;--amber-light:#fef3e6;
+  --yellow:#f0c808;--yellow-light:#fef9e0;
+  --green:#2d8c3c;--green-light:#e6f5e9;
+  --gray-50:#f8f9fa;--gray-100:#f1f3f5;--gray-200:#e9ecef;
+  --gray-300:#dee2e6;--gray-400:#ced4da;--gray-500:#adb5bd;
+  --gray-600:#868e96;--gray-700:#495057;--gray-800:#343a40;
+  --gray-900:#212529;
+  --radius:8px;--radius-lg:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.15);
+  --transition:all .2s ease;
 }
-html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--gray-50);color:var(--gray-900);font-size:15px;line-height:1.5}
 
-/* SCREENS */
-.screen{display:none;flex-direction:column;height:100vh;overflow:hidden}
-.screen.active{display:flex}
+/* ── Layout ── */
+.app-shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;background:var(--purple);color:#fff;display:flex;flex-direction:column;padding:0;flex-shrink:0}
+.sidebar-header{padding:20px 16px 12px;border-bottom:1px solid rgba(255,255,255,.15)}
+.sidebar-header h1{font-size:15px;font-weight:700;letter-spacing:.3px;opacity:.95}
+.sidebar-header .sub{font-size:11px;opacity:.6;margin-top:2px}
+.sidebar-nav{flex:1;padding:12px 8px}
+.sidebar-nav button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:none;background:transparent;color:rgba(255,255,255,.8);font-size:13px;border-radius:var(--radius);cursor:pointer;transition:var(--transition);text-align:left}
+.sidebar-nav button:hover{background:rgba(255,255,255,.12)}
+.sidebar-nav button.active{background:rgba(255,255,255,.18);color:#fff;font-weight:600}
+.sidebar-nav button svg{width:18px;height:18px;flex-shrink:0}
+.sidebar-footer{padding:12px 16px;border-top:1px solid rgba(255,255,255,.15);font-size:11px}
+.sidebar-footer .user-name{font-weight:600;opacity:.9;margin-bottom:4px}
+.sidebar-footer .sp-status{display:flex;align-items:center;gap:6px;opacity:.6}
+.sidebar-footer .sp-dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.sidebar-footer .sp-dot.err{background:var(--red)}
+.main-area{flex:1;overflow-y:auto;padding:0;position:relative}
 
-/* RESPONSIVE */
-@media(min-width:768px){
-  body{display:flex;flex-direction:row}
-  #desktop-nav{display:flex}
-  .screen{flex:1}
-  .body{padding:28px 32px}
-  .scan-bottom{padding:0 32px 28px}
-  .hdr{padding:20px 32px}
-  .status-bar{padding:8px 32px}
-  .footer{padding:16px 32px}
-  #screen-item .body{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-content:start}
-  #screen-item .footer{grid-column:1/-1}
-}
+/* ── Screens ── */
+.screen{display:none;padding:24px;max-width:720px;margin:0 auto;min-height:100%}
+.screen.active{display:block}
+
+/* ── Mobile ── */
 @media(max-width:767px){
-  #desktop-nav{display:none}
+  .sidebar{display:none}
+  .mobile-header{display:flex!important;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--purple);color:#fff;position:sticky;top:0;z-index:100}
+  .mobile-header h1{font-size:14px;font-weight:700}
+  .mobile-header .user-badge{font-size:11px;opacity:.7}
+  .screen{padding:16px}
+}
+@media(min-width:768px){.mobile-header{display:none!important}}
+
+/* ── Scan Screen ── */
+.scan-container{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:24px}
+.scan-icon{width:80px;height:80px;background:var(--purple);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.scan-icon svg{width:36px;height:36px;color:#fff}
+.scan-title{font-size:20px;font-weight:700;color:var(--purple)}
+.scan-subtitle{font-size:13px;color:var(--gray-600);text-align:center;max-width:300px}
+.scan-input-wrap{display:flex;gap:8px;width:100%;max-width:400px}
+.scan-input-wrap input{flex:1;padding:12px 16px;border:2px solid var(--gray-300);border-radius:var(--radius);font-size:16px;outline:none;transition:var(--transition)}
+.scan-input-wrap input:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(75,46,131,.15)}
+.btn-camera{width:48px;height:48px;border:2px solid var(--gray-300);border-radius:var(--radius);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--transition);flex-shrink:0}
+.btn-camera:hover{border-color:var(--purple);background:var(--gray-50)}
+.btn-camera svg{width:22px;height:22px;color:var(--gray-600)}
+#camera-video{width:100%;max-width:400px;border-radius:var(--radius-lg);display:none;border:2px solid var(--purple)}
+#camera-file{display:none}
+
+/* ── Item Screen ── */
+.item-header{margin-bottom:20px}
+.item-name{font-size:22px;font-weight:700;color:var(--gray-900);margin-bottom:8px}
+.badge-row{display:flex;flex-wrap:wrap;gap:6px}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.3px}
+.badge-instrument{background:var(--navy);color:#fff}
+.badge-unit{background:var(--gray-200);color:var(--gray-700)}
+.badge-type{background:var(--purple-light);color:#fff}
+.badge-inactive{background:var(--red);color:#fff}
+
+.stock-card{background:#fff;border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px;text-align:center}
+.stock-label{font-size:12px;color:var(--gray-600);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.stock-value{font-size:48px;font-weight:800}
+.stock-value.green{color:var(--green)}
+.stock-value.yellow{color:var(--amber)}
+.stock-value.red{color:var(--red)}
+.stock-par{font-size:12px;color:var(--gray-500);margin-top:4px}
+
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.metric-card{background:#fff;border-radius:var(--radius);padding:12px;box-shadow:var(--shadow)}
+.metric-label{font-size:10px;color:var(--gray-600);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.metric-value{font-size:16px;font-weight:700;color:var(--gray-800)}
+.metric-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;letter-spacing:.3px;margin-top:2px}
+.mb-ok{background:var(--green-light);color:var(--green)}
+.mb-watch{background:var(--yellow-light);color:#8a7000}
+.mb-order{background:var(--amber-light);color:var(--amber)}
+.mb-out{background:var(--red-light);color:var(--red)}
+.mb-low{background:var(--green-light);color:var(--green)}
+.mb-med{background:var(--amber-light);color:var(--amber)}
+.mb-high{background:var(--red-light);color:var(--red)}
+
+/* ── Desktop 2-column ── */
+@media(min-width:768px){
+  .item-body{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
 }
 
-/* DESKTOP NAV */
-#desktop-nav{
-  display:none;width:200px;background:var(--bg-card);border-right:1px solid var(--border);
-  flex-direction:column;padding:20px 0;flex-shrink:0;
-}
-.nav-logo{padding:0 16px 20px;border-bottom:1px solid var(--border);margin-bottom:12px}
-.nav-logo-title{font-size:15px;font-weight:800;color:var(--text)}
-.nav-logo-sub{font-size:10px;color:var(--text-muted);margin-top:2px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:13px;
-  font-weight:600;color:var(--text-secondary);cursor:pointer;border-left:3px solid transparent;transition:.15s}
-.nav-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
-.nav-item.active{color:var(--text);border-left-color:var(--purple);background:rgba(76,29,149,.08)}
-.nav-item .material-icons-outlined{font-size:18px}
-.nav-section{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--text-muted);padding:14px 16px 6px}
-.nav-footer{margin-top:auto;padding:14px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted)}
-.nav-footer-name{font-weight:700;color:var(--text);font-size:12px;margin-bottom:2px}
+/* ── Action Tabs ── */
+.action-section{background:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden}
+.action-tabs{display:flex;border-bottom:2px solid var(--gray-200)}
+.action-tab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--gray-500);transition:var(--transition)}
+.action-tab.active{color:var(--purple);border-bottom:2px solid var(--purple);margin-bottom:-2px}
+.action-tab:hover{color:var(--purple-light)}
+.action-panel{display:none;padding:16px}
+.action-panel.active{display:block}
 
-/* HEADER */
-.hdr{background:var(--purple);padding:16px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0}
-.hdr-teal{background:var(--teal)}
-.hdr-back{background:rgba(255,255,255,.15);border:none;color:#fff;width:38px;height:38px;
-  border-radius:10px;cursor:pointer;display:grid;place-items:center;flex-shrink:0;transition:.15s}
-.hdr-back:active{background:rgba(255,255,255,.28)}
-.hdr-title{font-size:17px;font-weight:700;color:#fff;flex:1}
-.hdr-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:2px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--gray-700);margin-bottom:4px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius);font-size:14px;outline:none;transition:var(--transition)}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(75,46,131,.12)}
+.form-group textarea{resize:vertical;min-height:60px}
 
-/* STATUS BAR */
-.status-bar{background:var(--bg-card);border-bottom:1px solid var(--border);
-  padding:8px 20px;display:flex;align-items:center;justify-content:space-between;
-  font-size:11px;color:var(--text-muted);flex-shrink:0}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--teal-light);
-  display:inline-block;margin-right:5px;animation:pulse 2s ease infinite}
-.dot.err{background:#D1242F;animation:none}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;transition:var(--transition);width:100%}
+.btn-primary{background:var(--purple);color:#fff}
+.btn-primary:hover{background:var(--purple-dark)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-receive{background:var(--green);color:#fff}
+.btn-receive:hover{background:#24732f}
+.btn-remove{background:var(--red);color:#fff}
+.btn-remove:hover{background:#a30f27}
+.btn-adjust{background:var(--navy);color:#fff}
+.btn-adjust:hover{background:#14304d}
+.btn-outline{background:transparent;border:1.5px solid var(--gray-300);color:var(--gray-700)}
+.btn-outline:hover{border-color:var(--purple);color:var(--purple)}
 
-/* BODY */
-.body{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
-.body::-webkit-scrollbar{width:4px}
-.body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+/* ── Edit Section (admin) ── */
+.edit-section{background:var(--gray-50);border:1.5px dashed var(--gray-300);border-radius:var(--radius);padding:14px;margin-bottom:16px;display:none}
+.edit-section.visible{display:block}
+.edit-section h3{font-size:13px;font-weight:700;color:var(--purple);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.edit-grid{grid-template-columns:1fr}}
 
-/* CARD */
-.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
-.card-title{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
-  color:var(--text-muted);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+/* ── New Item Screen ── */
+.new-item-card{background:#fff;border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow)}
+.new-item-card h2{font-size:18px;font-weight:700;color:var(--purple);margin-bottom:4px}
+.new-item-desc{font-size:13px;color:var(--gray-600);margin-bottom:16px}
+.parsed-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--teal-light);color:var(--teal);margin-bottom:12px}
+.btn-row{display:flex;gap:10px;margin-top:16px}
+.btn-row .btn{flex:1}
 
-/* ITEM CARD */
-.item-card{background:linear-gradient(135deg,rgba(76,29,149,.13),rgba(13,122,95,.08));
-  border:1px solid rgba(76,29,149,.22);border-radius:var(--radius);padding:18px}
-.item-name{font-size:19px;font-weight:800;margin-bottom:6px;line-height:1.3}
-.badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;
-  font-size:11px;font-weight:700;letter-spacing:.04em}
-.badge-purple{background:rgba(76,29,149,.18);color:#A78BFA;border:1px solid rgba(76,29,149,.28)}
-.badge-teal{background:rgba(13,122,95,.15);color:var(--teal-light);border:1px solid rgba(13,122,95,.28)}
-.badge-gray{background:rgba(255,255,255,.07);color:var(--text-secondary);border:1px solid var(--border)}
-.stock-row{display:flex;justify-content:space-between;align-items:flex-end;
-  padding-top:12px;border-top:1px solid rgba(255,255,255,.07)}
-.stock-num{font-size:38px;font-weight:800;line-height:1}
-.stock-num.ok{color:var(--teal-light)}
-.stock-num.low{color:#F59E0B}
-.stock-num.out{color:#F87171}
-.stock-lbl{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+/* ── Success Screen ── */
+.success-card{background:#fff;border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow);text-align:center}
+.success-icon{width:64px;height:64px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.success-icon svg{width:32px;height:32px;color:var(--green)}
+.success-title{font-size:20px;font-weight:700;color:var(--green);margin-bottom:16px}
+.success-details{text-align:left;background:var(--gray-50);border-radius:var(--radius);padding:16px;margin-bottom:20px}
+.success-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gray-200);font-size:13px}
+.success-row:last-child{border-bottom:none}
+.success-row .sr-label{color:var(--gray-600)}
+.success-row .sr-value{font-weight:600;color:var(--gray-800)}
 
-/* METRICS GRID */
-.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.metric-box{background:var(--bg-input);border-radius:10px;padding:12px;text-align:center}
-.metric-val{font-size:20px;font-weight:800;margin-bottom:2px}
-.metric-lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em}
-.metric-badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;
-  font-size:12px;font-weight:700}
-
-/* ACTION TABS */
-.action-tabs{display:flex;gap:0;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
-.action-tab{flex:1;padding:12px 8px;text-align:center;font-size:13px;font-weight:700;
-  cursor:pointer;background:var(--bg-input);color:var(--text-secondary);
-  border:none;transition:all .15s;-webkit-tap-highlight-color:transparent;
-  display:flex;flex-direction:column;align-items:center;gap:4px}
-.action-tab:not(:last-child){border-right:1px solid var(--border)}
-.action-tab.active-receive{background:rgba(13,122,95,.18);color:var(--teal-light)}
-.action-tab.active-remove{background:rgba(185,28,28,.15);color:#F87171}
-.action-tab.active-adjust{background:rgba(146,64,14,.12);color:#FCD34D}
-.action-tab .material-icons-outlined{font-size:20px}
-
-/* INLINE ACTION FORM */
-.action-form{display:none;flex-direction:column;gap:12px;padding:16px;
-  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-top:2px}
-.action-form.show{display:flex}
-
-/* FIELD */
-.field{display:flex;flex-direction:column;gap:6px}
-.field label{font-size:12px;font-weight:600;color:var(--text-secondary)}
-.field input,.field select,.field textarea{
-  background:var(--bg-input);border:1px solid var(--border);border-radius:8px;
-  padding:12px 14px;font-size:15px;color:var(--text);font-family:var(--font);
-  width:100%;outline:none;transition:.15s;-webkit-appearance:none}
-.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23A0A6B4' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--purple-light)}
-.field textarea{resize:none;min-height:68px}
-.field-hint{font-size:11px;color:var(--text-muted);margin-top:3px}
-
-/* QTY STEPPER */
-.qty-row{display:flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden}
-.qty-row button{background:var(--bg-input);border:none;color:var(--text);
-  width:48px;height:48px;font-size:24px;cursor:pointer;flex-shrink:0;
-  display:grid;place-items:center;-webkit-tap-highlight-color:transparent;transition:.1s}
-.qty-row button:active{background:var(--border)}
-.qty-row input{flex:1;background:var(--bg-input);border:none;border-left:1px solid var(--border);
-  border-right:1px solid var(--border);text-align:center;font-size:22px;font-weight:700;
-  color:var(--text);height:48px;outline:none}
-
-/* BUTTONS */
-.btn{display:flex;align-items:center;justify-content:center;gap:8px;
-  padding:15px 20px;border-radius:var(--radius);font-size:15px;font-weight:700;
-  font-family:var(--font);border:none;cursor:pointer;transition:all .15s;
-  -webkit-tap-highlight-color:transparent;width:100%}
-.btn:active{transform:scale(.97)}
-.btn-purple{background:var(--purple);color:#fff}
-.btn-teal{background:var(--teal);color:#fff}
-.btn-ghost{background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border)}
-.btn-receive{background:var(--receive);color:#fff}
-.btn-remove{background:var(--remove);color:#fff}
-.btn-adjust{background:var(--adjust);color:#fff}
-.btn-sm{padding:10px 16px;font-size:13px;border-radius:8px}
-
-/* EDIT SECTION */
-.edit-section{display:none;flex-direction:column;gap:12px;padding-top:14px;
-  border-top:1px solid var(--border);margin-top:4px}
-.edit-section.show{display:flex}
-
-/* SCAN SCREEN */
-.scan-area{flex:1;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:20px;padding:32px 20px}
-.scan-icon-box{width:110px;height:110px;border-radius:24px;
-  background:rgba(13,122,95,.1);border:1.5px solid rgba(13,122,95,.22);
-  display:grid;place-items:center}
-.scan-hint{font-size:14px;color:var(--text-secondary);text-align:center;line-height:1.5}
-.scan-bottom{padding:0 20px 24px;display:flex;flex-direction:column;gap:10px}
-.scan-input-row{display:flex;gap:8px}
-.scan-input-row input{flex:1;background:var(--bg-input);border:1px solid var(--border);
-  border-radius:10px;padding:13px 14px;font-size:15px;color:var(--text);
-  font-family:'Courier New',monospace;outline:none;transition:.15s}
-.scan-input-row input:focus{border-color:var(--purple-light)}
-.cam-btn{background:var(--bg-input);border:1px solid var(--border);border-radius:10px;
-  color:var(--text);padding:0 14px;cursor:pointer;display:grid;place-items:center;flex-shrink:0}
-.cam-btn:active{background:var(--border)}
-.divider{display:flex;align-items:center;gap:12px;color:var(--text-muted);font-size:12px}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
-
-/* CAMERA */
-.camera-view{display:none;border-radius:12px;overflow:hidden;position:relative;
-  background:#000;margin:0 20px 10px}
-.camera-view video{width:100%;max-height:200px;object-fit:cover;display:block}
-.cam-overlay{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center}
-.cam-frame{width:65%;height:45%;border:2px solid rgba(16,185,129,.9);border-radius:8px;
-  box-shadow:0 0 0 2000px rgba(0,0,0,.45)}
-.cam-close{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.55);
-  border:none;color:#fff;border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer}
-
-/* SUCCESS */
-.success-body{flex:1;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:14px;padding:32px 20px;text-align:center}
-.success-icon{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;
-  background:rgba(13,122,95,.15);border:2px solid rgba(13,122,95,.4);margin-bottom:4px}
-.success-log{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
-  padding:14px 16px;width:100%;text-align:left}
-.log-row{display:flex;justify-content:space-between;font-size:13px;
-  padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}
-.log-row:last-child{border-bottom:none}
-.log-row .lbl{color:var(--text-muted)}
-.log-row .val{font-weight:600;text-align:right;max-width:60%}
-
-/* AUTH SCREEN */
-.auth-center{flex:1;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:20px;padding:32px 20px;text-align:center}
-.auth-logo{width:80px;height:80px;border-radius:20px;background:var(--purple);
-  display:grid;place-items:center;margin-bottom:8px}
-
-/* LOADING + TOAST */
-.loading{display:none;position:fixed;inset:0;background:rgba(26,28,32,.88);
-  backdrop-filter:blur(4px);z-index:999;flex-direction:column;align-items:center;
-  justify-content:center;gap:14px}
-.loading.show{display:flex}
-.spinner{width:40px;height:40px;border-radius:50%;border:3px solid var(--border);
-  border-top-color:var(--teal-light);animation:spin .8s linear infinite}
+/* ── Loading / toast ── */
+.spinner-overlay{display:none;position:fixed;inset:0;background:rgba(255,255,255,.7);z-index:500;align-items:center;justify-content:center}
+.spinner-overlay.active{display:flex}
+.spinner{width:40px;height:40px;border:4px solid var(--gray-200);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{font-size:14px;color:var(--text-secondary)}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);
-  background:#1A1C20;border:1px solid var(--border);color:var(--text);padding:12px 20px;
-  border-radius:var(--radius);font-size:14px;font-weight:500;
-  box-shadow:0 8px 32px rgba(0,0,0,.4);transition:transform .3s cubic-bezier(.34,1.56,.64,1);
-  z-index:998;white-space:nowrap;max-width:90vw;text-align:center}
-.toast.show{transform:translateX(-50%) translateY(0)}
-.toast.err{border-color:rgba(209,36,47,.4);color:#F87171}
-.toast.ok{border-color:rgba(13,122,95,.4);color:var(--teal-light)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:var(--radius);font-size:13px;font-weight:600;color:#fff;z-index:600;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.toast-error{background:var(--red)}
+.toast-success{background:var(--green)}
+.toast-info{background:var(--navy)}
 
-.material-icons-outlined{font-family:'Material Icons Outlined';font-style:normal;
-  font-weight:normal;font-size:24px;line-height:1;display:inline-block;
-  -webkit-font-smoothing:antialiased}
-.footer{padding:16px 20px;display:flex;flex-direction:column;gap:10px;flex-shrink:0}
+/* ── Auth screen ── */
+.auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;padding:24px}
+.auth-screen .spinner{width:48px;height:48px}
+.auth-screen p{font-size:14px;color:var(--gray-600)}
 </style>
 </head>
 <body>
-
-<div class="loading" id="loading"><div class="spinner"></div><div class="loading-text" id="loading-text">Connecting...</div></div>
-<div class="toast" id="toast"></div>
-
-<!-- DESKTOP NAV -->
-<nav id="desktop-nav">
-  <div class="nav-logo">
-    <div class="nav-logo-title">Inventory Scanner</div>
-    <div class="nav-logo-sub">Renton Core Lab · DLMP</div>
-  </div>
-  <div class="nav-section">Scanner</div>
-  <div class="nav-item active" onclick="goScan()">
-    <span class="material-icons-outlined">qr_code_scanner</span>Scan Item
-  </div>
-  <div class="nav-item" onclick="resetManual();goScreen('screen-manual')">
-    <span class="material-icons-outlined">edit</span>Manual Entry
-  </div>
-  <div class="nav-footer">
-    <div class="nav-footer-name" id="nav-user-name">—</div>
-    <div id="nav-sp-status">Connecting...</div>
-  </div>
-</nav>
-
-<!-- AUTH SCREEN -->
-<div class="screen active" id="screen-auth">
-  <div class="hdr"><div class="hdr-title">Inventory Scanner</div></div>
-  <div class="auth-center">
-    <div class="auth-logo">
-      <span class="material-icons-outlined" style="font-size:40px;color:#fff">qr_code_scanner</span>
-    </div>
-    <div style="font-size:22px;font-weight:800">Renton Core Lab</div>
-    <div style="font-size:14px;color:var(--text-secondary);line-height:1.6;max-width:280px">
-      Sign in with your UW Medicine account to use the inventory scanner.
-    </div>
-    <button class="btn btn-purple" style="max-width:280px" onclick="triggerLogin()">
-      <span class="material-icons-outlined" style="font-size:20px">login</span>
-      Sign in with Microsoft
-    </button>
-    <div style="font-size:12px;color:var(--text-muted)">UW Medicine DLMP · Renton Central Lab</div>
-  </div>
+<!-- Auth loading -->
+<div id="auth-loading" class="auth-screen">
+  <div class="spinner"></div>
+  <p>Authenticating...</p>
 </div>
 
-<!-- SCAN SCREEN -->
-<div class="screen" id="screen-scan">
-  <div class="hdr">
-    <div>
-      <div class="hdr-title">Inventory Scanner</div>
-      <div class="hdr-sub" id="user-sub">Renton Core Lab · UW Medicine DLMP</div>
+<!-- App shell (hidden until auth) -->
+<div id="app-shell" class="app-shell" style="display:none">
+  <!-- Mobile header -->
+  <div class="mobile-header">
+    <h1>Core Lab Scanner</h1>
+    <span class="user-badge" id="mobile-user"></span>
+  </div>
+
+  <!-- Sidebar (desktop) -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h1>INVENTORY SCANNER</h1>
+      <div class="sub">Renton Central Lab</div>
     </div>
-  </div>
-  <div class="status-bar">
-    <span><span class="dot" id="sp-dot"></span><span id="sp-status">Connecting...</span></span>
-    <span id="sp-user" style="font-size:10px"></span>
-  </div>
-  <div class="scan-area">
-    <div class="scan-icon-box">
-      <span class="material-icons-outlined" style="font-size:52px;color:var(--teal-light)">qr_code_scanner</span>
-    </div>
-    <div class="scan-hint">Point barcode scanner at label,<br>or type/paste a barcode below</div>
-  </div>
-  <div class="camera-view" id="camera-view">
-    <video id="camera-video" playsinline autoplay muted></video>
-    <div class="cam-overlay"><div class="cam-frame"></div></div>
-    <button class="cam-close" onclick="stopCamera()">✕ Close</button>
-  </div>
-  <input type="file" id="cam-file" accept="image/*" capture="environment" style="display:none" onchange="handleCamFile(this)">
-  <div class="scan-bottom">
-    <div class="scan-input-row">
-      <input type="text" id="scan-input" placeholder="Scan or type barcode..."
-        autocomplete="off" autocorrect="off" spellcheck="false">
-      <button class="cam-btn" id="cam-btn" onclick="startCamera()">
-        <span class="material-icons-outlined">photo_camera</span>
+    <div class="sidebar-nav">
+      <button class="active" onclick="goScreen('screen-scan')" id="nav-scan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M7 12h10"/></svg>
+        Scan Item
+      </button>
+      <button onclick="goScreen('screen-manual')" id="nav-manual">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Manual Entry
       </button>
     </div>
-    <button class="btn btn-teal" onclick="lookupBarcode()">
-      <span class="material-icons-outlined" style="font-size:20px">search</span>
-      Look Up Item
-    </button>
-    <div class="divider">or</div>
-    <button class="btn btn-ghost" onclick="resetManual();goScreen('screen-manual')">
-      <span class="material-icons-outlined" style="font-size:20px">edit</span>
-      Enter Manually
-    </button>
-  </div>
-</div>
-
-<!-- ITEM SCREEN -->
-<div class="screen" id="screen-item">
-  <div class="hdr">
-    <button class="hdr-back" onclick="goScan()">
-      <span class="material-icons-outlined" style="font-size:20px">arrow_back</span>
-    </button>
-    <div><div class="hdr-title">Item Details</div><div class="hdr-sub">Scan result</div></div>
-  </div>
-  <div class="body">
-    <!-- ITEM CARD -->
-    <div class="item-card">
-      <div class="item-name" id="item-name">—</div>
-      <div class="badges">
-        <span class="badge badge-purple" id="item-instrument">—</span>
-        <span class="badge badge-teal" id="item-unit">—</span>
-        <span class="badge badge-gray" id="item-type">—</span>
-      </div>
-      <div class="stock-row">
-        <div>
-          <div class="stock-num ok" id="item-stock">0</div>
-          <div class="stock-lbl">Current Stock</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:20px;font-weight:700" id="item-par">—</div>
-          <div class="stock-lbl">Min PAR</div>
-        </div>
-      </div>
+    <div class="sidebar-footer">
+      <div class="user-name" id="sidebar-user">Not signed in</div>
+      <div class="sp-status"><div class="sp-dot" id="sp-dot"></div><span id="sp-label">SharePoint</span></div>
     </div>
+  </nav>
 
-    <!-- METRICS -->
-    <div class="card">
-      <div class="card-title">
-        Status
-        <button id="edit-btn" onclick="toggleEdit()" style="display:none;
-          background:rgba(76,29,149,.15);border:1px solid rgba(76,29,149,.3);
-          color:#A78BFA;border-radius:6px;padding:4px 10px;font-size:11px;
-          font-weight:700;cursor:pointer;align-items:center;gap:4px">
-          <span class="material-icons-outlined" style="font-size:14px">edit</span> Edit
-        </button>
-      </div>
-      <div class="metrics-grid">
-        <div class="metric-box">
-          <div class="metric-val" id="m-days">—</div>
-          <div class="metric-lbl">Days Supply</div>
+  <!-- Main content -->
+  <div class="main-area">
+    <!-- Screen: Scan -->
+    <div class="screen active" id="screen-scan">
+      <div class="scan-container">
+        <div class="scan-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M7 12h10"/></svg>
         </div>
-        <div class="metric-box">
-          <div class="metric-val" id="m-daily">—</div>
-          <div class="metric-lbl">Daily Use</div>
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center;
-          background:var(--bg-input);border-radius:8px;padding:10px 14px">
-          <span style="font-size:13px;color:var(--text-secondary)">Order Status</span>
-          <span class="metric-badge" id="m-order">—</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;
-          background:var(--bg-input);border-radius:8px;padding:10px 14px">
-          <span style="font-size:13px;color:var(--text-secondary)">Waste Risk</span>
-          <span class="metric-badge" id="m-waste">—</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;
-          background:var(--bg-input);border-radius:8px;padding:10px 14px">
-          <span style="font-size:13px;color:var(--text-secondary)">Open Life</span>
-          <span style="font-size:13px;font-weight:600" id="m-life">—</span>
-        </div>
-      </div>
-
-      <!-- ADMIN EDIT SECTION -->
-      <div class="edit-section" id="edit-section">
-        <div style="height:1px;background:var(--border);margin:4px 0"></div>
-        <div class="field">
-          <label>Min PAR</label>
-          <div class="qty-row">
-            <button onclick="stepF('e-par',-1)">−</button>
-            <input type="number" id="e-par" min="0" step="0.5">
-            <button onclick="stepF('e-par',1)">+</button>
-          </div>
-        </div>
-        <div class="field">
-          <label>Daily Use</label>
-          <div class="qty-row">
-            <button onclick="stepF('e-daily',-0.1)">−</button>
-            <input type="number" id="e-daily" min="0" step="0.1">
-            <button onclick="stepF('e-daily',0.1)">+</button>
-          </div>
-        </div>
-        <div class="field">
-          <label>Open Life (days)</label>
-          <div class="qty-row">
-            <button onclick="stepF('e-life',-1)">−</button>
-            <input type="number" id="e-life" min="0" step="1">
-            <button onclick="stepF('e-life',1)">+</button>
-          </div>
-        </div>
-        <div class="field">
-          <label>Item Type</label>
-          <select id="e-type">
-            <option value="Reagent">Reagent</option>
-            <option value="QC Material">QC Material</option>
-            <option value="Calibrator">Calibrator</option>
-            <option value="Supply">Supply</option>
-            <option value="Part">Part</option>
-          </select>
-        </div>
-        <div class="field">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="checkbox" id="e-active" style="width:auto;accent-color:var(--teal)">
-            Item is Active
-          </label>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-purple btn-sm" style="flex:1" onclick="saveEdits()">
-            <span class="material-icons-outlined" style="font-size:16px">save</span> Save
+        <div class="scan-title">Scan Barcode</div>
+        <div class="scan-subtitle">Scan a reagent or supply barcode to look up inventory. Use the camera or type/paste a barcode below.</div>
+        <div class="scan-input-wrap">
+          <input type="text" id="barcode-input" placeholder="Scan or type barcode..." autocomplete="off" inputmode="text">
+          <button class="btn-camera" onclick="startCamera()" title="Use camera">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
           </button>
-          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="cancelEdit()">Cancel</button>
+        </div>
+        <video id="camera-video" autoplay playsinline></video>
+        <input type="file" id="camera-file" accept="image/*" capture="environment">
+      </div>
+    </div>
+
+    <!-- Screen: Item -->
+    <div class="screen" id="screen-item">
+      <button class="btn btn-outline" onclick="goScreen('screen-scan')" style="width:auto;margin-bottom:16px;font-size:12px">
+        &larr; Back to Scanner
+      </button>
+      <div class="item-header">
+        <div class="item-name" id="item-name"></div>
+        <div class="badge-row" id="item-badges"></div>
+      </div>
+
+      <div class="item-body">
+        <div class="item-left">
+          <div class="stock-card">
+            <div class="stock-label">Current Stock</div>
+            <div class="stock-value" id="stock-value">0</div>
+            <div class="stock-par" id="stock-par"></div>
+          </div>
+          <div class="metrics-grid" id="metrics-grid"></div>
+
+          <!-- Admin edit -->
+          <div class="edit-section" id="edit-section">
+            <h3>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit Item
+            </h3>
+            <div class="edit-grid">
+              <div class="form-group"><label>Min PAR</label><input type="number" id="edit-par" min="0"></div>
+              <div class="form-group"><label>Daily Use</label><input type="number" id="edit-daily" min="0" step="0.1"></div>
+              <div class="form-group"><label>Open Life (days)</label><input type="number" id="edit-openlife" min="0"></div>
+              <div class="form-group">
+                <label>Item Type</label>
+                <select id="edit-type">
+                  <option value="Reagent">Reagent</option>
+                  <option value="Calibrator">Calibrator</option>
+                  <option value="Control">Control</option>
+                  <option value="Consumable">Consumable</option>
+                  <option value="Supply">Supply</option>
+                </select>
+              </div>
+              <div class="form-group" style="grid-column:1/-1">
+                <label><input type="checkbox" id="edit-active"> Active</label>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveEdit()" style="margin-top:8px">Save Changes</button>
+          </div>
+        </div>
+
+        <div class="item-right">
+          <div class="action-section">
+            <div class="action-tabs">
+              <button class="action-tab active" onclick="showActionTab('receive')" id="tab-receive">Receive</button>
+              <button class="action-tab" onclick="showActionTab('remove')" id="tab-remove">Remove</button>
+              <button class="action-tab" onclick="showActionTab('adjust')" id="tab-adjust">Adjust</button>
+            </div>
+
+            <!-- Receive -->
+            <div class="action-panel active" id="panel-receive">
+              <div class="form-group"><label>Quantity</label><input type="number" id="recv-qty" min="1" value="1"></div>
+              <div class="form-group"><label>Lot Number (optional)</label><input type="text" id="recv-lot"></div>
+              <div class="form-group"><label>Expiry Date (optional)</label><input type="date" id="recv-expiry"></div>
+              <button class="btn btn-receive" onclick="submitAction('Receive')">Receive Stock</button>
+            </div>
+
+            <!-- Remove -->
+            <div class="action-panel" id="panel-remove">
+              <div class="form-group"><label>Quantity</label><input type="number" id="rem-qty" min="1" value="1"></div>
+              <div class="form-group"><label>Reason (optional)</label><textarea id="rem-reason" rows="2"></textarea></div>
+              <button class="btn btn-remove" onclick="submitAction('Remove')">Remove Stock</button>
+            </div>
+
+            <!-- Adjust -->
+            <div class="action-panel" id="panel-adjust">
+              <div class="form-group"><label>New Exact Count</label><input type="number" id="adj-count" min="0"></div>
+              <div class="form-group"><label>Reason (optional)</label><textarea id="adj-reason" rows="2"></textarea></div>
+              <button class="btn btn-adjust" onclick="submitAction('Adjust')">Set Count</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- ACTION TABS -->
-    <div class="card">
-      <div class="card-title">Update Stock</div>
-      <div class="action-tabs">
-        <button class="action-tab" id="tab-receive" onclick="selectTab('receive')">
-          <span class="material-icons-outlined">add_circle</span>
-          Receive
-        </button>
-        <button class="action-tab" id="tab-remove" onclick="selectTab('remove')">
-          <span class="material-icons-outlined">remove_circle</span>
-          Remove
-        </button>
-        <button class="action-tab" id="tab-adjust" onclick="selectTab('adjust')">
-          <span class="material-icons-outlined">tune</span>
-          Adjust
-        </button>
-      </div>
-
-      <!-- RECEIVE FORM -->
-      <div class="action-form" id="form-receive">
-        <div class="field">
-          <label>Quantity to Add</label>
-          <div class="qty-row">
-            <button onclick="stepQ('q-receive',-1)">−</button>
-            <input type="number" id="q-receive" value="1" min="0" step="0.1">
-            <button onclick="stepQ('q-receive',1)">+</button>
+    <!-- Screen: New Item (manual / not found) -->
+    <div class="screen" id="screen-manual">
+      <button class="btn btn-outline" onclick="goScreen('screen-scan')" style="width:auto;margin-bottom:16px;font-size:12px">
+        &larr; Back to Scanner
+      </button>
+      <div class="new-item-card">
+        <h2>New Item Entry</h2>
+        <div class="new-item-desc">Item not found in catalog. Fill in details below to add it.</div>
+        <div id="parsed-badges"></div>
+        <div class="form-group"><label>Item Name / Title</label><input type="text" id="new-title"></div>
+        <div class="edit-grid">
+          <div class="form-group">
+            <label>Instrument</label>
+            <select id="new-instrument">
+              <option value="">Select...</option>
+              <option value="XN-9100">XN-9100</option>
+              <option value="DI-60">DI-60</option>
+              <option value="Stago">Stago</option>
+              <option value="Roche">Roche</option>
+              <option value="UN">UN</option>
+              <option value="Shared">Shared</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Catalog Number</label><input type="text" id="new-catnum"></div>
+          <div class="form-group"><label>Lot Number</label><input type="text" id="new-lot"></div>
+          <div class="form-group"><label>Expiry Date</label><input type="date" id="new-expiry"></div>
+          <div class="form-group"><label>Manufacturer</label><input type="text" id="new-mfg"></div>
+          <div class="form-group">
+            <label>Unit</label>
+            <select id="new-unit">
+              <option value="Each">Each</option>
+              <option value="Box">Box</option>
+              <option value="Pack">Pack</option>
+              <option value="Case">Case</option>
+              <option value="Kit">Kit</option>
+              <option value="Bottle">Bottle</option>
+              <option value="Cartridge">Cartridge</option>
+            </select>
           </div>
         </div>
-        <div class="field">
-          <label>Lot Number <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
-          <input type="text" id="lot-receive" placeholder="e.g. LOT-2026-001">
+        <div class="form-group"><label>Quantity</label><input type="number" id="new-qty" min="1" value="1"></div>
+        <div class="form-group"><label>Barcode String</label><input type="text" id="new-barcode" readonly></div>
+        <div class="form-group"><label>Barcode Type</label><input type="text" id="new-btype" readonly></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="submitNewItem(true)">Add to Catalog &amp; Submit</button>
+          <button class="btn btn-outline" onclick="submitNewItem(false)">Log Only</button>
         </div>
-        <div class="field">
-          <label>Expiry Date <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
-          <input type="date" id="exp-receive">
-        </div>
-        <button class="btn btn-receive" onclick="submitAction('receive')">
-          <span class="material-icons-outlined" style="font-size:20px">check_circle</span>
-          Confirm Receive
-        </button>
       </div>
+    </div>
 
-      <!-- REMOVE FORM -->
-      <div class="action-form" id="form-remove">
-        <div class="field">
-          <label>Quantity to Remove</label>
-          <div class="qty-row">
-            <button onclick="stepQ('q-remove',-1)">−</button>
-            <input type="number" id="q-remove" value="1" min="0" step="0.1">
-            <button onclick="stepQ('q-remove',1)">+</button>
-          </div>
+    <!-- Screen: Success -->
+    <div class="screen" id="screen-success">
+      <div class="success-card">
+        <div class="success-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <div class="field">
-          <label>Reason <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
-          <textarea id="reason-remove" placeholder="e.g. Used up, expired, discarded..."></textarea>
-        </div>
-        <button class="btn btn-remove" onclick="submitAction('remove')">
-          <span class="material-icons-outlined" style="font-size:20px">check_circle</span>
-          Confirm Remove
-        </button>
-      </div>
-
-      <!-- ADJUST FORM -->
-      <div class="action-form" id="form-adjust">
-        <div style="font-size:13px;color:var(--text-muted);padding:4px 0">
-          Set the exact current stock count.
-        </div>
-        <div class="field">
-          <label>New Stock Count</label>
-          <div class="qty-row">
-            <button onclick="stepQ('q-adjust',-1)">−</button>
-            <input type="number" id="q-adjust" value="0" min="0" step="0.1">
-            <button onclick="stepQ('q-adjust',1)">+</button>
-          </div>
-        </div>
-        <div class="field">
-          <label>Reason <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
-          <textarea id="reason-adjust" placeholder="e.g. Physical count, discrepancy..."></textarea>
-        </div>
-        <button class="btn btn-adjust" onclick="submitAction('adjust')">
-          <span class="material-icons-outlined" style="font-size:20px">check_circle</span>
-          Set Stock Count
-        </button>
+        <div class="success-title">Transaction Complete</div>
+        <div class="success-details" id="success-details"></div>
+        <button class="btn btn-primary" onclick="goScreen('screen-scan')">Scan Another</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- NEW ITEM SCREEN -->
-<div class="screen" id="screen-manual">
-  <div class="hdr">
-    <button class="hdr-back" onclick="goScan()">
-      <span class="material-icons-outlined" style="font-size:20px">arrow_back</span>
-    </button>
-    <div><div class="hdr-title">New Item</div><div class="hdr-sub">Add to catalog</div></div>
-  </div>
-  <div class="body">
-    <div style="background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.3);border-radius:10px;
-      padding:12px 14px;font-size:13px;color:#F59E0B;line-height:1.5" id="manual-alert">
-      Barcode not in catalog. Enter details to add it.
-    </div>
-    <div class="card">
-      <div class="card-title">Catalog Details
-        <span id="barcode-type-badge" class="badge badge-teal" style="display:none;font-size:10px"></span>
-      </div>
-      <div class="field"><label>Item Name *</label><input type="text" id="m-name" placeholder="e.g. Cellpack DCL"></div>
-      <div class="field" style="margin-top:12px"><label>Instrument / Section *</label>
-        <select id="m-instrument">
-          <option value="XN">Sysmex XN-Series</option>
-          <option value="Stago">Stago STA-R MAX</option>
-          <option value="UN">Sysmex UN Series</option>
-          <option value="DI-60">DI-60 / DM-96</option>
-          <option value="Roche">Roche Cobas</option>
-          <option value="Lab Supplies">Lab Supplies</option>
-          <option value="Office Supplies">Office Supplies</option>
-        </select>
-      </div>
-      <div class="field" style="margin-top:12px"><label>Unit</label>
-        <select id="m-unit">
-          <option value="L">L (liter)</option><option value="mL">mL</option>
-          <option value="vial">vial</option><option value="kit">kit</option>
-          <option value="btl">btl</option><option value="box">box</option>
-          <option value="pk">pk (pack)</option><option value="ea">ea (each)</option>
-        </select>
-      </div>
-      <div class="field" style="margin-top:12px"><label>Catalog Number</label>
-        <input type="text" id="m-catnum" placeholder="e.g. XE-2021" style="font-family:'Courier New',monospace;font-size:13px">
-      </div>
-      <div class="field" style="margin-top:12px"><label>Barcode String</label>
-        <input type="text" id="m-barcode" style="font-family:'Courier New',monospace;font-size:13px">
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Initial Stock Entry</div>
-      <div class="field"><label>Quantity</label>
-        <div class="qty-row">
-          <button onclick="stepQ('m-qty',-1)">−</button>
-          <input type="number" id="m-qty" value="1" min="0" step="0.1">
-          <button onclick="stepQ('m-qty',1)">+</button>
-        </div>
-      </div>
-      <div class="field" style="margin-top:12px"><label>Lot Number <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
-        <input type="text" id="m-lot" placeholder="e.g. LOT-2026-001">
-      </div>
-      <div class="field" style="margin-top:12px"><label>Expiry Date <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
-        <input type="date" id="m-expiry">
-      </div>
-      <div class="field" style="margin-top:12px"><label>Notes <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
-        <textarea id="m-notes" placeholder="Any additional notes"></textarea>
-      </div>
-    </div>
-  </div>
-  <div class="footer">
-    <button class="btn btn-teal" onclick="submitManual(true)">
-      <span class="material-icons-outlined" style="font-size:20px">add_circle</span>
-      Add to Catalog &amp; Submit
-    </button>
-    <button class="btn btn-ghost" onclick="submitManual(false)">Log only — don't add to catalog</button>
-  </div>
-</div>
-
-<!-- SUCCESS SCREEN -->
-<div class="screen" id="screen-success">
-  <div class="hdr hdr-teal">
-    <div><div class="hdr-title">Entry Recorded</div><div class="hdr-sub">Transaction logged</div></div>
-  </div>
-  <div class="success-body">
-    <div class="success-icon">
-      <span class="material-icons-outlined" style="font-size:48px;color:var(--teal-light)">check_circle</span>
-    </div>
-    <div style="font-size:24px;font-weight:800">Submitted</div>
-    <div style="font-size:14px;color:var(--text-secondary);text-align:center;max-width:280px;line-height:1.6">
-      Inventory updated and transaction logged.
-    </div>
-    <div class="success-log" id="success-log"></div>
-  </div>
-  <div class="footer">
-    <button class="btn btn-purple" onclick="goScan()">
-      <span class="material-icons-outlined" style="font-size:20px">qr_code_scanner</span>
-      Scan Another Item
-    </button>
-  </div>
-</div>
+<!-- Spinner overlay -->
+<div class="spinner-overlay" id="spinner"><div class="spinner"></div></div>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <script>
-// ============================================================
-// CONFIG
-// ============================================================
+/* ═══════════════════════════════════════════════
+   CONFIG
+   ═══════════════════════════════════════════════ */
 var MSAL_CONFIG = {
-  auth:{
-    clientId:'24c43cdb-d15a-42ff-9883-cd8c19965a54',
-    authority:'https://login.microsoftonline.com/f6b6dd5b-f02f-441a-99a0-162ac5060bd2',
-    redirectUri:'https://renton-central-lab.github.io/core-lab-shift-hub/inventory-scanner.html'
+  auth: {
+    clientId: '24c43cdb-d15a-42ff-9883-cd8c19965a54',
+    authority: 'https://login.microsoftonline.com/f6b6dd5b-f02f-441a-99a0-162ac5060bd2',
+    redirectUri: 'https://renton-central-lab.github.io/core-lab-shift-hub/inventory-scanner.html'
   },
-  cache:{cacheLocation:'localStorage',storeAuthStateInCookie:false}
+  cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
 };
-var SP = {
-  siteUrl:'https://uwnetid.sharepoint.com/sites/og_uw_renton_central_laboratory_-_core_lab',
-  lists:{inventory:'ReagentInventory',log:'InventoryLog',catalog:'ReagentCatalog'}
-};
-var SP_API = SP.siteUrl+'/_api/web/lists';
 var ADMIN_EMAIL = 'jesusem@uw.edu';
+var SITE_URL = 'https://uwnetid.sharepoint.com/sites/og_uw_renton_central_laboratory_-_core_lab';
+var SP_API = SITE_URL + '/_api/web/lists';
+var SCOPES = [SITE_URL + '/.default'];
 
-// SP internal field names
-var CAT={CatalogID:'field_1',Instrument:'field_2',Manufacturer:'field_3',Unit:'field_4',
-  BarcodeType:'field_5',BarcodeString:'field_6',CatalogNumber:'field_7',
-  GS1ParsesExpiry:'field_8',GS1ParsesLot:'field_9',Notes:'field_10'};
-var INV={Instrument:'field_1',ItemType:'field_2',Unit:'field_3',InStock:'field_4',
-  MinPAR:'field_5',DailyUse:'field_6',ExpiryDate:'field_7',OpenLifeDays:'field_8',
-  DateOpened:'field_9',LotNumber:'field_10',Notes:'field_11',CatalogID:'field_12',IsActive:'field_13'};
-var LOG={Action:'field_1',QuantityDelta:'field_2',QuantityAfter:'field_3',
-  LotNumber:'field_4',ExpiryDate:'field_5',Timestamp:'field_6',ReasonNote:'field_7',ScannedBy:'ScannedBy'};
+/* Field name maps (Excel-imported lists use field_N) */
+var CAT = { CatalogID:'field_1', Instrument:'field_2', Manufacturer:'field_3', Unit:'field_4', BarcodeType:'field_5', BarcodeString:'field_6', CatalogNumber:'field_7', GS1ParsesExpiry:'field_8', GS1ParsesLot:'field_9', Notes:'field_10' };
+var INV = { Instrument:'field_1', ItemType:'field_2', Unit:'field_3', InStock:'field_4', MinPAR:'field_5', DailyUse:'field_6', ExpiryDate:'field_7', OpenLifeDays:'field_8', DateOpened:'field_9', LotNumber:'field_10', Notes:'field_11', CatalogID:'field_12', IsActive:'field_13' };
+var LOG = { Action:'field_1', QuantityDelta:'field_2', QuantityAfter:'field_3', LotNumber:'field_4', ExpiryDate:'field_5', Timestamp:'field_6', ReasonNote:'field_7', ScannedBy:'ScannedBy' };
 
-function cf(obj,map){var o={};for(var k in obj)o[map[k]||k]=obj[k];return o;}
-function iv(row,k){return row[INV[k]||k];}
+function cf(obj, map) { var o = {}; for (var k in obj) { if (obj.hasOwnProperty(k)) o[map[k] || k] = obj[k]; } return o; }
+function iv(row, k) { return row[INV[k] || k]; }
 
-// ============================================================
-// STATE
-// ============================================================
-var msalInstance=null, spToken=null, spTokenExpiry=0;
-var isAdmin=false, currentItem=null, currentTab=null;
-var lastEntry={}, lastParsedGS1=null, lastRaw='';
-var _listTypes={};
+/* ═══════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════ */
+var msalApp = null;
+var accessToken = null;
+var currentUser = '';
+var isAdmin = false;
+var currentItem = null;     // inventory row
+var currentCatalog = null;  // catalog row
+var itemTypeCache = {};
+var debounceTimer = null;
+var cameraStream = null;
 
-// ============================================================
-// MSAL AUTH
-// ============================================================
-async function initAuth(){
-  showLoad('Signing in...');
-  try{
-    msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
-    var resp=null;
-    try{resp=await msalInstance.handleRedirectPromise();}catch(e){console.warn('Redirect promise:',e);}
-    if(resp&&resp.account){
-      msalInstance.setActiveAccount(resp.account);
-      spToken=resp.accessToken;
-      spTokenExpiry=resp.expiresOn?.getTime()||Date.now()+3600000;
+/* ═══════════════════════════════════════════════
+   MSAL AUTH
+   ═══════════════════════════════════════════════ */
+async function initAuth() {
+  try {
+    msalApp = new msal.PublicClientApplication(MSAL_CONFIG);
+    await msalApp.initialize();
+    var resp = await msalApp.handleRedirectPromise();
+    if (resp) {
+      accessToken = resp.accessToken;
+      setUser(resp.account);
+      showApp();
+      return;
     }
-    var accounts=msalInstance.getAllAccounts();
-    if(!accounts.length){hideLoad();goScreen('screen-auth');return;}
-    msalInstance.setActiveAccount(accounts[0]);
-    var acct=accounts[0];
-    isAdmin=(acct.username||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
-    setEl('user-sub',acct.name||acct.username);
-    setEl('sp-user',acct.name||'');
-    setEl('nav-user-name',acct.name||acct.username||'');
-    if(!spToken){
-      try{
-        var r=await msalInstance.acquireTokenSilent({scopes:['https://uwnetid.sharepoint.com/AllSites.Write'],account:acct});
-        spToken=r.accessToken; spTokenExpiry=r.expiresOn?.getTime()||Date.now()+3600000;
-      }catch(e){console.warn('Silent token failed:',e.message);}
+    var accounts = msalApp.getAllAccounts();
+    if (accounts.length > 0) {
+      try {
+        var tokenResp = await msalApp.acquireTokenSilent({ scopes: SCOPES, account: accounts[0] });
+        accessToken = tokenResp.accessToken;
+        setUser(accounts[0]);
+        showApp();
+      } catch (e) {
+        console.warn('Silent token failed, redirecting:', e);
+        msalApp.acquireTokenRedirect({ scopes: SCOPES });
+      }
+    } else {
+      msalApp.acquireTokenRedirect({ scopes: SCOPES });
     }
-    hideLoad();
-    goScreen('screen-scan');
-    testSP().catch(e=>console.warn('SP test:',e));
-  }catch(e){hideLoad();console.error('Auth error:',e);goScreen('screen-auth');}
-}
-
-async function triggerLogin(){
-  if(!msalInstance) msalInstance=new msal.PublicClientApplication(MSAL_CONFIG);
-  await msalInstance.loginRedirect({scopes:['https://uwnetid.sharepoint.com/AllSites.Write','User.Read']});
-}
-
-async function getToken(){
-  if(spToken&&Date.now()<spTokenExpiry-60000) return spToken;
-  var acct=msalInstance?.getActiveAccount();
-  if(!acct) throw new Error('Not signed in');
-  try{
-    var r=await msalInstance.acquireTokenSilent({scopes:['https://uwnetid.sharepoint.com/AllSites.Write'],account:acct});
-    spToken=r.accessToken; spTokenExpiry=r.expiresOn?.getTime()||Date.now()+3600000;
-    return spToken;
-  }catch(e){throw new Error('Session expired — please reload');}
-}
-
-async function testSP(){
-  try{
-    await spFetch(SP.lists.inventory,'?$top=1&$select=Title');
-    setEl('sp-status','SharePoint connected');
-    setEl('nav-sp-status','SharePoint connected');
-    var dot=document.getElementById('sp-dot');
-    if(dot) dot.className='dot';
-  }catch(e){
-    setEl('sp-status','Connection error');
-    setEl('nav-sp-status','Connection error');
-    var dot=document.getElementById('sp-dot');
-    if(dot) dot.className='dot err';
+  } catch (err) {
+    console.error('Auth init error:', err);
+    document.getElementById('auth-loading').innerHTML = '<p style="color:var(--red)">Authentication failed. Please reload.</p>';
   }
 }
 
-// ============================================================
-// SP API
-// ============================================================
-async function _req(url,opts){
-  var token=await getToken();
-  var headers=Object.assign({'Accept':'application/json;odata=verbose','Content-Type':'application/json;odata=verbose','Authorization':'Bearer '+token},(opts&&opts.headers)||{});
-  var o=Object.assign({},opts||{},{headers});
-  if(o.body&&typeof o.body!=='string') o.body=JSON.stringify(o.body);
-  var res=await fetch(url,o);
-  if(!res.ok){var err=await res.text();throw new Error('SP '+res.status+': '+err);}
-  return res;
+function setUser(account) {
+  currentUser = account.name || account.username || 'Unknown';
+  isAdmin = account.username && account.username.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  var el1 = document.getElementById('sidebar-user');
+  if (el1) el1.textContent = currentUser;
+  var el2 = document.getElementById('mobile-user');
+  if (el2) el2.textContent = currentUser;
 }
 
-async function getItemType(listName){
-  if(_listTypes[listName]) return _listTypes[listName];
-  var r=await _req(SP_API+"/getbytitle('"+listName+"')?$select=ListItemEntityTypeFullName");
-  var d=await r.json(); _listTypes[listName]=d.d.ListItemEntityTypeFullName;
-  return _listTypes[listName];
+function showApp() {
+  var el1 = document.getElementById('auth-loading');
+  if (el1) el1.style.display = 'none';
+  var el2 = document.getElementById('app-shell');
+  if (el2) el2.style.display = 'flex';
+  var inp = document.getElementById('barcode-input');
+  if (inp) inp.focus();
+  checkSPConnection();
 }
 
-async function getDigest(){
-  var r=await _req(SP.siteUrl+'/_api/contextinfo',{method:'POST'});
-  var d=await r.json(); return d.d.GetContextWebInformation.FormDigestValue;
-}
-
-async function spFetch(listName,endpoint,opts){
-  endpoint=endpoint||''; opts=opts||{};
-  var url=SP_API+"/getbytitle('"+listName+"')/items"+endpoint;
-  var res=await _req(url,opts);
-  if(!opts.method||opts.method==='GET'){var j=await res.json();return j.d&&j.d.results?{value:j.d.results}:j;}
-  return res;
-}
-
-async function spPost(listName,fields){
-  var digest=await getDigest(), meta=await getItemType(listName);
-  fields.__metadata={type:meta};
-  return _req(SP_API+"/getbytitle('"+listName+"')/items",{method:'POST',headers:{'X-RequestDigest':digest},body:fields});
-}
-
-async function spPatch(listName,itemId,fields){
-  var digest=await getDigest(), meta=await getItemType(listName);
-  fields.__metadata={type:meta};
-  return _req(SP_API+"/getbytitle('"+listName+"')/items("+itemId+")",{method:'POST',headers:{'IF-MATCH':'*','X-HTTP-Method':'MERGE','X-RequestDigest':digest},body:fields});
-}
-
-// ============================================================
-// GS1 PARSER
-// ============================================================
-function parseGS1(raw){
-  var r={raw,gtin:null,catalogNumber:null,expiry:null,lot:null,isGS1:false,barcodeType:'Unknown'};
-  var str=raw;
-  if(str.startsWith(']d2')||str.startsWith(']C1')){str=str.slice(3);r.isGS1=true;r.barcodeType='GS1-DataMatrix';}
-  if(str.includes('(')){
-    r.isGS1=true; if(r.barcodeType==='Unknown') r.barcodeType='GS1-128';
-    var rx=/\((\d{2,4})\)([^(]*)/g,m;
-    while((m=rx.exec(str))!==null) applyAI(r,m[1],m[2].trim());
-  } else if(r.isGS1||/^\d{14}/.test(str)){
-    r.isGS1=true; if(r.barcodeType==='Unknown') r.barcodeType='GS1-DataMatrix';
-    var pos=0;
-    while(pos<str.length){
-      var a2=str.slice(pos,pos+2);
-      if(a2==='01'&&pos+16<=str.length){applyAI(r,'01',str.slice(pos+2,pos+16));pos+=16;}
-      else if(a2==='17'&&pos+8<=str.length){applyAI(r,'17',str.slice(pos+2,pos+8));pos+=8;}
-      else if(a2==='10'){var v='';pos+=2;while(pos<str.length&&!/^(01|17|10|30)/.test(str.slice(pos))){v+=str[pos];pos++;}applyAI(r,'10',v);}
-      else{pos++;}
-    }
-  } else if(/^\d{12,13}$/.test(str)){r.barcodeType=str.length===12?'UPC-A':'EAN-13';r.catalogNumber=str;}
-  else if(/^[A-Z0-9\-]{4,}$/i.test(str)){r.barcodeType='Code128';r.catalogNumber=str;}
-  return r;
-}
-function applyAI(r,ai,val){
-  if(ai==='01'){r.gtin=val;r.catalogNumber=val.replace(/^0+/,'')||val;}
-  else if(ai==='17'&&val.length===6){var yy=parseInt(val.slice(0,2)),yr=yy<50?2000+yy:1900+yy;r.expiry=yr+'-'+val.slice(2,4)+'-'+(val.slice(4,6)==='00'?'28':val.slice(4,6));}
-  else if(ai==='10'){r.lot=val.trim();}
-}
-function guessInst(p){
-  var c=(p.catalogNumber||'').toUpperCase();
-  if(c.startsWith('XE')||c.includes('CELLPACK')||c.includes('SULFO')||c.includes('LYSER')||c.includes('FLUORO')||c.includes('STOMATO')||c.includes('DILUENT')) return 'XN';
-  if(c.includes('STA-')||c.includes('PTT')||c.includes('FIB')||c.startsWith('006')) return 'Stago';
-  if(c.includes('UN-')||c.startsWith('UA-')) return 'UN';
-  if(c.includes('DI-')||c.includes('DM-')) return 'DI-60';
-  if(c.startsWith('458')||c.includes('COBAS')) return 'Roche';
-  return 'XN';
-}
-
-// ============================================================
-// LOOKUP
-// ============================================================
-async function lookupBarcode(){
-  var raw=document.getElementById('scan-input').value.trim();
-  if(!raw){showToast('Please scan or enter a barcode');return;}
-  showLoad('Looking up item...');
-  try{
-    var safe=raw.replace(/'/g,"''");
-    var sel='Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9,field_10,field_11,field_12,field_13';
-    var catSel='Title,field_1,field_2,field_4,field_5,field_6,field_7,field_8,field_9';
-    var data=await spFetch(SP.lists.catalog,'?$top=1&$select='+catSel+'&$filter='+encodeURIComponent("field_6 eq '"+safe+"'"));
-    var catRow=data.value?.[0]||null;
-    if(!catRow){
-      data=await spFetch(SP.lists.catalog,'?$top=1&$select='+catSel+'&$filter='+encodeURIComponent("field_7 eq '"+safe+"'"));
-      catRow=data.value?.[0]||null;
-    }
-    if(!catRow){
-      lastRaw=raw; lastParsedGS1=parseGS1(raw);
-      fillManualFromBarcode(lastParsedGS1,raw);
-      hideLoad(); goScreen('screen-manual'); return;
-    }
-    // Find inventory row
-    var safeTitle=(catRow.Title||'').replace(/'/g,"''");
-    var invData=await spFetch(SP.lists.inventory,'?$top=1&$select='+sel+'&$filter='+encodeURIComponent("Title eq '"+safeTitle+"'"));
-    var invRow=invData.value?.[0]||null;
-    if(!invRow) invRow=await autoCreateInvRow(catRow);
-    currentItem=invRow;
-    // Pre-fill lot/expiry from GS1
-    var parsed=parseGS1(raw);
-    if(parsed.expiry){document.getElementById('exp-receive').value=parsed.expiry;}
-    if(parsed.lot){document.getElementById('lot-receive').value=parsed.lot;}
-    renderItem();
-    hideLoad(); goScreen('screen-item');
-  }catch(e){hideLoad();showToast('Error: '+(e.message||'').slice(0,60),true);}
-}
-
-async function autoCreateInvRow(catRow){
-  var fields=cf({Instrument:catRow[CAT.Instrument]||'XN',ItemType:'Reagent',
-    Unit:catRow[CAT.Unit]||'ea',InStock:0,MinPAR:1,DailyUse:0,
-    CatalogID:catRow[CAT.CatalogID]||'',IsActive:'Yes'},INV);
-  fields.Title=catRow.Title;
-  var res=await spPost(SP.lists.inventory,fields);
-  var json=await res.json(); var nr=json.d||json; nr.Title=catRow.Title;
-  // Re-fetch
-  var safe=(catRow.Title||'').replace(/'/g,"''");
-  var sel='Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9,field_10,field_11,field_12,field_13';
-  var fetched=await spFetch(SP.lists.inventory,'?$top=1&$select='+sel+'&$filter='+encodeURIComponent("Title eq '"+safe+"'"));
-  return fetched.value?.[0]||nr;
-}
-
-// ============================================================
-// RENDER ITEM SCREEN
-// ============================================================
-function renderItem(){
-  if(!currentItem) return;
-  setEl('item-name',currentItem.Title);
-  setEl('item-instrument',iv(currentItem,'Instrument')||'—');
-  setEl('item-unit',iv(currentItem,'Unit')||'—');
-  setEl('item-type',iv(currentItem,'ItemType')||'—');
-  var stock=parseFloat(iv(currentItem,'InStock'))||0;
-  var par=parseFloat(iv(currentItem,'MinPAR'))||0;
-  var stockEl=document.getElementById('item-stock');
-  if(stockEl){stockEl.textContent=stock;stockEl.className='stock-num '+(stock<=0?'out':stock<par?'low':'ok');}
-  setEl('item-par',par||'—');
-  // Metrics
-  var daily=parseFloat(iv(currentItem,'DailyUse'))||0;
-  var life=parseFloat(iv(currentItem,'OpenLifeDays'))||0;
-  var days=daily>0?Math.round(stock/daily):null;
-  setEl('m-days',days!==null?days+'d':'—');
-  setEl('m-daily',daily>0?daily:'—');
-  setEl('m-life',life>0?life+' days':'—');
-  // Order status
-  var orderEl=document.getElementById('m-order');
-  if(orderEl){
-    var os,oc,ob;
-    if(stock<=0){os='OUT OF STOCK';oc='#FCA5A5';ob='rgba(185,28,28,.15)';}
-    else if(stock<par){os='ORDER NOW';oc='#FCD34D';ob='rgba(146,64,14,.15)';}
-    else if(par>0&&stock<par*1.5){os='WATCH';oc='#FDE68A';ob='rgba(146,64,14,.08)';}
-    else{os='OK';oc='var(--teal-light)';ob='rgba(13,122,95,.12)';}
-    orderEl.textContent=os; orderEl.style.color=oc; orderEl.style.background=ob;
+async function getToken() {
+  if (!msalApp) return accessToken;
+  try {
+    var accounts = msalApp.getAllAccounts();
+    if (accounts.length === 0) { msalApp.acquireTokenRedirect({ scopes: SCOPES }); return null; }
+    var resp = await msalApp.acquireTokenSilent({ scopes: SCOPES, account: accounts[0] });
+    accessToken = resp.accessToken;
+    return accessToken;
+  } catch (e) {
+    console.warn('Token refresh failed:', e);
+    msalApp.acquireTokenRedirect({ scopes: SCOPES });
+    return null;
   }
-  // Waste risk
-  var wasteEl=document.getElementById('m-waste');
-  if(wasteEl){
-    if(life>0&&days!==null){
-      var ratio=days/life;
-      var wr,wc,wb;
-      if(ratio>1.5){wr='HIGH';wc='#FCA5A5';wb='rgba(185,28,28,.15)';}
-      else if(ratio>1){wr='MEDIUM';wc='#FCD34D';wb='rgba(146,64,14,.15)';}
-      else{wr='LOW';wc='var(--teal-light)';wb='rgba(13,122,95,.12)';}
-      wasteEl.textContent=wr; wasteEl.style.color=wc; wasteEl.style.background=wb;
-    } else {wasteEl.textContent='—'; wasteEl.style.color='var(--text-muted)'; wasteEl.style.background='transparent';}
-  }
-  // Edit button — admin only
-  var eb=document.getElementById('edit-btn');
-  if(eb) eb.style.display=isAdmin?'inline-flex':'none';
-  // Reset action tabs
-  selectTab(null);
-  // Reset form fields
-  document.getElementById('q-receive').value=1;
-  document.getElementById('q-remove').value=1;
-  document.getElementById('q-adjust').value=parseFloat(iv(currentItem,'InStock'))||0;
-  document.getElementById('lot-receive').value='';
-  document.getElementById('exp-receive').value='';
-  document.getElementById('reason-remove').value='';
-  document.getElementById('reason-adjust').value='';
 }
 
-// ============================================================
-// ACTION TABS
-// ============================================================
-function selectTab(action){
-  currentTab=action;
-  ['receive','remove','adjust'].forEach(function(a){
-    var tab=document.getElementById('tab-'+a);
-    var form=document.getElementById('form-'+a);
-    if(tab) tab.className='action-tab'+(action===a?' active-'+a:'');
-    if(form) form.className='action-form'+(action===a?' show':'');
+/* ═══════════════════════════════════════════════
+   SHAREPOINT API
+   ═══════════════════════════════════════════════ */
+async function spFetch(listName, query) {
+  var token = await getToken();
+  if (!token) throw new Error('No access token');
+  var url = SP_API + "/getbytitle('" + listName + "')/items" + (query || '');
+  var resp = await fetch(url, {
+    headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json;odata=verbose' }
   });
-}
-
-// ============================================================
-// SUBMIT ACTION
-// ============================================================
-async function submitAction(action){
-  if(!currentItem){showToast('No item selected',true);return;}
-  var qty,lot='',expiry='',reason='';
-  var oldStock=parseFloat(iv(currentItem,'InStock'))||0;
-  var newStock,delta;
-  if(action==='receive'){
-    qty=parseFloat(document.getElementById('q-receive').value)||0;
-    lot=document.getElementById('lot-receive').value.trim();
-    expiry=document.getElementById('exp-receive').value;
-    newStock=oldStock+qty; delta=qty;
-  } else if(action==='remove'){
-    qty=parseFloat(document.getElementById('q-remove').value)||0;
-    reason=document.getElementById('reason-remove').value.trim();
-    newStock=Math.max(0,oldStock-qty); delta=-qty;
-  } else {
-    qty=parseFloat(document.getElementById('q-adjust').value)||0;
-    reason=document.getElementById('reason-adjust').value.trim();
-    newStock=qty; delta=qty-oldStock;
+  if (!resp.ok) {
+    var txt = await resp.text();
+    throw new Error('SP GET ' + resp.status + ': ' + txt);
   }
-  showLoad('Updating inventory...');
-  try{
-    var patchData=cf({InStock:newStock},INV);
-    if(lot) patchData[INV.LotNumber]=lot;
-    if(expiry) patchData[INV.ExpiryDate]=expiry;
-    await spPatch(SP.lists.inventory,currentItem.ID,patchData);
-    var acct=msalInstance?.getActiveAccount();
-    var scannedBy=acct?(acct.name||acct.username||''):'';
-    var today=new Date().toISOString().slice(0,10);
-    var actionLabel=action.charAt(0).toUpperCase()+action.slice(1);
-    var logData=cf({Action:actionLabel,QuantityDelta:delta,QuantityAfter:newStock,
-      LotNumber:lot||'',ExpiryDate:expiry||'',Timestamp:new Date().toISOString(),
-      ReasonNote:reason||'',ScannedBy:scannedBy},LOG);
-    logData.Title=currentItem.Title+' — '+actionLabel+' — '+today;
-    await spPost(SP.lists.log,logData);
-    lastEntry={item:currentItem.Title,action:actionLabel,
-      delta:delta>0?'+'+delta:String(delta),newStock,
-      lot:lot||'—',scannedBy,
-      time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})};
-    hideLoad(); showSuccess();
-  }catch(e){hideLoad();showToast('Submit failed: '+(e.message||'').slice(0,50),true);}
+  var data = await resp.json();
+  return { value: data.d && data.d.results ? data.d.results : [] };
 }
 
-// ============================================================
-// ADMIN EDIT
-// ============================================================
-function toggleEdit(){
-  var sec=document.getElementById('edit-section');
-  var eb=document.getElementById('edit-btn');
-  if(!sec) return;
-  var showing=sec.classList.contains('show');
-  if(showing){cancelEdit();return;}
-  document.getElementById('e-par').value=parseFloat(iv(currentItem,'MinPAR'))||0;
-  document.getElementById('e-daily').value=parseFloat(iv(currentItem,'DailyUse'))||0;
-  document.getElementById('e-life').value=parseFloat(iv(currentItem,'OpenLifeDays'))||0;
-  document.getElementById('e-type').value=iv(currentItem,'ItemType')||'Reagent';
-  document.getElementById('e-active').checked=(iv(currentItem,'IsActive')||'Yes')!=='No';
-  sec.classList.add('show');
-  if(eb) eb.innerHTML='<span class="material-icons-outlined" style="font-size:14px">close</span> Done';
-}
-function cancelEdit(){
-  var sec=document.getElementById('edit-section');
-  if(sec) sec.classList.remove('show');
-  var eb=document.getElementById('edit-btn');
-  if(eb) eb.innerHTML='<span class="material-icons-outlined" style="font-size:14px">edit</span> Edit';
-}
-async function saveEdits(){
-  if(!currentItem||!isAdmin) return;
-  var par=parseFloat(document.getElementById('e-par').value)||0;
-  var daily=parseFloat(document.getElementById('e-daily').value)||0;
-  var life=parseFloat(document.getElementById('e-life').value)||0;
-  var type=document.getElementById('e-type').value;
-  var active=document.getElementById('e-active').checked?'Yes':'No';
-  showLoad('Saving...');
-  try{
-    var pd=cf({MinPAR:par,DailyUse:daily,OpenLifeDays:life,ItemType:type,IsActive:active},INV);
-    await spPatch(SP.lists.inventory,currentItem.ID,pd);
-    currentItem[INV.MinPAR]=par; currentItem[INV.DailyUse]=daily;
-    currentItem[INV.OpenLifeDays]=life; currentItem[INV.ItemType]=type; currentItem[INV.IsActive]=active;
-    cancelEdit(); renderItem(); hideLoad(); showToast('Saved',false);
-  }catch(e){hideLoad();showToast('Save failed: '+(e.message||'').slice(0,40),true);}
+async function getDigest() {
+  var token = await getToken();
+  var resp = await fetch(SITE_URL + '/_api/contextinfo', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json;odata=verbose', 'Content-Length': '0' }
+  });
+  var data = await resp.json();
+  return data.d.GetContextWebInformation.FormDigestValue;
 }
 
-// ============================================================
-// MANUAL / NEW ITEM
-// ============================================================
-function fillManualFromBarcode(parsed,raw){
-  setVal('m-barcode',raw);
-  if(parsed.expiry) setVal('m-expiry',parsed.expiry);
-  if(parsed.lot) setVal('m-lot',parsed.lot);
-  if(parsed.catalogNumber) setVal('m-catnum',parsed.catalogNumber);
-  setVal('m-instrument',guessInst(parsed));
-  var tb=document.getElementById('barcode-type-badge');
-  if(tb){tb.textContent=parsed.barcodeType+(parsed.isGS1?' · GS1':'');tb.style.display='inline-flex';}
-  var al=document.getElementById('manual-alert');
-  if(al){
-    var flds=[];
-    if(parsed.expiry)flds.push('expiry');
-    if(parsed.lot)flds.push('lot');
-    if(parsed.catalogNumber)flds.push('catalog #');
-    al.innerHTML=flds.length?'Barcode not in catalog. Auto-filled: <strong>'+flds.join(', ')+'</strong>. Enter item name to add it.':'Barcode not in catalog. Enter details to add it.';
+async function getItemType(listName) {
+  if (itemTypeCache[listName]) return itemTypeCache[listName];
+  var token = await getToken();
+  var resp = await fetch(SP_API + "/getbytitle('" + listName + "')?$select=ListItemEntityTypeFullName", {
+    headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json;odata=verbose' }
+  });
+  var data = await resp.json();
+  var t = data.d.ListItemEntityTypeFullName;
+  itemTypeCache[listName] = t;
+  return t;
+}
+
+async function spPost(listName, fields) {
+  var digest = await getDigest();
+  var meta = await getItemType(listName);
+  fields.__metadata = { type: meta };
+  var token = await getToken();
+  var resp = await fetch(SP_API + "/getbytitle('" + listName + "')/items", {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Accept': 'application/json;odata=verbose',
+      'Content-Type': 'application/json;odata=verbose',
+      'X-RequestDigest': digest
+    },
+    body: JSON.stringify(fields)
+  });
+  if (!resp.ok) {
+    var txt = await resp.text();
+    throw new Error('SP POST ' + resp.status + ': ' + txt);
+  }
+  return await resp.json();
+}
+
+async function spPatch(listName, itemId, fields) {
+  var digest = await getDigest();
+  var meta = await getItemType(listName);
+  fields.__metadata = { type: meta };
+  var token = await getToken();
+  var url = SP_API + "/getbytitle('" + listName + "')/items(" + itemId + ")";
+  var resp = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Accept': 'application/json;odata=verbose',
+      'Content-Type': 'application/json;odata=verbose',
+      'X-RequestDigest': digest,
+      'IF-MATCH': '*',
+      'X-HTTP-Method': 'MERGE'
+    },
+    body: JSON.stringify(fields)
+  });
+  if (!resp.ok) {
+    var txt = await resp.text();
+    throw new Error('SP PATCH ' + resp.status + ': ' + txt);
   }
 }
-function resetManual(){
-  lastRaw=''; lastParsedGS1=null;
-  ['m-name','m-lot','m-expiry','m-notes','m-barcode','m-catnum'].forEach(function(id){setVal(id,'');});
-  setVal('m-qty','1'); setVal('m-instrument','XN'); setVal('m-unit','L');
-  var tb=document.getElementById('barcode-type-badge');
-  if(tb) tb.style.display='none';
-  var al=document.getElementById('manual-alert');
-  if(al) al.textContent='Enter item details below.';
+
+async function checkSPConnection() {
+  try {
+    await spFetch('ReagentCatalog', '?$top=1&$select=Id');
+    var dot = document.getElementById('sp-dot');
+    if (dot) dot.className = 'sp-dot';
+    var lbl = document.getElementById('sp-label');
+    if (lbl) lbl.textContent = 'Connected';
+  } catch (e) {
+    var dot = document.getElementById('sp-dot');
+    if (dot) dot.className = 'sp-dot err';
+    var lbl = document.getElementById('sp-label');
+    if (lbl) lbl.textContent = 'Disconnected';
+  }
 }
-async function submitManual(addToCatalog){
-  var name=getVal('m-name').trim();
-  if(!name){showToast('Item name is required',true);return;}
-  var inst=getVal('m-instrument'), unit=getVal('m-unit');
-  var qty=parseFloat(getVal('m-qty'))||0;
-  var lot=getVal('m-lot').trim(), expiry=getVal('m-expiry');
-  var notes=getVal('m-notes').trim(), barcode=getVal('m-barcode').trim();
-  var catnum=getVal('m-catnum').trim();
-  var parsed=lastParsedGS1||(barcode?parseGS1(barcode):null);
-  var today=new Date().toISOString().slice(0,10);
-  var catalogID='MAN-'+Date.now();
-  showLoad('Saving...');
-  try{
-    if(addToCatalog&&barcode){
-      var cd=cf({CatalogID:catalogID,BarcodeString:barcode,CatalogNumber:catnum||barcode,
-        Instrument:inst,Unit:unit,Manufacturer:'Other',
-        BarcodeType:parsed?parsed.barcodeType:'Unknown',
-        GS1ParsesExpiry:parsed&&parsed.expiry?'Yes':'No',
-        GS1ParsesLot:parsed&&parsed.lot?'Yes':'No',
-        Notes:notes||'Added via scanner — '+today},CAT);
-      cd.Title=name; await spPost(SP.lists.catalog,cd);
-      var id=cf({Instrument:inst,ItemType:'Reagent',Unit:unit,InStock:qty,
-        MinPAR:1,DailyUse:0,CatalogID:catalogID,IsActive:'Yes'},INV);
-      id.Title=name; await spPost(SP.lists.inventory,id);
+
+/* ═══════════════════════════════════════════════
+   NAVIGATION
+   ═══════════════════════════════════════════════ */
+function goScreen(id) {
+  var screens = document.querySelectorAll('.screen');
+  for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
+  var el = document.getElementById(id);
+  if (el) el.classList.add('active');
+
+  var navBtns = document.querySelectorAll('.sidebar-nav button');
+  for (var i = 0; i < navBtns.length; i++) navBtns[i].classList.remove('active');
+  if (id === 'screen-scan') {
+    var nb = document.getElementById('nav-scan');
+    if (nb) nb.classList.add('active');
+    setTimeout(function(){ var inp = document.getElementById('barcode-input'); if (inp) { inp.value = ''; inp.focus(); } }, 100);
+    stopCamera();
+  } else if (id === 'screen-manual') {
+    var nb = document.getElementById('nav-manual');
+    if (nb) nb.classList.add('active');
+    stopCamera();
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   GS1 BARCODE PARSER
+   ═══════════════════════════════════════════════ */
+function parseBarcode(raw) {
+  raw = raw.trim();
+  var result = { barcode: raw, type: 'Unknown', catalogNumber: '', lot: '', expiry: '', quantity: '' };
+
+  // UPC-A (12 digits)
+  if (/^\d{12}$/.test(raw)) {
+    result.type = 'UPC-A';
+    result.catalogNumber = raw;
+    return result;
+  }
+  // EAN-13 (13 digits)
+  if (/^\d{13}$/.test(raw)) {
+    result.type = 'EAN-13';
+    result.catalogNumber = raw;
+    return result;
+  }
+
+  // GS1
+  var work = raw;
+  // Strip symbology prefix
+  if (work.indexOf(']d2') === 0) { result.type = 'GS1-DataMatrix'; work = work.substring(3); }
+  else if (work.indexOf(']C1') === 0) { result.type = 'GS1-128'; work = work.substring(3); }
+  else if (/\(\d{2}\)/.test(work)) { result.type = 'GS1-128'; }
+  else if (work.length >= 20) { result.type = 'GS1'; }
+  else { return result; }
+
+  // Parenthetical AIs: (01)12345678901234(17)260101(10)LOT123
+  var paren = /\((\d{2,4})\)([^(]*)/g;
+  var m;
+  var foundParen = false;
+  while ((m = paren.exec(work)) !== null) {
+    foundParen = true;
+    applyAI(result, m[1], m[2]);
+  }
+  if (foundParen) return result;
+
+  // Fixed-length AI parsing (no parens, no FNC1 separators visible)
+  var pos = 0;
+  while (pos < work.length) {
+    var ai = work.substring(pos, pos + 2);
+    if (ai === '01') {
+      result.catalogNumber = work.substring(pos + 2, pos + 16).replace(/^0+/, '') || '0';
+      pos += 16;
+    } else if (ai === '17') {
+      result.expiry = parseGS1Date(work.substring(pos + 2, pos + 8));
+      pos += 8;
+    } else if (ai === '10') {
+      // Variable length, delimited by GS (0x1D) or end of string
+      var rest = work.substring(pos + 2);
+      var gs = rest.indexOf(String.fromCharCode(29));
+      result.lot = gs >= 0 ? rest.substring(0, gs) : rest;
+      pos += 2 + result.lot.length + (gs >= 0 ? 1 : 0);
+      if (gs < 0) break;
+    } else if (ai === '30') {
+      var rest = work.substring(pos + 2);
+      var gs = rest.indexOf(String.fromCharCode(29));
+      result.quantity = gs >= 0 ? rest.substring(0, gs) : rest;
+      pos += 2 + result.quantity.length + (gs >= 0 ? 1 : 0);
+      if (gs < 0) break;
+    } else {
+      break;
     }
-    var acct=msalInstance?.getActiveAccount();
-    var scannedBy=acct?(acct.name||acct.username||''):'';
-    var ld=cf({Action:'Received',QuantityDelta:qty,QuantityAfter:qty,
-      LotNumber:lot||'',ExpiryDate:expiry||'',Timestamp:new Date().toISOString(),
-      ReasonNote:notes||'',ScannedBy:scannedBy},LOG);
-    ld.Title=name+' — Received — '+today;
-    await spPost(SP.lists.log,ld);
-    lastEntry={item:name,action:'Received',delta:'+'+qty,newStock:qty,
-      lot:lot||'—',scannedBy,time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})};
-    lastRaw=''; lastParsedGS1=null;
-    hideLoad(); showSuccess();
-  }catch(e){hideLoad();showToast('Failed: '+(e.message||'').slice(0,50),true);}
+  }
+  return result;
 }
 
-// ============================================================
-// SUCCESS
-// ============================================================
-function showSuccess(){
-  var log=document.getElementById('success-log');
-  if(log) log.innerHTML=[
-    ['Item',lastEntry.item],['Action',lastEntry.action],
-    ['Change',lastEntry.delta],['New Stock',lastEntry.newStock],
-    ['Lot',lastEntry.lot],['Scanned By',lastEntry.scannedBy||'—'],['Time',lastEntry.time]
-  ].map(function(r){return'<div class="log-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>';}).join('');
+function applyAI(result, ai, val) {
+  val = val.replace(/[\x1d]/g, '');
+  if (ai === '01') result.catalogNumber = val.replace(/^0+/, '') || '0';
+  else if (ai === '17') result.expiry = parseGS1Date(val);
+  else if (ai === '10') result.lot = val;
+  else if (ai === '30') result.quantity = val;
+}
+
+function parseGS1Date(s) {
+  if (!s || s.length < 6) return '';
+  var yy = parseInt(s.substring(0, 2), 10);
+  var mm = s.substring(2, 4);
+  var dd = s.substring(4, 6);
+  var year = yy >= 50 ? 1900 + yy : 2000 + yy;
+  if (dd === '00') dd = '28';
+  return year + '-' + mm + '-' + dd;
+}
+
+function guessInstrument(catNum) {
+  if (!catNum) return '';
+  var upper = catNum.toUpperCase();
+  if (/^XE|CELLPACK|SULFO|LYSER|FLUORO|STOMATO|DILUENT/.test(upper)) return 'XN-9100';
+  if (/^STA-|^PTT|^FIB|^006/.test(upper)) return 'Stago';
+  if (/^UN-|^UA-/.test(upper)) return 'UN';
+  if (/^DI-|^DM-/.test(upper)) return 'DI-60';
+  if (/^458|COBAS/.test(upper)) return 'Roche';
+  return '';
+}
+
+/* ═══════════════════════════════════════════════
+   BARCODE LOOKUP
+   ═══════════════════════════════════════════════ */
+async function lookupBarcode(raw) {
+  if (!raw || raw.length < 3) return;
+  showSpinner(true);
+  try {
+    var parsed = parseBarcode(raw);
+    var safeVal = parsed.barcode.replace(/'/g, "''");
+    // Search catalog by BarcodeString
+    var catResult = await spFetch('ReagentCatalog',
+      '?$top=1&$select=Id,Title,' + CAT.CatalogID + ',' + CAT.Instrument + ',' + CAT.Manufacturer + ',' + CAT.Unit + ',' + CAT.BarcodeType + ',' + CAT.BarcodeString + ',' + CAT.CatalogNumber + ',' + CAT.GS1ParsesExpiry + ',' + CAT.GS1ParsesLot +
+      '&$filter=' + encodeURIComponent(CAT.BarcodeString + " eq '" + safeVal + "'"));
+
+    // If not found by full barcode, try by catalog number
+    if (catResult.value.length === 0 && parsed.catalogNumber) {
+      var safeCat = parsed.catalogNumber.replace(/'/g, "''");
+      catResult = await spFetch('ReagentCatalog',
+        '?$top=1&$select=Id,Title,' + CAT.CatalogID + ',' + CAT.Instrument + ',' + CAT.Manufacturer + ',' + CAT.Unit + ',' + CAT.BarcodeType + ',' + CAT.BarcodeString + ',' + CAT.CatalogNumber + ',' + CAT.GS1ParsesExpiry + ',' + CAT.GS1ParsesLot +
+        '&$filter=' + encodeURIComponent(CAT.CatalogNumber + " eq '" + safeCat + "'"));
+    }
+
+    if (catResult.value.length > 0) {
+      currentCatalog = catResult.value[0];
+      var catalogId = currentCatalog[CAT.CatalogID];
+      var safeCatId = (catalogId || '').toString().replace(/'/g, "''");
+      // Lookup inventory by CatalogID
+      var invResult = await spFetch('ReagentInventory',
+        '?$top=1&$select=Id,Title,' + INV.Instrument + ',' + INV.ItemType + ',' + INV.Unit + ',' + INV.InStock + ',' + INV.MinPAR + ',' + INV.DailyUse + ',' + INV.ExpiryDate + ',' + INV.OpenLifeDays + ',' + INV.DateOpened + ',' + INV.LotNumber + ',' + INV.Notes + ',' + INV.CatalogID + ',' + INV.IsActive +
+        '&$filter=' + encodeURIComponent(INV.CatalogID + " eq '" + safeCatId + "'"));
+      if (invResult.value.length > 0) {
+        currentItem = invResult.value[0];
+        showItemScreen(parsed);
+      } else {
+        // Catalog entry exists but no inventory row
+        currentItem = null;
+        showItemScreenCatalogOnly(parsed);
+      }
+    } else {
+      // Not found in catalog, show new item screen
+      currentItem = null;
+      currentCatalog = null;
+      showNewItemScreen(parsed);
+    }
+  } catch (err) {
+    console.error('Lookup error:', err);
+    showToast('Lookup failed: ' + err.message, 'error');
+  }
+  showSpinner(false);
+}
+
+/* ═══════════════════════════════════════════════
+   ITEM SCREEN
+   ═══════════════════════════════════════════════ */
+function showItemScreen(parsed) {
+  var row = currentItem;
+  var cat = currentCatalog;
+  var name = (cat && cat.Title) || (row && row.Title) || 'Unknown Item';
+  var el = document.getElementById('item-name');
+  if (el) el.textContent = name;
+
+  // Badges
+  var instrument = iv(row, 'Instrument') || (cat && cat[CAT.Instrument]) || '';
+  var unit = iv(row, 'Unit') || (cat && cat[CAT.Unit]) || '';
+  var itemType = iv(row, 'ItemType') || '';
+  var isActive = iv(row, 'IsActive');
+  var badgesHTML = '';
+  if (instrument) badgesHTML += '<span class="badge badge-instrument">' + esc(instrument) + '</span>';
+  if (unit) badgesHTML += '<span class="badge badge-unit">' + esc(unit) + '</span>';
+  if (itemType) badgesHTML += '<span class="badge badge-type">' + esc(itemType) + '</span>';
+  if (isActive === false || isActive === 'No' || isActive === 'FALSE') badgesHTML += '<span class="badge badge-inactive">INACTIVE</span>';
+  var bEl = document.getElementById('item-badges');
+  if (bEl) bEl.innerHTML = badgesHTML;
+
+  // Stock
+  var stock = parseFloat(iv(row, 'InStock')) || 0;
+  var par = parseFloat(iv(row, 'MinPAR')) || 0;
+  var sEl = document.getElementById('stock-value');
+  if (sEl) {
+    sEl.textContent = stock;
+    sEl.className = 'stock-value ' + (stock <= 0 ? 'red' : stock < par ? 'yellow' : 'green');
+  }
+  var pEl = document.getElementById('stock-par');
+  if (pEl) pEl.textContent = 'PAR: ' + par;
+
+  // Metrics
+  var dailyUse = parseFloat(iv(row, 'DailyUse')) || 0;
+  var openLife = parseFloat(iv(row, 'OpenLifeDays')) || 0;
+  var daysSupply = dailyUse > 0 ? Math.round(stock / dailyUse) : null;
+  var orderStatus = getOrderStatus(stock, par);
+  var wasteRisk = getWasteRisk(daysSupply, openLife);
+  var lot = iv(row, 'LotNumber') || '';
+  var expiry = iv(row, 'ExpiryDate') || '';
+  if (expiry && expiry.indexOf('T') >= 0) expiry = expiry.split('T')[0];
+
+  var mg = document.getElementById('metrics-grid');
+  if (mg) {
+    mg.innerHTML = metricCard('Days Supply', daysSupply !== null ? daysSupply + ' days' : 'N/A') +
+      metricCard('Daily Use', dailyUse > 0 ? dailyUse + '/day' : 'Not set') +
+      metricCard('Order Status', '', orderStatus) +
+      metricCard('Waste Risk', '', wasteRisk) +
+      metricCard('Open Life', openLife > 0 ? openLife + ' days' : 'N/A') +
+      metricCard('Lot', lot || 'None') +
+      metricCard('Expiry', expiry || 'None');
+  }
+
+  // Pre-fill receive fields from parsed barcode
+  var rl = document.getElementById('recv-lot');
+  if (rl) rl.value = parsed.lot || '';
+  var re = document.getElementById('recv-expiry');
+  if (re) re.value = parsed.expiry || '';
+  var rq = document.getElementById('recv-qty');
+  if (rq) rq.value = parsed.quantity || '1';
+
+  // Admin edit
+  var editSec = document.getElementById('edit-section');
+  if (editSec) editSec.className = isAdmin ? 'edit-section visible' : 'edit-section';
+  if (isAdmin) {
+    var ep = document.getElementById('edit-par'); if (ep) ep.value = par;
+    var ed = document.getElementById('edit-daily'); if (ed) ed.value = dailyUse;
+    var eo = document.getElementById('edit-openlife'); if (eo) eo.value = openLife;
+    var et = document.getElementById('edit-type'); if (et) et.value = itemType || 'Reagent';
+    var ea = document.getElementById('edit-active');
+    if (ea) ea.checked = !(isActive === false || isActive === 'No' || isActive === 'FALSE');
+  }
+
+  // Reset action tabs
+  showActionTab('receive');
+  goScreen('screen-item');
+}
+
+function showItemScreenCatalogOnly(parsed) {
+  // Create a pseudo-item for display when catalog exists but no inventory row
+  currentItem = { Id: null };
+  currentItem[INV.InStock] = 0;
+  currentItem[INV.MinPAR] = 0;
+  currentItem[INV.DailyUse] = 0;
+  currentItem[INV.OpenLifeDays] = 0;
+  currentItem[INV.Instrument] = currentCatalog[CAT.Instrument] || '';
+  currentItem[INV.Unit] = currentCatalog[CAT.Unit] || '';
+  currentItem[INV.ItemType] = 'Reagent';
+  currentItem[INV.IsActive] = true;
+  currentItem[INV.CatalogID] = currentCatalog[CAT.CatalogID];
+  currentItem.Title = currentCatalog.Title;
+  showItemScreen(parsed);
+}
+
+function metricCard(label, value, badge) {
+  var html = '<div class="metric-card"><div class="metric-label">' + esc(label) + '</div>';
+  if (badge) {
+    html += '<div class="metric-badge ' + badge.cls + '">' + esc(badge.text) + '</div>';
+  } else {
+    html += '<div class="metric-value">' + esc(value) + '</div>';
+  }
+  return html + '</div>';
+}
+
+function getOrderStatus(stock, par) {
+  if (stock <= 0) return { text: 'OUT OF STOCK', cls: 'mb-out' };
+  if (stock < par) return { text: 'ORDER NOW', cls: 'mb-order' };
+  if (stock < par * 1.5) return { text: 'WATCH', cls: 'mb-watch' };
+  return { text: 'OK', cls: 'mb-ok' };
+}
+
+function getWasteRisk(daysSupply, openLife) {
+  if (daysSupply === null || openLife <= 0) return { text: 'N/A', cls: 'mb-low' };
+  var ratio = daysSupply / openLife;
+  if (ratio > 1.5) return { text: 'HIGH', cls: 'mb-high' };
+  if (ratio > 1.0) return { text: 'MEDIUM', cls: 'mb-med' };
+  return { text: 'LOW', cls: 'mb-low' };
+}
+
+/* ═══════════════════════════════════════════════
+   ACTION TABS
+   ═══════════════════════════════════════════════ */
+function showActionTab(tab) {
+  var tabs = document.querySelectorAll('.action-tab');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+  var panels = document.querySelectorAll('.action-panel');
+  for (var i = 0; i < panels.length; i++) panels[i].classList.remove('active');
+  var tEl = document.getElementById('tab-' + tab);
+  if (tEl) tEl.classList.add('active');
+  var pEl = document.getElementById('panel-' + tab);
+  if (pEl) pEl.classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════
+   SUBMIT ACTIONS
+   ═══════════════════════════════════════════════ */
+async function submitAction(action) {
+  if (!currentItem) { showToast('No item loaded', 'error'); return; }
+  showSpinner(true);
+  try {
+    var stock = parseFloat(iv(currentItem, 'InStock')) || 0;
+    var delta = 0;
+    var newStock = stock;
+    var lot = '';
+    var expiry = '';
+    var reason = '';
+
+    if (action === 'Receive') {
+      delta = parseInt(document.getElementById('recv-qty').value, 10) || 0;
+      if (delta <= 0) { showToast('Enter a positive quantity', 'error'); showSpinner(false); return; }
+      newStock = stock + delta;
+      lot = document.getElementById('recv-lot').value || '';
+      expiry = document.getElementById('recv-expiry').value || '';
+    } else if (action === 'Remove') {
+      delta = parseInt(document.getElementById('rem-qty').value, 10) || 0;
+      if (delta <= 0) { showToast('Enter a positive quantity', 'error'); showSpinner(false); return; }
+      if (delta > stock) delta = stock;
+      newStock = stock - delta;
+      delta = -delta;
+      reason = document.getElementById('rem-reason').value || '';
+    } else if (action === 'Adjust') {
+      newStock = parseInt(document.getElementById('adj-count').value, 10);
+      if (isNaN(newStock) || newStock < 0) { showToast('Enter a valid count', 'error'); showSpinner(false); return; }
+      delta = newStock - stock;
+      reason = document.getElementById('adj-reason').value || '';
+    }
+
+    // If no inventory row yet, create one
+    if (!currentItem.Id) {
+      var invFields = {};
+      invFields.Title = currentCatalog ? currentCatalog.Title : 'Unknown';
+      invFields[INV.Instrument] = iv(currentItem, 'Instrument') || '';
+      invFields[INV.ItemType] = iv(currentItem, 'ItemType') || 'Reagent';
+      invFields[INV.Unit] = iv(currentItem, 'Unit') || 'Each';
+      invFields[INV.InStock] = newStock;
+      invFields[INV.MinPAR] = 0;
+      invFields[INV.DailyUse] = 0;
+      invFields[INV.OpenLifeDays] = 0;
+      invFields[INV.CatalogID] = iv(currentItem, 'CatalogID') || '';
+      invFields[INV.IsActive] = true;
+      if (lot) invFields[INV.LotNumber] = lot;
+      if (expiry) invFields[INV.ExpiryDate] = expiry;
+      await spPost('ReagentInventory', invFields);
+    } else {
+      // Update existing inventory row
+      var patchFields = {};
+      patchFields[INV.InStock] = newStock;
+      if (lot) patchFields[INV.LotNumber] = lot;
+      if (expiry) patchFields[INV.ExpiryDate] = expiry;
+      await spPatch('ReagentInventory', currentItem.Id, patchFields);
+    }
+
+    // Write log entry
+    var logFields = {};
+    logFields[LOG.Action] = action;
+    logFields[LOG.QuantityDelta] = delta;
+    logFields[LOG.QuantityAfter] = newStock;
+    logFields[LOG.LotNumber] = lot;
+    logFields[LOG.ExpiryDate] = expiry;
+    logFields[LOG.Timestamp] = new Date().toISOString();
+    logFields[LOG.ReasonNote] = reason;
+    logFields[LOG.ScannedBy] = currentUser;
+    logFields.Title = (currentCatalog ? currentCatalog.Title : (currentItem.Title || 'Unknown'));
+    await spPost('InventoryLog', logFields);
+
+    // Success screen
+    showSuccessScreen({
+      item: currentCatalog ? currentCatalog.Title : (currentItem.Title || 'Unknown'),
+      action: action,
+      delta: delta,
+      newStock: newStock,
+      lot: lot,
+      expiry: expiry,
+      user: currentUser
+    });
+  } catch (err) {
+    console.error('Submit error:', err);
+    showToast('Transaction failed: ' + err.message, 'error');
+  }
+  showSpinner(false);
+}
+
+/* ═══════════════════════════════════════════════
+   ADMIN EDIT
+   ═══════════════════════════════════════════════ */
+async function saveEdit() {
+  if (!currentItem || !currentItem.Id) { showToast('No inventory row to edit', 'error'); return; }
+  showSpinner(true);
+  try {
+    var fields = {};
+    fields[INV.MinPAR] = parseFloat(document.getElementById('edit-par').value) || 0;
+    fields[INV.DailyUse] = parseFloat(document.getElementById('edit-daily').value) || 0;
+    fields[INV.OpenLifeDays] = parseFloat(document.getElementById('edit-openlife').value) || 0;
+    fields[INV.ItemType] = document.getElementById('edit-type').value || 'Reagent';
+    fields[INV.IsActive] = document.getElementById('edit-active').checked;
+    await spPatch('ReagentInventory', currentItem.Id, fields);
+    showToast('Item updated', 'success');
+    // Refresh
+    currentItem[INV.MinPAR] = fields[INV.MinPAR];
+    currentItem[INV.DailyUse] = fields[INV.DailyUse];
+    currentItem[INV.OpenLifeDays] = fields[INV.OpenLifeDays];
+    currentItem[INV.ItemType] = fields[INV.ItemType];
+    currentItem[INV.IsActive] = fields[INV.IsActive];
+    showItemScreen({ lot: '', expiry: '', quantity: '' });
+  } catch (err) {
+    showToast('Save failed: ' + err.message, 'error');
+  }
+  showSpinner(false);
+}
+
+/* ═══════════════════════════════════════════════
+   NEW ITEM SCREEN
+   ═══════════════════════════════════════════════ */
+function showNewItemScreen(parsed) {
+  var pb = document.getElementById('parsed-badges');
+  if (pb) {
+    var html = '';
+    if (parsed.type !== 'Unknown') html += '<span class="parsed-badge">' + esc(parsed.type) + '</span>';
+    if (parsed.lot) html += '<span class="parsed-badge">Lot: ' + esc(parsed.lot) + '</span>';
+    if (parsed.expiry) html += '<span class="parsed-badge">Exp: ' + esc(parsed.expiry) + '</span>';
+    pb.innerHTML = html;
+  }
+  var ni = document.getElementById('new-instrument');
+  if (ni) ni.value = guessInstrument(parsed.catalogNumber);
+  var nc = document.getElementById('new-catnum');
+  if (nc) nc.value = parsed.catalogNumber || '';
+  var nl = document.getElementById('new-lot');
+  if (nl) nl.value = parsed.lot || '';
+  var ne = document.getElementById('new-expiry');
+  if (ne) ne.value = parsed.expiry || '';
+  var nb = document.getElementById('new-barcode');
+  if (nb) nb.value = parsed.barcode || '';
+  var nbt = document.getElementById('new-btype');
+  if (nbt) nbt.value = parsed.type || 'Unknown';
+  var nt = document.getElementById('new-title');
+  if (nt) nt.value = '';
+  var nq = document.getElementById('new-qty');
+  if (nq) nq.value = parsed.quantity || '1';
+  var nm = document.getElementById('new-mfg');
+  if (nm) nm.value = '';
+
+  goScreen('screen-manual');
+}
+
+async function submitNewItem(addToCatalog) {
+  var title = (document.getElementById('new-title').value || '').trim();
+  if (!title) { showToast('Enter an item name', 'error'); return; }
+  showSpinner(true);
+  try {
+    var instrument = document.getElementById('new-instrument').value || '';
+    var catNum = document.getElementById('new-catnum').value || '';
+    var lot = document.getElementById('new-lot').value || '';
+    var expiry = document.getElementById('new-expiry').value || '';
+    var mfg = document.getElementById('new-mfg').value || '';
+    var unit = document.getElementById('new-unit').value || 'Each';
+    var qty = parseInt(document.getElementById('new-qty').value, 10) || 1;
+    var barcode = document.getElementById('new-barcode').value || '';
+    var btype = document.getElementById('new-btype').value || '';
+
+    var catalogId = '';
+
+    if (addToCatalog) {
+      // Generate CatalogID
+      catalogId = 'RC-' + Date.now().toString(36).toUpperCase();
+      var catFields = {};
+      catFields.Title = title;
+      catFields[CAT.CatalogID] = catalogId;
+      catFields[CAT.Instrument] = instrument;
+      catFields[CAT.Manufacturer] = mfg;
+      catFields[CAT.Unit] = unit;
+      catFields[CAT.BarcodeType] = btype;
+      catFields[CAT.BarcodeString] = barcode;
+      catFields[CAT.CatalogNumber] = catNum;
+      catFields[CAT.GS1ParsesExpiry] = expiry ? 'Yes' : 'No';
+      catFields[CAT.GS1ParsesLot] = lot ? 'Yes' : 'No';
+      await spPost('ReagentCatalog', catFields);
+
+      // Create inventory row
+      var invFields = {};
+      invFields.Title = title;
+      invFields[INV.Instrument] = instrument;
+      invFields[INV.ItemType] = 'Reagent';
+      invFields[INV.Unit] = unit;
+      invFields[INV.InStock] = qty;
+      invFields[INV.MinPAR] = 0;
+      invFields[INV.DailyUse] = 0;
+      invFields[INV.OpenLifeDays] = 0;
+      invFields[INV.CatalogID] = catalogId;
+      invFields[INV.IsActive] = true;
+      if (lot) invFields[INV.LotNumber] = lot;
+      if (expiry) invFields[INV.ExpiryDate] = expiry;
+      await spPost('ReagentInventory', invFields);
+    }
+
+    // Log entry
+    var logFields = {};
+    logFields.Title = title;
+    logFields[LOG.Action] = addToCatalog ? 'New Item + Receive' : 'Log Only';
+    logFields[LOG.QuantityDelta] = qty;
+    logFields[LOG.QuantityAfter] = qty;
+    logFields[LOG.LotNumber] = lot;
+    logFields[LOG.ExpiryDate] = expiry;
+    logFields[LOG.Timestamp] = new Date().toISOString();
+    logFields[LOG.ReasonNote] = addToCatalog ? 'Added to catalog' : 'Logged without catalog entry';
+    logFields[LOG.ScannedBy] = currentUser;
+    await spPost('InventoryLog', logFields);
+
+    showSuccessScreen({
+      item: title,
+      action: addToCatalog ? 'New Item + Receive' : 'Log Only',
+      delta: qty,
+      newStock: qty,
+      lot: lot,
+      expiry: expiry,
+      user: currentUser
+    });
+  } catch (err) {
+    console.error('New item error:', err);
+    showToast('Failed: ' + err.message, 'error');
+  }
+  showSpinner(false);
+}
+
+/* ═══════════════════════════════════════════════
+   SUCCESS SCREEN
+   ═══════════════════════════════════════════════ */
+function showSuccessScreen(info) {
+  var html = '';
+  html += sr('Item', info.item);
+  html += sr('Action', info.action);
+  html += sr('Quantity Change', (info.delta >= 0 ? '+' : '') + info.delta);
+  html += sr('New Stock', info.newStock);
+  if (info.lot) html += sr('Lot Number', info.lot);
+  if (info.expiry) html += sr('Expiry', info.expiry);
+  html += sr('Scanned By', info.user);
+  html += sr('Time', new Date().toLocaleString());
+  var el = document.getElementById('success-details');
+  if (el) el.innerHTML = html;
   goScreen('screen-success');
 }
 
-// ============================================================
-// CAMERA
-// ============================================================
-var camStream=null,bdDetector=null,camFrame=null;
-async function startCamera(){
-  if(!('BarcodeDetector'in window)){
-    var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
-    document.getElementById('cam-file').click();
-    return;
-  }
-  try{
-    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    var vid=document.getElementById('camera-video');
-    vid.srcObject=camStream;
-    document.getElementById('camera-view').style.display='block';
-    var cb=document.getElementById('cam-btn');
-    if(cb){cb.innerHTML='<span class="material-icons-outlined">stop_circle</span>';cb.onclick=stopCamera;}
-    bdDetector=new BarcodeDetector({formats:['code_128','code_39','data_matrix','ean_13','ean_8','qr_code','upc_a','upc_e']});
-    scanFrame(vid);
-  }catch(e){console.error('Camera:',e);document.getElementById('cam-file').click();}
-}
-async function scanFrame(vid){
-  if(!camStream) return;
-  try{var bc=await bdDetector.detect(vid);if(bc&&bc.length>0){document.getElementById('scan-input').value=bc[0].rawValue;stopCamera();showToast('Barcode scanned');lookupBarcode();return;}}catch(e){}
-  camFrame=requestAnimationFrame(()=>scanFrame(vid));
-}
-function stopCamera(){
-  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
-  if(camFrame){cancelAnimationFrame(camFrame);camFrame=null;}
-  var cv=document.getElementById('camera-view');if(cv)cv.style.display='none';
-  var cb=document.getElementById('cam-btn');
-  if(cb){cb.innerHTML='<span class="material-icons-outlined">photo_camera</span>';cb.onclick=startCamera;}
-}
-async function handleCamFile(input){
-  var file=input.files[0];if(!file)return;
-  if('BarcodeDetector'in window){
-    try{var bm=await createImageBitmap(file);var d=new BarcodeDetector({formats:['code_128','code_39','data_matrix','ean_13','ean_8','qr_code','upc_a','upc_e']});var bc=await d.detect(bm);if(bc&&bc.length>0){document.getElementById('scan-input').value=bc[0].rawValue;showToast('Barcode detected');lookupBarcode();input.value='';return;}}catch(e){console.warn('Img decode:',e);}
-  }
-  showToast('Could not read barcode — type manually',true);input.value='';
+function sr(label, value) {
+  return '<div class="success-row"><span class="sr-label">' + esc(label) + '</span><span class="sr-value">' + esc(String(value)) + '</span></div>';
 }
 
-// ============================================================
-// NAVIGATION + HELPERS
-// ============================================================
-function goScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  var el=document.getElementById(id);
-  if(el) el.classList.add('active');
-  else console.warn('goScreen: missing',id);
-}
-function goScan(){
-  document.getElementById('scan-input').value='';
-  currentItem=null; currentTab=null;
-  goScreen('screen-scan');
-  setTimeout(()=>document.getElementById('scan-input').focus(),100);
-}
-function stepQ(id,d){var el=document.getElementById(id);if(el)el.value=Math.max(0,Math.round(((parseFloat(el.value)||0)+d)*100)/100);}
-function stepF(id,d){var el=document.getElementById(id);if(el)el.value=Math.max(0,Math.round(((parseFloat(el.value)||0)+d)*100)/100);}
-function setEl(id,val){var el=document.getElementById(id);if(el)el.textContent=val;}
-function setVal(id,val){var el=document.getElementById(id);if(el)el.value=val;}
-function getVal(id){var el=document.getElementById(id);return el?el.value:'';}
-var _loadTmr;
-function showLoad(msg){setEl('loading-text',msg||'Loading...');document.getElementById('loading').classList.add('show');}
-function hideLoad(){document.getElementById('loading').classList.remove('show');}
-var _toastTmr;
-function showToast(msg,isErr){
-  var t=document.getElementById('toast');if(!t)return;
-  t.textContent=msg; t.className='toast show'+(isErr?' err':'');
-  clearTimeout(_toastTmr); _toastTmr=setTimeout(()=>t.classList.remove('show'),3500);
+/* ═══════════════════════════════════════════════
+   CAMERA / BARCODE DETECTION
+   ═══════════════════════════════════════════════ */
+async function startCamera() {
+  // Check for BarcodeDetector (Android Chrome)
+  if ('BarcodeDetector' in window) {
+    try {
+      var video = document.getElementById('camera-video');
+      if (!video) return;
+      video.style.display = 'block';
+      cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      video.srcObject = cameraStream;
+      var detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'data_matrix', 'qr_code'] });
+      var scanning = true;
+      var scanFrame = async function() {
+        if (!scanning || !cameraStream) return;
+        try {
+          var barcodes = await detector.detect(video);
+          if (barcodes.length > 0) {
+            scanning = false;
+            var inp = document.getElementById('barcode-input');
+            if (inp) inp.value = barcodes[0].rawValue;
+            stopCamera();
+            lookupBarcode(barcodes[0].rawValue);
+            return;
+          }
+        } catch (e) { /* continue scanning */ }
+        requestAnimationFrame(scanFrame);
+      };
+      video.onloadedmetadata = function() { scanFrame(); };
+    } catch (e) {
+      console.warn('Camera not available:', e);
+      fallbackFileInput();
+    }
+  } else {
+    fallbackFileInput();
+  }
 }
 
-// Scan input listeners
-var si=document.getElementById('scan-input');
-si.addEventListener('keydown',function(e){if(e.key==='Enter')lookupBarcode();});
-var _scanTmr;
-si.addEventListener('input',function(){
-  clearTimeout(_scanTmr);
-  var v=si.value.trim();
-  if(v.length>=8){_scanTmr=setTimeout(function(){if(/^\d{12,13}$/.test(v)||v.length>=20)lookupBarcode();},300);}
+function fallbackFileInput() {
+  var fi = document.getElementById('camera-file');
+  if (fi) fi.click();
+}
+
+function stopCamera() {
+  if (cameraStream) {
+    var tracks = cameraStream.getTracks();
+    for (var i = 0; i < tracks.length; i++) tracks[i].stop();
+    cameraStream = null;
+  }
+  var video = document.getElementById('camera-video');
+  if (video) { video.style.display = 'none'; video.srcObject = null; }
+}
+
+/* ═══════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════ */
+function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function showSpinner(on) {
+  var el = document.getElementById('spinner');
+  if (el) el.className = on ? 'spinner-overlay active' : 'spinner-overlay';
+}
+
+function showToast(msg, type) {
+  var el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'toast toast-' + (type || 'info') + ' show';
+  setTimeout(function() { el.className = 'toast'; }, 3500);
+}
+
+/* ═══════════════════════════════════════════════
+   INPUT HANDLING
+   ═══════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function() {
+  var inp = document.getElementById('barcode-input');
+  if (inp) {
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        clearTimeout(debounceTimer);
+        lookupBarcode(inp.value.trim());
+      }
+    });
+    inp.addEventListener('input', function() {
+      clearTimeout(debounceTimer);
+      var val = inp.value.trim();
+      // Auto-trigger on UPC-A (12), EAN-13 (13), or GS1 (20+)
+      if (/^\d{12,13}$/.test(val) || val.length >= 20) {
+        debounceTimer = setTimeout(function() { lookupBarcode(val); }, 300);
+      }
+    });
+  }
+
+  // File input fallback for camera
+  var fi = document.getElementById('camera-file');
+  if (fi) {
+    fi.addEventListener('change', function(e) {
+      if (e.target.files && e.target.files[0]) {
+        // On iOS, user took a photo, but we can't decode barcode from image without a library
+        // Show toast directing them to type the barcode
+        showToast('Photo capture not supported on this device. Please type the barcode.', 'info');
+      }
+    });
+  }
+
+  // Init auth
+  initAuth();
 });
-
-window.addEventListener('load',initAuth);
 </script>
 </body>
 </html>
