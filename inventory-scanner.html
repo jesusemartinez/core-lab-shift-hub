@@ -751,17 +751,19 @@ async function lookupBarcode(){
 
   showLoading('Looking up barcode...');
   try{
-    // Try exact BarcodeString match first
-    const encoded = encodeURIComponent(`'${raw.replace(/'/g,"''")}'`);
+    // OData filter — build cleanly without encodeURIComponent wrapping quotes
+    var safeRaw = raw.replace(/'/g, "''");
+    var select = '$select=Title,CatalogID,Instrument,Unit,BarcodeType,CatalogNumber,GS1ParsesExpiry,GS1ParsesLot';
+
     let data = await spFetch(SP.lists.catalog,
-      `?$filter=BarcodeString eq ${encoded}&$top=1&$select=Title,CatalogID,Instrument,Unit,BarcodeType,CatalogNumber`);
+      "?$filter=BarcodeString eq '" + safeRaw + "'&$top=1&" + select);
 
     let catalogRow = data.value?.[0] || null;
 
     // If no match, try CatalogNumber
     if(!catalogRow){
       data = await spFetch(SP.lists.catalog,
-        `?$filter=CatalogNumber eq ${encoded}&$top=1&$select=Title,CatalogID,Instrument,Unit,BarcodeType,CatalogNumber`);
+        "?$filter=CatalogNumber eq '" + safeRaw + "'&$top=1&" + select);
       catalogRow = data.value?.[0] || null;
     }
 
@@ -778,9 +780,9 @@ async function lookupBarcode(){
     currentCatalog = catalogRow;
 
     // Now look up the inventory row
-    const catId = encodeURIComponent(`'${catalogRow.CatalogID.replace(/'/g,"''")}'`);
+    var safeCatId = catalogRow.CatalogID.replace(/'/g, "''");
     const invData = await spFetch(SP.lists.inventory,
-      `?$filter=CatalogID eq ${catId}&$top=1`);
+      "?$filter=CatalogID eq '" + safeCatId + "'&$top=1");
 
     const invRow = invData.value?.[0] || null;
     if(!invRow){
