@@ -182,7 +182,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .status-dot{width:6px;height:6px;border-radius:50%;background:var(--teal-light);display:inline-block;margin-right:4px;animation:pulse 2s ease infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 </style>
-<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 </head>
 <body>
 
@@ -204,7 +203,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   <div class="status-bar">
     <span><span class="status-dot"></span><span id="sp-status-text">Ready</span></span>
     <span id="sp-user-text"></span>
-    <button id="signin-btn" onclick="manualSignIn()" style="display:none;background:var(--purple);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">Sign In</button>
   </div>
   <div class="scan-area">
     <div class="scan-icon">📦</div>
@@ -387,80 +385,82 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 
 <script>
 // ============================================================
-// MSAL + SHAREPOINT CONFIG
+// SHAREPOINT CONFIG
 // ============================================================
-const MSAL_CONFIG = {
-  auth: {
-    clientId: '24c43cdb-d15a-42ff-9883-cd8c19965a54',
-    authority: 'https://login.microsoftonline.com/f6b6dd5b-f02f-441a-99a0-162ac5060bd2',
-    redirectUri: window.location.origin + window.location.pathname
-  },
-  cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
-};
-
 const SP = {
   siteUrl: 'https://uwnetid.sharepoint.com/sites/og_uw_renton_central_laboratory_-_core_lab',
+  clientId: '24c43cdb-d15a-42ff-9883-cd8c19965a54',
   lists: {
     inventory: 'ReagentInventory',
     log:       'InventoryLog',
     catalog:   'ReagentCatalog',
-  },
-  scopes: ['https://uwnetid.sharepoint.com/AllSites.Write', 'User.Read']
+  }
 };
 
-let msalInstance = null;
-let spToken = null;
-let spTokenExpiry = 0;
+var spToken = null;
+var spTokenExpiry = 0;
+var spUserName = '';
 
-async function initMSAL(){
-  msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
-  // Handle redirect response first — this fires after returning from login
+// Read SharePoint access token directly from MSAL localStorage cache
+// Works because Shift Hub (same domain, same clientId) already authenticated
+// and stored the token in localStorage with cacheLocation:'localStorage'
+function getTokenFromMSALCache(){
   try{
-    const response = await msalInstance.handleRedirectPromise();
-    if(response && response.account){
-      msalInstance.setActiveAccount(response.account);
-      spToken = response.accessToken;
-      spTokenExpiry = response.expiresOn?.getTime() || Date.now() + 3600000;
+    for(var i = 0; i < localStorage.length; i++){
+      var key = localStorage.key(i);
+      if(!key) continue;
+      // MSAL access token cache keys contain the clientId and 'accesstoken'
+      var keyLower = key.toLowerCase();
+      if(!keyLower.includes(SP.clientId.toLowerCase())) continue;
+      if(!keyLower.includes('accesstoken')) continue;
+      var entry = JSON.parse(localStorage.getItem(key));
+      if(!entry || !entry.secret) continue;
+      // Must be a SharePoint token
+      var target = (entry.target || '').toLowerCase();
+      if(!target.includes('sharepoint') && !target.includes('allsites')) continue;
+      // Check not expired (expiresOn is Unix timestamp in seconds)
+      var expiresOn = parseInt(entry.expiresOn) * 1000;
+      if(expiresOn < Date.now() + 30000) continue;
+      spToken = entry.secret;
+      spTokenExpiry = expiresOn;
+      console.log('Token from MSAL cache, expires:', new Date(expiresOn).toLocaleTimeString());
+      return entry.secret;
     }
-  } catch(e){ console.error('Redirect handle error:', e); }
-  const accounts = msalInstance.getAllAccounts();
-  if(accounts.length > 0) msalInstance.setActiveAccount(accounts[0]);
-  return accounts[0] || null;
+  } catch(e){ console.warn('Cache read error:', e); }
+  return null;
 }
 
-async function manualSignIn(){
+// Get user name from MSAL account cache
+function getUserFromMSALCache(){
   try{
-    await loginMSAL();
-    location.reload();
-  } catch(e){ showToast("Sign in failed — try again", true); }
+    for(var i = 0; i < localStorage.length; i++){
+      var key = localStorage.key(i);
+      if(!key) continue;
+      var keyLower = key.toLowerCase();
+      if(!keyLower.includes(SP.clientId.toLowerCase())) continue;
+      if(!keyLower.includes('account')) continue;
+      var entry = JSON.parse(localStorage.getItem(key));
+      if(!entry) continue;
+      return entry.name || entry.username || '';
+    }
+  } catch(e){}
+  return '';
 }
 
 async function getToken(){
-  if(spToken && Date.now() < spTokenExpiry - 60000) return spToken;
-  if(!msalInstance) await initMSAL();
-  const accounts = msalInstance.getAllAccounts();
-  if(!accounts.length){
-    // No account — redirect to Microsoft login
-    await msalInstance.loginRedirect({ scopes: SP.scopes });
-    return; // Page will redirect, execution stops here
-  }
-  try{
-    const result = await msalInstance.acquireTokenSilent({
-      scopes: SP.scopes,
-      account: msalInstance.getAllAccounts()[0]
-    });
-    spToken = result.accessToken;
-    spTokenExpiry = result.expiresOn?.getTime() || Date.now() + 3600000;
-    return spToken;
-  } catch(e){
-    // Silent failed — redirect to login
-    await msalInstance.acquireTokenRedirect({ scopes: SP.scopes });
-    return;
-  }
+  // Use cached in-memory token if still valid
+  if(spToken && Date.now() < spTokenExpiry - 30000) return spToken;
+  // Pull from MSAL localStorage cache (written by Shift Hub)
+  var token = getTokenFromMSALCache();
+  if(token) return token;
+  // No valid token found — Shift Hub session may have expired
+  throw new Error('No valid token — please open the Shift Hub first to authenticate');
 }
 
 // ============================================================
 // STATE
+
+
 // ============================================================
 let currentItem = null;   // matched ReagentInventory row
 let currentCatalog = null; // matched ReagentCatalog row
@@ -488,58 +488,57 @@ function scanAnother(){
 // ============================================================
 // SHAREPOINT REST API
 // ============================================================
-async function spFetch(listName, endpoint='', opts={}){
-  const token = await getToken();
-  const url = `${SP.siteUrl}/_api/web/lists/getbytitle('${listName}')/items${endpoint}`;
-  const headers = {
+// Shared SP fetch helper — mirrors Shift Hub exactly
+async function _spRequest(url, options){
+  var token = await getToken();
+  var headers = Object.assign({
     'Accept': 'application/json;odata=nometadata',
     'Content-Type': 'application/json;odata=nometadata',
-    'Authorization': `Bearer ${token}`,
-    ...(opts.headers||{})
-  };
-  const res = await fetch(url, {
-    method: opts.method || 'GET',
-    headers,
-    body: opts.body ? JSON.stringify(opts.body) : undefined
-  });
+    'Authorization': 'Bearer ' + token
+  }, (options && options.headers) || {});
+  var opts = Object.assign({}, options || {}, { headers: headers });
+  if(opts.body && typeof opts.body !== 'string') opts.body = JSON.stringify(opts.body);
+  var res = await fetch(url, opts);
   if(!res.ok){
-    const err = await res.text();
-    throw new Error(`SP ${res.status}: ${err}`);
+    var err = await res.text();
+    throw new Error('SP ' + res.status + ': ' + err);
   }
-  return opts.method && opts.method !== 'GET' ? res : res.json();
+  return res;
+}
+
+async function spFetch(listName, endpoint, opts){
+  endpoint = endpoint || '';
+  opts = opts || {};
+  var url = SP.siteUrl + "/_api/web/lists/getbytitle('" + listName + "')/items" + endpoint;
+  var res = await _spRequest(url, opts);
+  if(!opts.method || opts.method === 'GET') return res.json();
+  return res;
+}
+
+async function getDigest(){
+  var r = await _spRequest(SP.siteUrl + '/_api/contextinfo', { method: 'POST' });
+  var d = await r.json();
+  return d.FormDigestValue;
 }
 
 async function spPatch(listName, itemId, fields){
-  const token = await getToken();
-  const url = `${SP.siteUrl}/_api/web/lists/getbytitle('${listName}')/items(${itemId})`;
-  const res = await fetch(url, {
-    method: 'PATCH',
-    headers: {
-      'Accept': 'application/json;odata=nometadata',
-      'Content-Type': 'application/json;odata=nometadata',
-      'Authorization': `Bearer ${token}`,
-      'IF-MATCH': '*'
-    },
-    body: JSON.stringify(fields)
+  var digest = await getDigest();
+  var url = SP.siteUrl + "/_api/web/lists/getbytitle('" + listName + "')/items(" + itemId + ")";
+  return _spRequest(url, {
+    method: 'POST',
+    headers: { 'IF-MATCH': '*', 'X-HTTP-Method': 'MERGE', 'X-RequestDigest': digest },
+    body: fields
   });
-  if(!res.ok) throw new Error(`SP PATCH ${res.status}: ${await res.text()}`);
-  return res;
 }
 
 async function spPost(listName, fields){
-  const token = await getToken();
-  const url = `${SP.siteUrl}/_api/web/lists/getbytitle('${listName}')/items`;
-  const res = await fetch(url, {
+  var digest = await getDigest();
+  var url = SP.siteUrl + "/_api/web/lists/getbytitle('" + listName + "')/items";
+  return _spRequest(url, {
     method: 'POST',
-    headers: {
-      'Accept': 'application/json;odata=nometadata',
-      'Content-Type': 'application/json;odata=nometadata',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(fields)
+    headers: { 'X-RequestDigest': digest },
+    body: fields
   });
-  if(!res.ok) throw new Error(`SP POST ${res.status}: ${await res.text()}`);
-  return res;
 }
 
 // ============================================================
@@ -831,27 +830,24 @@ function showToast(msg, isError=false){
 window.addEventListener('load', async ()=>{
   showLoading('Connecting to SharePoint...');
   try{
-    await initMSAL();
-    let accounts = msalInstance.getAllAccounts();
-    if(accounts.length === 0){
-      document.getElementById('sp-status-text').textContent = 'Sign in required';
-      document.getElementById('signin-btn').style.display = 'inline-block';
+    var token = getTokenFromMSALCache();
+    if(!token){
+      document.getElementById('sp-status-text').textContent = 'Open Shift Hub first to sign in';
       hideLoading();
+      showToast('Open the Shift Hub to authenticate, then return here');
       return;
     }
-    const account = accounts[0];
-    document.getElementById('sp-user-text').textContent = account?.name || account?.username || '';
-    await getToken();
+    spUserName = getUserFromMSALCache();
+    document.getElementById('sp-user-text').textContent = spUserName;
     await spFetch(SP.lists.inventory, '?$top=1&$select=Title');
     document.getElementById('sp-status-text').textContent = 'SharePoint connected';
-    document.getElementById('signin-btn').style.display = 'none';
     hideLoading();
     scanInput.focus();
   } catch(e){
     hideLoading();
     console.error('Init error:', e);
-    document.getElementById('sp-status-text').textContent = 'Sign in required';
-    document.getElementById('signin-btn').style.display = 'inline-block';
+    document.getElementById('sp-status-text').textContent = e.message || 'Connection error';
+    showToast('Could not connect — open Shift Hub first', true);
   }
 });
 </script>
