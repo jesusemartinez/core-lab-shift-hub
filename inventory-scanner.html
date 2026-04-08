@@ -3,421 +3,522 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Inventory Scanner">
+<meta name="theme-color" content="#4C1D95">
+<link rel="manifest" href="manifest.json">
 <title>Renton Inventory Scanner</title>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 <style>
-.mi{ font-family:'Material Icons Outlined';font-style:normal;font-size:22px;
-     line-height:1;vertical-align:middle;display:inline-flex;align-items:center; }
-.mi-sm{ font-size:18px; }
-.mi-lg{ font-size:36px; }
-
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --purple:#4C1D95;
-  --purple-light:#7C3AED;
-  --teal:#0D7A5F;
-  --teal-light:#10B981;
-  --warning:#B45309;
-  --critical:#D1242F;
-  --bg:#1A1C20;
-  --bg-card:#242629;
-  --bg-input:#2E3035;
-  --border:#3A3D44;
-  --text:#F0F1F4;
-  --text-secondary:#A0A6B4;
-  --text-muted:#5E6478;
-  --radius:12px;
-  --font:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --purple:#4C1D95;--purple-light:#7C3AED;
+  --teal:#0D7A5F;--teal-light:#10B981;
+  --receive:#0D7A5F;--remove:#B91C1C;--adjust:#92400E;
+  --warning:#B45309;--critical:#D1242F;
+  --bg:#1A1C20;--bg-card:#242629;--bg-input:#2E3035;
+  --border:#3A3D44;--text:#F0F1F4;--text-secondary:#A0A6B4;--text-muted:#5E6478;
+  --radius:14px;--font:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
 html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden}
-/* SCREENS */
-.screen{display:none;flex-direction:column;height:100vh;max-width:480px;margin:0 auto;position:relative}
+.screen{display:none;flex-direction:column;height:100vh;max-width:480px;margin:0 auto}
 .screen.active{display:flex}
+.material-icons-outlined{font-family:'Material Icons Outlined';font-style:normal;font-weight:normal;
+  font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;
+  white-space:nowrap;word-wrap:normal;direction:ltr;-webkit-font-feature-settings:'liga';
+  -webkit-font-smoothing:antialiased;}
+
 /* HEADER */
-.hdr{
-  background:var(--purple);
-  padding:16px 20px 14px;
-  display:flex;align-items:center;gap:12px;
-  flex-shrink:0;
-}
-.hdr-back{
-  background:rgba(255,255,255,.15);border:none;color:#fff;
-  width:36px;height:36px;border-radius:8px;font-size:18px;
-  cursor:pointer;display:grid;place-items:center;flex-shrink:0;
-  transition:background .15s;
-}
-.hdr-back:hover{background:rgba(255,255,255,.25)}
-.hdr-title{font-size:17px;font-weight:700;color:#fff;flex:1}
-.hdr-sub{font-size:11px;color:rgba(255,255,255,.6);margin-top:1px}
+.hdr{padding:16px 20px 14px;display:flex;align-items:center;gap:12px;flex-shrink:0;
+  background:var(--purple);}
 .hdr-teal{background:var(--teal)}
-/* SCROLL BODY */
+.hdr-back{background:rgba(255,255,255,.15);border:none;color:#fff;width:38px;height:38px;
+  border-radius:10px;cursor:pointer;display:grid;place-items:center;flex-shrink:0;transition:.15s}
+.hdr-back:active{background:rgba(255,255,255,.3)}
+.hdr-title{font-size:17px;font-weight:700;color:#fff;flex:1}
+.hdr-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:2px}
+
+/* STATUS */
+.status-bar{background:var(--bg-card);border-bottom:1px solid var(--border);
+  padding:8px 20px;display:flex;align-items:center;justify-content:space-between;
+  font-size:11px;color:var(--text-muted);flex-shrink:0;}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--teal-light);
+  display:inline-block;margin-right:5px;animation:pulse 2s ease infinite}
+.status-dot.red{background:var(--critical);animation:none}
+.status-dot.yellow{background:#F59E0B;animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* INSTALL BANNER */
+.install-banner{display:none;background:var(--purple);padding:10px 16px;
+  align-items:center;justify-content:space-between;gap:12px;flex-shrink:0}
+.install-banner.show{display:flex}
+
+/* BODY */
 .body{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
 .body::-webkit-scrollbar{width:4px}
 .body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-/* CARDS */
+
+/* ACTION SELECT SCREEN */
+.action-grid{display:grid;grid-template-columns:1fr;gap:14px;padding:24px 20px}
+.action-card{background:var(--bg-card);border:1.5px solid var(--border);border-radius:var(--radius);
+  padding:24px 20px;display:flex;align-items:center;gap:18px;cursor:pointer;
+  transition:all .15s;-webkit-tap-highlight-color:transparent}
+.action-card:active{transform:scale(.97)}
+.action-card.receive{border-color:rgba(13,122,95,.4)}
+.action-card.receive:hover,.action-card.receive:active{background:rgba(13,122,95,.08)}
+.action-card.remove{border-color:rgba(185,28,28,.4)}
+.action-card.remove:hover,.action-card.remove:active{background:rgba(185,28,28,.08)}
+.action-card.adjust{border-color:rgba(146,64,14,.4)}
+.action-card.adjust:hover,.action-card.adjust:active{background:rgba(146,64,14,.08)}
+.action-icon{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;flex-shrink:0}
+.action-icon.receive{background:rgba(13,122,95,.15)}
+.action-icon.remove{background:rgba(185,28,28,.12)}
+.action-icon.adjust{background:rgba(146,64,14,.12)}
+.action-title{font-size:17px;font-weight:700}
+.action-desc{font-size:13px;color:var(--text-secondary);margin-top:3px;line-height:1.4}
+
+/* SCAN SCREEN */
+.scan-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;padding:24px 20px}
+.scan-icon-box{width:110px;height:110px;border-radius:24px;
+  background:rgba(13,122,95,.1);border:1.5px solid rgba(13,122,95,.25);
+  display:grid;place-items:center}
+.scan-hint{font-size:14px;color:var(--text-secondary);text-align:center;line-height:1.5}
+.scan-bottom{padding:0 20px 24px;display:flex;flex-direction:column;gap:10px}
+.scan-input-row{display:flex;gap:8px}
+.scan-input-row input{flex:1;background:var(--bg-input);border:1px solid var(--border);
+  border-radius:10px;padding:13px 14px;font-size:15px;color:var(--text);
+  font-family:'Courier New',monospace;outline:none;transition:.15s}
+.scan-input-row input:focus{border-color:var(--purple-light)}
+.cam-btn{background:var(--bg-input);border:1px solid var(--border);border-radius:10px;
+  color:var(--text);padding:0 14px;cursor:pointer;display:grid;place-items:center;
+  flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.cam-btn:active{background:var(--border)}
+
+/* CAMERA */
+.camera-view{display:none;border-radius:12px;overflow:hidden;position:relative;background:#000;margin:0 20px 10px}
+.camera-view video{width:100%;max-height:200px;object-fit:cover;display:block}
+.camera-overlay{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.camera-frame{width:65%;height:45%;border:2px solid rgba(16,185,129,.9);border-radius:8px;
+  box-shadow:0 0 0 2000px rgba(0,0,0,.45)}
+.camera-close{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.55);
+  border:none;color:#fff;border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer}
+.camera-status{position:absolute;bottom:8px;left:0;right:0;text-align:center;
+  color:rgba(255,255,255,.8);font-size:12px}
+
+/* ITEM CARD */
+.item-card{background:linear-gradient(135deg,rgba(76,29,149,.14),rgba(13,122,95,.08));
+  border:1px solid rgba(76,29,149,.25);border-radius:var(--radius);padding:18px}
+.item-name{font-size:18px;font-weight:700;margin-bottom:6px;line-height:1.3}
+.item-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;
+  font-size:11px;font-weight:700;letter-spacing:.04em}
+.badge-teal{background:rgba(13,122,95,.15);color:var(--teal-light);border:1px solid rgba(13,122,95,.3)}
+.badge-purple{background:rgba(76,29,149,.18);color:#A78BFA;border:1px solid rgba(76,29,149,.3)}
+.badge-gray{background:rgba(255,255,255,.07);color:var(--text-secondary);border:1px solid var(--border)}
+.stock-row{display:flex;justify-content:space-between;align-items:flex-end;
+  padding-top:12px;border-top:1px solid rgba(255,255,255,.07)}
+.stock-num{font-size:36px;font-weight:800;line-height:1}
+.stock-num.low{color:#F59E0B}
+.stock-num.critical{color:var(--critical)}
+.stock-num.ok{color:var(--teal-light)}
+.stock-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.par-info{text-align:right}
+.par-val{font-size:18px;font-weight:700}
+.par-lbl{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+
+/* FIELDS */
 .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
-.card-title{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px}
-/* FIELD */
+.card-title{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--text-muted);margin-bottom:14px}
 .field{display:flex;flex-direction:column;gap:6px}
+.field+.field{margin-top:14px}
 .field label{font-size:12px;font-weight:600;color:var(--text-secondary)}
 .field input,.field select,.field textarea{
-  background:var(--bg-input);border:1px solid var(--border);
-  border-radius:8px;padding:12px 14px;
-  font-size:15px;color:var(--text);font-family:var(--font);
-  width:100%;outline:none;
-  transition:border-color .15s;
-  -webkit-appearance:none;
-}
-.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23A0A6B4' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+  background:var(--bg-input);border:1px solid var(--border);border-radius:8px;
+  padding:12px 14px;font-size:15px;color:var(--text);font-family:var(--font);
+  width:100%;outline:none;transition:.15s;-webkit-appearance:none}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23A0A6B4' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--purple-light)}
-.field input.scan-field{font-family:'Courier New',monospace;font-size:13px;letter-spacing:.04em}
-.field textarea{resize:none;min-height:80px}
+.field textarea{resize:none;min-height:72px}
+.field-hint{font-size:11px;color:var(--text-muted);margin-top:4px}
+
+/* QTY STEPPER */
+.qty-stepper{display:flex;align-items:center;gap:0;border:1px solid var(--border);
+  border-radius:8px;overflow:hidden}
+.qty-stepper button{background:var(--bg-input);border:none;color:var(--text);
+  width:48px;height:48px;font-size:22px;cursor:pointer;flex-shrink:0;
+  display:grid;place-items:center;-webkit-tap-highlight-color:transparent;transition:.1s}
+.qty-stepper button:active{background:var(--border)}
+.qty-stepper input{flex:1;background:var(--bg-input);border:none;border-left:1px solid var(--border);
+  border-right:1px solid var(--border);text-align:center;font-size:22px;font-weight:700;
+  color:var(--text);padding:0;height:48px;outline:none}
+
 /* BUTTONS */
-.btn{
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  width:100%;padding:16px;border-radius:var(--radius);
-  font-size:16px;font-weight:700;font-family:var(--font);
-  border:none;cursor:pointer;transition:all .15s;
-  -webkit-tap-highlight-color:transparent;
-}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:16px;border-radius:var(--radius);font-size:16px;
+  font-weight:700;font-family:var(--font);border:none;cursor:pointer;
+  transition:all .15s;-webkit-tap-highlight-color:transparent}
 .btn:active{transform:scale(.97)}
-.btn-primary{background:var(--teal);color:#fff}
-.btn-primary:hover{background:#0a6650}
+.btn-receive{background:var(--receive);color:#fff}
+.btn-remove{background:var(--remove);color:#fff}
+.btn-adjust{background:var(--adjust);color:#fff}
 .btn-purple{background:var(--purple);color:#fff}
-.btn-purple:hover{background:#3b1178}
 .btn-ghost{background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border)}
-.btn-ghost:hover{border-color:var(--text-muted);color:var(--text)}
-.btn-critical{background:var(--critical);color:#fff}
-/* SCAN AREA */
-.scan-area{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:24px;padding:32px 20px;
-}
-.scan-icon{
-  width:120px;height:120px;border-radius:24px;
-  background:rgba(13,122,95,.12);border:2px solid rgba(13,122,95,.3);
-  display:grid;place-items:center;font-size:52px;
-}
-.scan-hint{font-size:14px;color:var(--text-secondary);text-align:center;line-height:1.5}
-.scan-input-wrap{width:100%;padding:0 20px 20px}
-/* BADGE */
-.badge{
-  display:inline-flex;align-items:center;padding:3px 10px;
-  border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em;
-}
-.badge-teal{background:rgba(13,122,95,.15);color:var(--teal-light);border:1px solid rgba(13,122,95,.3)}
-.badge-purple{background:rgba(76,29,149,.2);color:#A78BFA;border:1px solid rgba(76,29,149,.3)}
-.badge-warn{background:rgba(180,83,9,.12);color:#F59E0B;border:1px solid rgba(180,83,9,.3)}
-/* ITEM PREVIEW */
-.item-preview{
-  background:linear-gradient(135deg,rgba(76,29,149,.15),rgba(13,122,95,.1));
-  border:1px solid rgba(76,29,149,.3);
-  border-radius:var(--radius);padding:16px;
-}
-.item-name{font-size:18px;font-weight:700;margin-bottom:4px}
-.item-meta{font-size:13px;color:var(--text-secondary);display:flex;gap:8px;flex-wrap:wrap}
-.item-stock{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-top:12px;padding-top:12px;border-top:1px solid var(--border);
-}
-.stock-val{font-size:24px;font-weight:800;color:var(--teal-light)}
-.stock-lbl{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em}
+
+/* ACTION INDICATOR */
+.action-indicator{display:flex;align-items:center;gap:8px;padding:10px 14px;
+  border-radius:10px;font-size:13px;font-weight:700;flex-shrink:0;margin:0 20px}
+.action-indicator.receive{background:rgba(13,122,95,.12);color:var(--teal-light);border:1px solid rgba(13,122,95,.25)}
+.action-indicator.remove{background:rgba(185,28,28,.1);color:#FCA5A5;border:1px solid rgba(185,28,28,.25)}
+.action-indicator.adjust{background:rgba(146,64,14,.1);color:#FCD34D;border:1px solid rgba(146,64,14,.25)}
+
 /* SUCCESS */
-.success-body{
-  flex:1;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:16px;padding:32px 20px;text-align:center;
-}
-.success-icon{
-  width:100px;height:100px;border-radius:50%;
-  background:rgba(13,122,95,.15);border:2px solid rgba(13,122,95,.4);
-  display:grid;place-items:center;font-size:48px;margin-bottom:8px;
-}
+.success-body{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:14px;padding:32px 20px;text-align:center}
+.success-icon{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;margin-bottom:4px}
+.success-icon.receive{background:rgba(13,122,95,.15);border:2px solid rgba(13,122,95,.4)}
+.success-icon.remove{background:rgba(185,28,28,.1);border:2px solid rgba(185,28,28,.3)}
+.success-icon.adjust{background:rgba(146,64,14,.1);border:2px solid rgba(146,64,14,.3)}
 .success-title{font-size:24px;font-weight:800}
-.success-detail{font-size:14px;color:var(--text-secondary);line-height:1.6;max-width:280px}
-.success-log{
-  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
-  padding:14px 16px;width:100%;text-align:left;
-}
-.success-log-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05)}
-.success-log-row:last-child{border-bottom:none}
-.success-log-row .lbl{color:var(--text-muted)}
-.success-log-row .val{color:var(--text);font-weight:600}
+.success-log{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;width:100%;text-align:left}
+.log-row{display:flex;justify-content:space-between;font-size:13px;
+  padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.log-row:last-child{border-bottom:none}
+.log-row .lbl{color:var(--text-muted)}
+.log-row .val{color:var(--text);font-weight:600;text-align:right;max-width:60%}
+
 /* LOADING */
-.loading{
-  display:none;position:fixed;inset:0;
-  background:rgba(26,28,32,.85);backdrop-filter:blur(4px);
-  z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:12px;
-}
+.loading{display:none;position:fixed;inset:0;background:rgba(26,28,32,.88);
+  backdrop-filter:blur(4px);z-index:999;flex-direction:column;align-items:center;
+  justify-content:center;gap:14px}
 .loading.show{display:flex}
-.spinner{
-  width:40px;height:40px;border-radius:50%;
+.spinner{width:40px;height:40px;border-radius:50%;
   border:3px solid var(--border);border-top-color:var(--teal-light);
-  animation:spin .8s linear infinite;
-}
+  animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{font-size:14px;color:var(--text-secondary)}
+
 /* TOAST */
-.toast{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);
-  background:#1A1C20;border:1px solid var(--border);
-  color:var(--text);padding:12px 20px;border-radius:var(--radius);
-  font-size:14px;font-weight:500;
-  box-shadow:0 8px 32px rgba(0,0,0,.4);
-  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
-  z-index:998;white-space:nowrap;max-width:320px;text-align:center;
-}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);
+  background:#1A1C20;border:1px solid var(--border);color:var(--text);
+  padding:12px 20px;border-radius:var(--radius);font-size:14px;font-weight:500;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  z-index:998;white-space:nowrap;max-width:320px;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.error{border-color:rgba(209,36,47,.4);color:#F87171}
-/* ALERT */
-.alert{
-  background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.3);
-  border-radius:8px;padding:12px 14px;font-size:13px;color:#F59E0B;
-  line-height:1.5;
-}
+.toast.success{border-color:rgba(13,122,95,.4);color:var(--teal-light)}
+
 /* DIVIDER */
 .divider{display:flex;align-items:center;gap:12px;color:var(--text-muted);font-size:12px}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
 /* FOOTER */
-.footer{padding:16px 20px;flex-shrink:0}
-/* STATUS BAR */
-.status-bar{
-  background:var(--bg-card);border-bottom:1px solid var(--border);
-  padding:8px 20px;display:flex;align-items:center;justify-content:space-between;
-  font-size:11px;color:var(--text-muted);flex-shrink:0;
-}
-.status-dot{width:6px;height:6px;border-radius:50%;background:var(--teal-light);display:inline-block;margin-right:4px;animation:pulse 2s ease infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.footer{padding:16px 20px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+
+/* AUTH SCREEN */
+.auth-center{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:20px;padding:32px 20px;text-align:center}
+.auth-logo{width:80px;height:80px;border-radius:20px;background:var(--purple);
+  display:grid;place-items:center;margin-bottom:8px}
 </style>
 </head>
 <body>
 
-<!-- LOADING OVERLAY -->
 <div class="loading" id="loading">
   <div class="spinner"></div>
-  <div class="loading-text" id="loading-text">Connecting to SharePoint...</div>
+  <div class="loading-text" id="loading-text">Connecting...</div>
 </div>
 <div class="toast" id="toast"></div>
 
-<!-- ===== SCREEN 1: SCAN ===== -->
-<div class="screen active" id="screen-scan">
-  <div class="hdr">
-    <div>
-      <div class="hdr-title">Inventory Scanner</div>
-      <div class="hdr-sub">Renton Core Lab · UW Medicine DLMP</div>
+<!-- ===== AUTH SCREEN ===== -->
+<div class="screen active" id="screen-auth">
+  <div class="hdr"><div class="hdr-title">Inventory Scanner</div></div>
+  <div class="auth-center">
+    <div class="auth-logo">
+      <span class="material-icons-outlined" style="font-size:40px;color:#fff">qr_code_scanner</span>
     </div>
-  </div>
-  <div class="status-bar">
-    <span><span class="status-dot"></span><span id="sp-status-text">Ready</span></span>
-    <span id="sp-user-text"></span>
-  </div>
-  <div class="scan-area">
-    <div class="scan-icon"><span class="material-icons-outlined" style="font-size:52px;color:var(--teal-light)">inventory_2</span></div>
-    <div class="scan-hint">
-      Point barcode scanner at a reagent label,<br>or type/paste a barcode string below
+    <div style="font-size:22px;font-weight:800">Renton Core Lab</div>
+    <div style="font-size:14px;color:var(--text-secondary);line-height:1.6;max-width:280px">
+      Sign in with your UW Medicine account to access the inventory scanner.
     </div>
-  </div>
-  <div class="scan-input-wrap">
-    <div class="field" style="margin-bottom:12px">
-      <label>Barcode / UPC</label>
-      <div style="display:flex;gap:8px;align-items:stretch">
-        <input type="text" id="scan-input" class="scan-field" style="flex:1"
-          placeholder="Scan label or type barcode here..."
-          autocomplete="off" autocorrect="off" spellcheck="false">
-        <button id="camera-btn" onclick="startCamera()" style="
-          background:var(--bg-input);border:1px solid var(--border);border-radius:8px;
-          color:var(--text);font-size:22px;padding:0 14px;cursor:pointer;flex-shrink:0;
-          display:flex;align-items:center;justify-content:center;
-          -webkit-tap-highlight-color:transparent;" title="Scan with camera"><span class="material-icons-outlined" style="font-size:22px">photo_camera</span></button>
-      </div>
-    </div>
-    <!-- Camera view (hidden by default) -->
-    <div id="camera-container" style="display:none;margin-bottom:12px;border-radius:12px;overflow:hidden;position:relative;background:#000">
-      <video id="camera-video" style="width:100%;max-height:220px;object-fit:cover;display:block" playsinline autoplay muted></video>
-      <div style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center">
-        <div style="width:70%;height:40%;border:2px solid rgba(16,185,129,.8);border-radius:8px;box-shadow:0 0 0 2000px rgba(0,0,0,.4)"></div>
-      </div>
-      <button onclick="stopCamera()" style="
-        position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);
-        border:none;color:#fff;border-radius:6px;padding:6px 10px;
-        font-size:12px;cursor:pointer;">✕ Close</button>
-      <div id="camera-status" style="position:absolute;bottom:8px;left:0;right:0;text-align:center;color:rgba(255,255,255,.8);font-size:12px">
-        Point camera at barcode
-      </div>
-    </div>
-    <!-- Fallback file input for iOS -->
-    <input type="file" id="camera-file-input" accept="image/*" capture="environment"
-      style="display:none" onchange="handleCameraFile(this)">
-    <!-- iOS-specific camera input — forces camera not photo library -->
-    <input type="file" id="camera-ios-input" accept="image/*" capture
-      style="display:none" onchange="handleCameraFile(this)">
-    <button class="btn btn-primary" onclick="lookupBarcode()"><span class="material-icons-outlined mi-sm">search</span> Look Up Item</button>
-    <div style="margin:14px 0"><div class="divider">or</div></div>
-    <button class="btn btn-ghost" onclick="resetManualScreen();goScreen('screen-manual')"><span class="material-icons-outlined mi-sm">edit</span> Enter Manually</button>
+    <button class="btn btn-purple" style="max-width:280px" onclick="triggerLogin()">
+      <span class="material-icons-outlined" style="font-size:20px">login</span>
+      Sign in with Microsoft
+    </button>
+    <div style="font-size:12px;color:var(--text-muted)">UW Medicine DLMP · Renton Central Lab</div>
   </div>
 </div>
 
-<!-- ===== SCREEN 2: CONFIRM ===== -->
+<!-- ===== ACTION SELECT SCREEN ===== -->
+<div class="screen" id="screen-action">
+  <div class="hdr">
+    <div>
+      <div class="hdr-title">Inventory Scanner</div>
+      <div class="hdr-sub" id="user-name-display">Renton Core Lab · UW Medicine DLMP</div>
+    </div>
+  </div>
+  <div class="status-bar">
+    <span><span class="status-dot" id="sp-dot"></span><span id="sp-status-text">Connecting...</span></span>
+    <span id="sp-user-text" style="font-size:10px"></span>
+  </div>
+  <div class="install-banner" id="install-banner">
+    <span style="font-size:13px;color:#fff">Add to home screen</span>
+    <div style="display:flex;gap:8px">
+      <button onclick="installApp()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">Install</button>
+      <button onclick="dismissInstall()" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:20px;cursor:pointer;padding:0 4px;line-height:1">×</button>
+    </div>
+  </div>
+  <div style="padding:20px 20px 8px">
+    <div style="font-size:13px;color:var(--text-muted);font-weight:600;letter-spacing:.05em;text-transform:uppercase">What are you doing?</div>
+  </div>
+  <div class="action-grid">
+    <div class="action-card receive" onclick="selectAction('receive')">
+      <div class="action-icon receive">
+        <span class="material-icons-outlined" style="font-size:28px;color:var(--teal-light)">add_circle</span>
+      </div>
+      <div>
+        <div class="action-title" style="color:var(--teal-light)">Receive</div>
+        <div class="action-desc">Adding new stock — shipment arrived, restocking</div>
+      </div>
+    </div>
+    <div class="action-card remove" onclick="selectAction('remove')">
+      <div class="action-icon remove">
+        <span class="material-icons-outlined" style="font-size:28px;color:#F87171">remove_circle</span>
+      </div>
+      <div>
+        <div class="action-title" style="color:#F87171">Remove</div>
+        <div class="action-desc">Pulling from stock — used up, expired, discarded</div>
+      </div>
+    </div>
+    <div class="action-card adjust" onclick="selectAction('adjust')">
+      <div class="action-icon adjust">
+        <span class="material-icons-outlined" style="font-size:28px;color:#FCD34D">tune</span>
+      </div>
+      <div>
+        <div class="action-title" style="color:#FCD34D">Adjust</div>
+        <div class="action-desc">Correct the count — physical inventory, discrepancy</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCAN SCREEN ===== -->
+<div class="screen" id="screen-scan">
+  <div class="hdr">
+    <button class="hdr-back" onclick="goScreen('screen-action')">
+      <span class="material-icons-outlined" style="font-size:20px">arrow_back</span>
+    </button>
+    <div>
+      <div class="hdr-title" id="scan-hdr-title">Scan Item</div>
+      <div class="hdr-sub" id="scan-hdr-sub">Point scanner at barcode</div>
+    </div>
+  </div>
+  <div id="action-indicator" class="action-indicator receive">
+    <span class="material-icons-outlined" style="font-size:18px">add_circle</span>
+    <span id="action-indicator-text">Receiving stock</span>
+  </div>
+  <div class="scan-area">
+    <div class="scan-icon-box">
+      <span class="material-icons-outlined" style="font-size:52px;color:var(--teal-light)">qr_code_scanner</span>
+    </div>
+    <div class="scan-hint">Point barcode scanner at label,<br>or type/paste a barcode below</div>
+  </div>
+  <!-- Camera view -->
+  <div class="camera-view" id="camera-view">
+    <video id="camera-video" playsinline autoplay muted></video>
+    <div class="camera-overlay"><div class="camera-frame"></div></div>
+    <button class="camera-close" onclick="stopCamera()">✕ Close</button>
+    <div class="camera-status" id="camera-status">Aim at barcode</div>
+  </div>
+  <input type="file" id="camera-file-input" accept="image/*" capture="environment" style="display:none" onchange="handleCameraFile(this)">
+  <input type="file" id="camera-ios-input" accept="image/*" capture style="display:none" onchange="handleCameraFile(this)">
+  <div class="scan-bottom">
+    <div class="scan-input-row">
+      <input type="text" id="scan-input" placeholder="Scan or type barcode..."
+        autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="cam-btn" id="camera-btn" onclick="startCamera()">
+        <span class="material-icons-outlined">photo_camera</span>
+      </button>
+    </div>
+    <button class="btn btn-receive" id="scan-lookup-btn" onclick="lookupBarcode()">
+      <span class="material-icons-outlined" style="font-size:20px">search</span>
+      Look Up Item
+    </button>
+    <div class="divider">or</div>
+    <button class="btn btn-ghost" onclick="resetManualScreen();goScreen('screen-manual')">
+      <span class="material-icons-outlined" style="font-size:20px">edit</span>
+      Enter Manually
+    </button>
+  </div>
+</div>
+
+<!-- ===== CONFIRM SCREEN ===== -->
 <div class="screen" id="screen-confirm">
   <div class="hdr">
-    <button class="hdr-back" onclick="goScreen('screen-scan')">←</button>
+    <button class="hdr-back" onclick="goScreen('screen-scan')">
+      <span class="material-icons-outlined" style="font-size:20px">arrow_back</span>
+    </button>
     <div>
       <div class="hdr-title">Confirm Entry</div>
       <div class="hdr-sub">Review and submit</div>
     </div>
   </div>
   <div class="body">
-    <div class="item-preview" id="item-preview">
+    <div class="item-card">
       <div class="item-name" id="preview-name">—</div>
-      <div class="item-meta">
+      <div class="item-badges">
         <span class="badge badge-purple" id="preview-instrument">—</span>
         <span class="badge badge-teal" id="preview-unit">—</span>
-        <span class="badge badge-warn" id="preview-type">—</span>
+        <span class="badge badge-gray" id="preview-type">—</span>
       </div>
-      <div class="item-stock">
+      <div class="stock-row">
         <div>
-          <div class="stock-val" id="preview-stock">0</div>
-          <div class="stock-lbl">Current Stock</div>
+          <div class="stock-num ok" id="preview-stock">0</div>
+          <div class="stock-label">Current Stock</div>
         </div>
-        <div style="text-align:right">
-          <div style="font-size:13px;color:var(--text-muted)">Min PAR</div>
-          <div style="font-size:18px;font-weight:700" id="preview-par">—</div>
+        <div class="par-info">
+          <div class="par-val" id="preview-par">—</div>
+          <div class="par-lbl">Min PAR</div>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title">Transaction Details</div>
-      <div style="display:flex;flex-direction:column;gap:14px">
-        <div class="field">
-          <label>Action</label>
-          <select id="action-select" onchange="toggleReasonField()">
-            <option value="Received">Received — Add to stock</option>
-            <option value="Opened">Opened — Mark as open</option>
-            <option value="Adjusted">Adjusted — Correct stock count</option>
-            <option value="Discarded">Discarded — Remove from stock</option>
-          </select>
+      <div class="card-title" id="confirm-card-title">Transaction Details</div>
+      <div class="field">
+        <label>Quantity</label>
+        <div class="qty-stepper">
+          <button onclick="stepQty(-1)">−</button>
+          <input type="number" id="qty-input" value="1" min="0" step="0.1">
+          <button onclick="stepQty(1)">+</button>
         </div>
-        <div class="field" id="qty-field">
-          <label>Quantity</label>
-          <input type="number" id="qty-input" value="1" min="0" step="0.1" placeholder="Enter quantity">
-        </div>
-        <div class="field">
-          <label>Lot Number <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
-          <input type="text" id="lot-input" placeholder="e.g. LOT-2026-001">
-        </div>
-        <div class="field" id="expiry-field">
-          <label>Expiry Date <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
-          <input type="date" id="expiry-input">
-        </div>
-        <div class="field" id="reason-field" style="display:none">
-          <label>Reason <span style="color:var(--critical);font-weight:400">*required</span></label>
-          <textarea id="reason-input" placeholder="Enter reason for adjustment or discard"></textarea>
-        </div>
+      </div>
+      <div class="field" id="adjust-field" style="display:none">
+        <label>Set stock to this exact amount</label>
+        <div class="field-hint">Current stock will be replaced with this value</div>
+      </div>
+      <div class="field">
+        <label>Lot Number <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <input type="text" id="lot-input" placeholder="e.g. LOT-2026-001">
+      </div>
+      <div class="field">
+        <label>Expiry Date <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <input type="date" id="expiry-input">
+      </div>
+      <div class="field" id="reason-field">
+        <label>Reason <span style="color:var(--text-muted);font-weight:400" id="reason-optional-label">(optional)</span></label>
+        <textarea id="reason-input" placeholder="e.g. Used up, expired, damaged..."></textarea>
       </div>
     </div>
   </div>
   <div class="footer">
-    <button class="btn btn-primary" onclick="submitEntry()"><span class="material-icons-outlined mi-sm">check_circle</span> Submit Entry</button>
+    <button class="btn btn-receive" id="submit-btn" onclick="submitEntry()">
+      <span class="material-icons-outlined" style="font-size:20px">check_circle</span>
+      <span id="submit-btn-label">Submit</span>
+    </button>
   </div>
 </div>
 
-<!-- ===== SCREEN 3: MANUAL ===== -->
+<!-- ===== NEW ITEM SCREEN ===== -->
 <div class="screen" id="screen-manual">
   <div class="hdr">
-    <button class="hdr-back" onclick="goScreen('screen-scan')">←</button>
+    <button class="hdr-back" onclick="goScreen('screen-scan')">
+      <span class="material-icons-outlined" style="font-size:20px">arrow_back</span>
+    </button>
     <div>
       <div class="hdr-title">New Item</div>
       <div class="hdr-sub">Add to catalog &amp; log entry</div>
     </div>
   </div>
   <div class="body">
-    <div class="alert" id="manual-alert">
+    <div style="background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.3);border-radius:10px;
+      padding:12px 14px;font-size:13px;color:#F59E0B;line-height:1.5" id="manual-alert">
       Barcode not in catalog. Enter details to add it.
     </div>
     <div class="card">
       <div class="card-title">Catalog Details
         <span id="manual-barcode-type" class="badge badge-teal" style="display:none;margin-left:8px;font-size:10px"></span>
       </div>
-      <div style="display:flex;flex-direction:column;gap:14px">
-        <div class="field">
-          <label>Item Name *</label>
-          <input type="text" id="manual-name" placeholder="e.g. Cellpack DCL" autofocus>
-        </div>
-        <div class="field">
-          <label>Instrument / Section *</label>
-          <select id="manual-instrument">
-            <option value="XN">Sysmex XN-Series</option>
-            <option value="Stago">Stago STA-R MAX</option>
-            <option value="UN">Sysmex UN Series</option>
-            <option value="DI-60">DI-60 / DM-96</option>
-            <option value="Roche">Roche Cobas</option>
-            <option value="Lab Supplies">Lab Supplies</option>
-            <option value="Office Supplies">Office Supplies</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Unit</label>
-          <select id="manual-unit">
-            <option value="L">L (liter)</option>
-            <option value="mL">mL</option>
-            <option value="vial">vial</option>
-            <option value="kit">kit</option>
-            <option value="btl">btl (bottle)</option>
-            <option value="box">box</option>
-            <option value="pk">pk (pack)</option>
-            <option value="ea">ea (each)</option>
-            <option value="set">set</option>
-            <option value="roll">roll</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Catalog Number <span style="color:var(--text-muted);font-weight:400">(auto-filled from GS1)</span></label>
-          <input type="text" id="manual-catalog-number" class="scan-field" placeholder="e.g. XE-2021">
-        </div>
-        <div class="field" id="manual-barcode-field">
-          <label>Barcode String</label>
-          <input type="text" id="manual-barcode" class="scan-field" placeholder="Scanned barcode">
-        </div>
+      <div class="field">
+        <label>Item Name *</label>
+        <input type="text" id="manual-name" placeholder="e.g. Cellpack DCL">
+      </div>
+      <div class="field">
+        <label>Instrument / Section *</label>
+        <select id="manual-instrument">
+          <option value="XN">Sysmex XN-Series</option>
+          <option value="Stago">Stago STA-R MAX</option>
+          <option value="UN">Sysmex UN Series</option>
+          <option value="DI-60">DI-60 / DM-96</option>
+          <option value="Roche">Roche Cobas</option>
+          <option value="Lab Supplies">Lab Supplies</option>
+          <option value="Office Supplies">Office Supplies</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Unit</label>
+        <select id="manual-unit">
+          <option value="L">L (liter)</option>
+          <option value="mL">mL</option>
+          <option value="vial">vial</option>
+          <option value="kit">kit</option>
+          <option value="btl">btl (bottle)</option>
+          <option value="box">box</option>
+          <option value="pk">pk (pack)</option>
+          <option value="ea">ea (each)</option>
+          <option value="set">set</option>
+          <option value="roll">roll</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Catalog Number</label>
+        <input type="text" id="manual-catalog-number" placeholder="e.g. XE-2021" style="font-family:'Courier New',monospace;font-size:13px">
+      </div>
+      <div class="field">
+        <label>Barcode String</label>
+        <input type="text" id="manual-barcode" style="font-family:'Courier New',monospace;font-size:13px" placeholder="Scanned barcode">
       </div>
     </div>
     <div class="card">
       <div class="card-title">Transaction Details</div>
-      <div style="display:flex;flex-direction:column;gap:14px">
-        <div class="field">
-          <label>Action *</label>
-          <select id="manual-action">
-            <option value="Received">Received — Add to stock</option>
-            <option value="Opened">Opened — Mark as open</option>
-            <option value="Adjusted">Adjusted — Correct stock count</option>
-            <option value="Discarded">Discarded — Remove from stock</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Quantity *</label>
+      <div class="field">
+        <label>Quantity</label>
+        <div class="qty-stepper">
+          <button onclick="stepManualQty(-1)">−</button>
           <input type="number" id="manual-qty" value="1" min="0" step="0.1">
+          <button onclick="stepManualQty(1)">+</button>
         </div>
-        <div class="field">
-          <label>Lot Number <span style="color:var(--text-muted);font-weight:400">(auto-filled from GS1)</span></label>
-          <input type="text" id="manual-lot" placeholder="e.g. LOT-2026-001">
-        </div>
-        <div class="field">
-          <label>Expiry Date <span style="color:var(--text-muted);font-weight:400">(auto-filled from GS1)</span></label>
-          <input type="date" id="manual-expiry">
-        </div>
-        <div class="field">
-          <label>Notes <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
-          <textarea id="manual-notes" placeholder="Any additional notes"></textarea>
-        </div>
+      </div>
+      <div class="field">
+        <label>Lot Number <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <input type="text" id="manual-lot" placeholder="e.g. LOT-2026-001">
+      </div>
+      <div class="field">
+        <label>Expiry Date <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <input type="date" id="manual-expiry">
+      </div>
+      <div class="field">
+        <label>Notes <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <textarea id="manual-notes" placeholder="Any additional notes"></textarea>
       </div>
     </div>
   </div>
-  <div class="footer" style="display:flex;flex-direction:column;gap:8px">
-    <button class="btn btn-primary" onclick="submitManual()"><span class="material-icons-outlined mi-sm">add_circle</span> Add to Catalog &amp; Submit</button>
-    <button class="btn btn-ghost" style="font-size:13px" onclick="submitManualLogOnly()">Log only — don't add to catalog</button>
+  <div class="footer">
+    <button class="btn btn-receive" onclick="submitManual(true)">
+      <span class="material-icons-outlined" style="font-size:20px">add_circle</span>
+      Add to Catalog &amp; Submit
+    </button>
+    <button class="btn btn-ghost" onclick="submitManual(false)">Log only — don't add to catalog</button>
   </div>
 </div>
 
-<!-- ===== SCREEN 4: SUCCESS ===== -->
+<!-- ===== SUCCESS SCREEN ===== -->
 <div class="screen" id="screen-success">
   <div class="hdr hdr-teal">
     <div>
@@ -426,237 +527,170 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
     </div>
   </div>
   <div class="success-body">
-    <div class="success-icon"><span class="material-icons-outlined" style="font-size:52px;color:var(--teal-light)">check_circle</span></div>
+    <div class="success-icon receive" id="success-icon">
+      <span class="material-icons-outlined" style="font-size:48px;color:var(--teal-light)">check_circle</span>
+    </div>
     <div class="success-title">Submitted</div>
-    <div class="success-detail">The inventory has been updated and the transaction has been logged to InventoryLog.</div>
+    <div style="font-size:14px;color:var(--text-secondary);text-align:center;max-width:280px;line-height:1.6">
+      Inventory updated and transaction logged to InventoryLog.
+    </div>
     <div class="success-log" id="success-log"></div>
   </div>
-  <div class="footer" style="display:flex;flex-direction:column;gap:10px">
-    <button class="btn btn-purple" onclick="scanAnother()"><span class="material-icons-outlined mi-sm">qr_code_scanner</span> Scan Another Item</button>
-    <button class="btn btn-ghost" onclick="goScreen('screen-manual')"><span class="material-icons-outlined mi-sm">edit</span> Manual Entry</button>
+  <div class="footer">
+    <button class="btn btn-purple" onclick="scanAnother()">
+      <span class="material-icons-outlined" style="font-size:20px">qr_code_scanner</span>
+      Scan Another Item
+    </button>
+    <button class="btn btn-ghost" onclick="goScreen('screen-action')">
+      <span class="material-icons-outlined" style="font-size:20px">home</span>
+      Back to Home
+    </button>
   </div>
 </div>
 
 <script>
 // ============================================================
-// SHAREPOINT CONFIG
+// MSAL + SHAREPOINT CONFIG
 // ============================================================
-const SP = {
-  siteUrl: 'https://uwnetid.sharepoint.com/sites/og_uw_renton_central_laboratory_-_core_lab',
-  clientId: '24c43cdb-d15a-42ff-9883-cd8c19965a54',
-  lists: {
-    inventory: 'ReagentInventory',
-    log:       'InventoryLog',
-    catalog:   'ReagentCatalog',
-  }
+var MSAL_CONFIG = {
+  auth: {
+    clientId: '24c43cdb-d15a-42ff-9883-cd8c19965a54',
+    authority: 'https://login.microsoftonline.com/f6b6dd5b-f02f-441a-99a0-162ac5060bd2',
+    redirectUri: 'https://renton-central-lab.github.io/core-lab-shift-hub/inventory-scanner.html'
+  },
+  cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
 };
 
-var spToken = null;
-var spTokenExpiry = 0;
-var spUserName = '';
+var SP = {
+  siteUrl: 'https://uwnetid.sharepoint.com/sites/og_uw_renton_central_laboratory_-_core_lab',
+  lists: { inventory: 'ReagentInventory', log: 'InventoryLog', catalog: 'ReagentCatalog' }
+};
+var SP_API = SP.siteUrl + '/_api/web/lists';
+var _listTypes = {};
 
-// Read SharePoint access token directly from MSAL localStorage cache
-// Works because Shift Hub (same domain, same clientId) already authenticated
-// and stored the token in localStorage with cacheLocation:'localStorage'
-function getTokenFromMSALCache(){
-  try{
-    for(var i = 0; i < localStorage.length; i++){
-      var key = localStorage.key(i);
-      if(!key) continue;
-      // MSAL access token cache keys contain the clientId and 'accesstoken'
-      var keyLower = key.toLowerCase();
-      if(!keyLower.includes(SP.clientId.toLowerCase())) continue;
-      if(!keyLower.includes('accesstoken')) continue;
-      var entry = JSON.parse(localStorage.getItem(key));
-      if(!entry || !entry.secret) continue;
-      // Must be a SharePoint token
-      var target = (entry.target || '').toLowerCase();
-      if(!target.includes('sharepoint') && !target.includes('allsites')) continue;
-      // Check not expired (expiresOn is Unix timestamp in seconds)
-      var expiresOn = parseInt(entry.expiresOn) * 1000;
-      if(expiresOn < Date.now() + 30000) continue;
-      spToken = entry.secret;
-      spTokenExpiry = expiresOn;
-      console.log('Token from MSAL cache, expires:', new Date(expiresOn).toLocaleTimeString());
-      return entry.secret;
-    }
-  } catch(e){ console.warn('Cache read error:', e); }
-  return null;
-}
+// SP field internal name maps
+var CAT_FIELDS = {
+  CatalogID:'field_1',Instrument:'field_2',Manufacturer:'field_3',Unit:'field_4',
+  BarcodeType:'field_5',BarcodeString:'field_6',CatalogNumber:'field_7',
+  GS1ParsesExpiry:'field_8',GS1ParsesLot:'field_9',Notes:'field_10'
+};
+var INV_FIELDS = {
+  Instrument:'field_1',ItemType:'field_2',Unit:'field_3',InStock:'field_4',
+  MinPAR:'field_5',DailyUse:'field_6',ExpiryDate:'field_7',OpenLifeDays:'field_8',
+  DateOpened:'field_9',LotNumber:'field_10',Notes:'field_11',CatalogID:'field_12',IsActive:'field_13'
+};
+var LOG_FIELDS = {
+  Action:'field_1',QuantityDelta:'field_2',QuantityAfter:'field_3',
+  LotNumber:'field_4',ExpiryDate:'field_5',Timestamp:'field_6',ReasonNote:'field_7'
+};
 
-// Get user name from MSAL account cache
-function getUserFromMSALCache(){
-  try{
-    for(var i = 0; i < localStorage.length; i++){
-      var key = localStorage.key(i);
-      if(!key) continue;
-      var keyLower = key.toLowerCase();
-      if(!keyLower.includes(SP.clientId.toLowerCase())) continue;
-      if(!keyLower.includes('account')) continue;
-      var entry = JSON.parse(localStorage.getItem(key));
-      if(!entry) continue;
-      return entry.name || entry.username || '';
-    }
-  } catch(e){}
-  return '';
-}
-
-async function getToken(){
-  // Use cached in-memory token if still valid
-  if(spToken && Date.now() < spTokenExpiry - 30000) return spToken;
-  // Pull from MSAL localStorage cache (written by Shift Hub)
-  var token = getTokenFromMSALCache();
-  if(token) return token;
-  // No valid token found — Shift Hub session may have expired
-  throw new Error('No valid token — please open the Shift Hub first to authenticate');
-}
-
-// ============================================================
-// GS1 BARCODE PARSER
-// ============================================================
-// Parses GS1-128 and GS1-DataMatrix strings using Application Identifiers
-// Format: (01)GTIN(17)YYMMDD(10)LOT or ]d2 prefix + raw AIs
-function parseGS1(raw){
-  var result = {
-    raw: raw,
-    gtin: null,
-    catalogNumber: null,
-    expiry: null,       // ISO date string YYYY-MM-DD
-    lot: null,
-    quantity: null,
-    isGS1: false,
-    barcodeType: 'Unknown'
-  };
-
-  // Detect GS1-DataMatrix (starts with ]d2 or ]C1)
-  var str = raw;
-  if(str.startsWith(']d2') || str.startsWith(']C1')){
-    str = str.slice(3);
-    result.isGS1 = true;
-    result.barcodeType = 'GS1-DataMatrix';
-  }
-
-  // Normalize parenthetical format: (01)12345 → parse sequentially
-  // Also handle raw AI format without parens: 011234517YYMMDD10LOT
-  var hasParens = str.includes('(');
-
-  if(hasParens){
-    result.isGS1 = true;
-    result.barcodeType = result.barcodeType === 'GS1-DataMatrix' ? 'GS1-DataMatrix' : 'GS1-128';
-    // Parse (AI)value pairs
-    var regex = /\((\d{2,4})\)([^(]*)/g;
-    var match;
-    while((match = regex.exec(str)) !== null){
-      var ai = match[1];
-      var val = match[2].trim();
-      applyAI(result, ai, val);
-    }
-  } else if(result.isGS1 || /^\d{14}/.test(str)){
-    // Raw GS1 without parens — parse fixed-length AIs
-    result.isGS1 = true;
-    if(result.barcodeType === 'Unknown') result.barcodeType = 'GS1-DataMatrix';
-    var pos = 0;
-    while(pos < str.length){
-      // Try 2-digit AI first
-      var ai2 = str.slice(pos, pos+2);
-      var ai3 = str.slice(pos, pos+3);
-      var ai4 = str.slice(pos, pos+4);
-      if(ai2 === '01' && pos+2+14 <= str.length){
-        applyAI(result, '01', str.slice(pos+2, pos+2+14)); pos += 16;
-      } else if(ai2 === '17' && pos+2+6 <= str.length){
-        applyAI(result, '17', str.slice(pos+2, pos+2+6)); pos += 8;
-      } else if(ai2 === '10'){
-        // Variable length — read until next AI or end
-        var val = ''; pos += 2;
-        while(pos < str.length && !/^(01|17|10|30|21|11|15)\d/.test(str.slice(pos))){ val += str[pos]; pos++; }
-        applyAI(result, '10', val);
-      } else if(ai2 === '30'){
-        applyAI(result, '30', str.slice(pos+2, pos+2+8)); pos += 10;
-      } else {
-        pos++; // skip unknown byte
-      }
-    }
-  } else if(/^\d{12,13}$/.test(str)){
-    // UPC-A or EAN-13
-    result.barcodeType = str.length === 12 ? 'UPC-A' : 'EAN-13';
-    result.catalogNumber = str;
-  } else if(/^[A-Z0-9\-]{4,}$/i.test(str)){
-    // Likely Code128 catalog number
-    result.barcodeType = 'Code128';
-    result.catalogNumber = str;
-  }
-
-  return result;
-}
-
-function applyAI(result, ai, val){
-  if(ai === '01'){
-    result.gtin = val;
-    // Strip leading zeros to get catalog number (last 13 or fewer digits)
-    result.catalogNumber = val.replace(/^0+/, '') || val;
-  } else if(ai === '17'){
-    // YYMMDD → YYYY-MM-DD
-    if(val.length === 6){
-      var yy = parseInt(val.slice(0,2));
-      var year = yy < 50 ? 2000+yy : 1900+yy;
-      var mm = val.slice(2,4);
-      var dd = val.slice(4,6) === '00' ? '28' : val.slice(4,6); // 00 = last day of month
-      result.expiry = year + '-' + mm + '-' + dd;
-    }
-  } else if(ai === '10'){
-    result.lot = val.trim();
-  } else if(ai === '30'){
-    result.quantity = parseInt(val) || null;
-  }
-}
-
-// Guess instrument from GTIN/catalog number prefix
-function guessInstrument(parsed){
-  var cat = (parsed.catalogNumber || '').toUpperCase();
-  var gtin = (parsed.gtin || '');
-  // Sysmex GTINs start with 4712345 area
-  if(gtin.startsWith('04712345') || cat.startsWith('XE') || cat.includes('CELLPACK') || cat.includes('SULFO') || cat.includes('LYSER') || cat.includes('FLUORO') || cat.includes('STOMATO') || cat.includes('DILUENT') || cat.includes('UF-') || cat.includes('EIGHTCHEK')) return 'XN';
-  if(cat.includes('STA-') || cat.includes('PTT') || cat.includes('NEOPLASTIN') || cat.includes('FIB') || cat.startsWith('006')) return 'Stago';
-  if(cat.includes('UN-') || cat.startsWith('UA-') || cat.includes('UF-SH') || cat.includes('UF-ST')) return 'UN';
-  if(cat.includes('DI-') || cat.includes('DM-') || cat.includes('BSB') || cat.includes('CYTOPREP') || cat.includes('BF-')) return 'DI-60';
-  if(cat.startsWith('458') || cat.includes('COBAS') || cat.includes('ISE') || cat.includes('PRECICONT') || cat.includes('E801') || cat.includes('P612')) return 'Roche';
-  return 'XN'; // default
-}
+function catFields(obj){ var o={}; for(var k in obj) o[CAT_FIELDS[k]||k]=obj[k]; return o; }
+function invFields(obj){ var o={}; for(var k in obj) o[INV_FIELDS[k]||k]=obj[k]; return o; }
+function logFields(obj){ var o={}; for(var k in obj) o[LOG_FIELDS[k]||k]=obj[k]; return o; }
+function invVal(row,k){ return row[INV_FIELDS[k]||k]; }
 
 // ============================================================
 // STATE
-
+// ============================================================
+var msalInstance = null;
+var spToken = null;
+var spTokenExpiry = 0;
+var currentAction = 'receive'; // receive | remove | adjust
+var currentItem = null;
+var currentCatalog = null;
+var lastScannedRaw = '';
+var lastParsedGS1 = null;
+var lastEntry = {};
 
 // ============================================================
-let currentItem = null;
-let currentCatalog = null;
-let lastEntry = {};
-let lastScannedRaw = '';  // raw barcode from last scan attempt
-let lastParsedGS1 = null; // parsed GS1 data from last scan
-
+// MSAL AUTH — STANDALONE, NO SHIFT HUB DEPENDENCY
 // ============================================================
-// SCREEN NAVIGATION
-// ============================================================
-function goScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  // Auto-focus scan input
-  if(id === 'screen-scan'){
-    setTimeout(()=>document.getElementById('scan-input').focus(), 100);
+async function initAuth(){
+  showLoading('Signing in...');
+  try{
+    msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
+    // Handle redirect response from login
+    var response = await msalInstance.handleRedirectPromise();
+    if(response && response.account){
+      msalInstance.setActiveAccount(response.account);
+      spToken = response.accessToken;
+      spTokenExpiry = response.expiresOn?.getTime() || Date.now() + 3600000;
+    }
+    var accounts = msalInstance.getAllAccounts();
+    if(accounts.length === 0){
+      // No account — show auth screen
+      hideLoading();
+      goScreen('screen-auth');
+      return;
+    }
+    msalInstance.setActiveAccount(accounts[0]);
+    // Try silent token acquisition
+    await getToken();
+    // Connected — go to action screen
+    var account = msalInstance.getActiveAccount();
+    if(account){
+      document.getElementById('user-name-display').textContent = account.name || account.username;
+      document.getElementById('sp-user-text').textContent = account.name || '';
+    }
+    await testSPConnection();
+    hideLoading();
+    goScreen('screen-action');
+  } catch(e){
+    hideLoading();
+    console.error('Auth init error:', e);
+    goScreen('screen-auth');
   }
 }
 
-function scanAnother(){
-  document.getElementById('scan-input').value = '';
-  currentItem = null;
-  currentCatalog = null;
-  goScreen('screen-scan');
+async function triggerLogin(){
+  if(!msalInstance){
+    msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
+  }
+  try{
+    await msalInstance.loginRedirect({
+      scopes: ['https://uwnetid.sharepoint.com/AllSites.Write', 'User.Read']
+    });
+  } catch(e){
+    console.error('Login error:', e);
+    showToast('Sign in failed — try again', true);
+  }
+}
+
+async function getToken(){
+  if(spToken && Date.now() < spTokenExpiry - 60000) return spToken;
+  var account = msalInstance?.getActiveAccount();
+  if(!account) throw new Error('No active account');
+  try{
+    var result = await msalInstance.acquireTokenSilent({
+      scopes: ['https://uwnetid.sharepoint.com/AllSites.Write'],
+      account: account
+    });
+    spToken = result.accessToken;
+    spTokenExpiry = result.expiresOn?.getTime() || Date.now() + 3600000;
+    return spToken;
+  } catch(e){
+    // Silent failed — try redirect
+    await msalInstance.acquireTokenRedirect({
+      scopes: ['https://uwnetid.sharepoint.com/AllSites.Write']
+    });
+    throw e;
+  }
+}
+
+async function testSPConnection(){
+  try{
+    await spFetch(SP.lists.inventory, '?$top=1&$select=Title');
+    document.getElementById('sp-status-text').textContent = 'SharePoint connected';
+    document.getElementById('sp-dot').className = 'status-dot';
+  } catch(e){
+    document.getElementById('sp-status-text').textContent = 'Connection error';
+    document.getElementById('sp-dot').className = 'status-dot red';
+  }
 }
 
 // ============================================================
-// SHAREPOINT REST API
+// SHAREPOINT API
 // ============================================================
-// Shared SP fetch helper — mirrors Shift Hub exactly
 async function _spRequest(url, options){
   var token = await getToken();
   var headers = Object.assign({
@@ -667,16 +701,9 @@ async function _spRequest(url, options){
   var opts = Object.assign({}, options || {}, { headers: headers });
   if(opts.body && typeof opts.body !== 'string') opts.body = JSON.stringify(opts.body);
   var res = await fetch(url, opts);
-  if(!res.ok){
-    var err = await res.text();
-    throw new Error('SP ' + res.status + ': ' + err);
-  }
+  if(!res.ok){ var err = await res.text(); throw new Error('SP ' + res.status + ': ' + err); }
   return res;
 }
-
-// SP_API base — exact Shift Hub pattern
-var SP_API = SP.siteUrl + '/_api/web/lists';
-var _listTypes = {};
 
 async function getListItemType(listName){
   if(_listTypes[listName]) return _listTypes[listName];
@@ -686,62 +713,14 @@ async function getListItemType(listName){
   return _listTypes[listName];
 }
 
-
-// ============================================================
-// SHAREPOINT FIELD NAME MAPS
-// Internal names assigned by SP during Excel import
-// ============================================================
-var CAT_FIELDS = {
-  CatalogID:'field_1', Instrument:'field_2', Manufacturer:'field_3',
-  Unit:'field_4', BarcodeType:'field_5', BarcodeString:'field_6',
-  CatalogNumber:'field_7', GS1ParsesExpiry:'field_8', GS1ParsesLot:'field_9',
-  Notes:'field_10'
-};
-var INV_FIELDS = {
-  Instrument:'field_1', ItemType:'field_2', Unit:'field_3',
-  InStock:'field_4', MinPAR:'field_5', DailyUse:'field_6',
-  ExpiryDate:'field_7', OpenLifeDays:'field_8', DateOpened:'field_9',
-  LotNumber:'field_10', Notes:'field_11', CatalogID:'field_12', IsActive:'field_13'
-};
-var LOG_FIELDS = {
-  Action:'field_1', QuantityDelta:'field_2', QuantityAfter:'field_3',
-  LotNumber:'field_4', ExpiryDate:'field_5', Timestamp:'field_6', ReasonNote:'field_7'
-};
-function logFields(obj){
-  var out={};
-  for(var k in obj){ out[LOG_FIELDS[k]||k]=obj[k]; }
-  return out;
-}
-// Build an object using internal field names
-function catFields(obj){
-  var out={};
-  for(var k in obj){ out[CAT_FIELDS[k]||k]=obj[k]; }
-  return out;
-}
-function invFields(obj){
-  var out={};
-  for(var k in obj){ out[INV_FIELDS[k]||k]=obj[k]; }
-  return out;
-}
-// Read a field from a SP row using display name
-function catVal(row,name){ return row[CAT_FIELDS[name]||name]; }
-function invVal(row,name){ return row[INV_FIELDS[name]||name]; }
-
-
-// spGet mirrors Shift Hub exactly
-async function spGet(listName, filter, select, top){
-  var url = SP_API + "/getbytitle('" + listName + "')/items?$top=" + (top || 500);
-  if(filter) url += '&$filter=' + encodeURIComponent(filter);
-  if(select) url += '&$select=' + select;
-  url += '&$orderby=Id desc';
-  var r = await _spRequest(url, {});
+async function getDigest(){
+  var r = await _spRequest(SP.siteUrl + '/_api/contextinfo', { method: 'POST' });
   var d = await r.json();
-  return d.d ? (d.d.results || []) : (d.value || []);
+  return d.d.GetContextWebInformation.FormDigestValue;
 }
 
 async function spFetch(listName, endpoint, opts){
-  endpoint = endpoint || '';
-  opts = opts || {};
+  endpoint = endpoint || ''; opts = opts || {};
   var url = SP_API + "/getbytitle('" + listName + "')/items" + endpoint;
   var res = await _spRequest(url, opts);
   if(!opts.method || opts.method === 'GET'){
@@ -752,269 +731,183 @@ async function spFetch(listName, endpoint, opts){
   return res;
 }
 
-async function getDigest(){
-  var r = await _spRequest(SP.siteUrl + '/_api/contextinfo', { method: 'POST' });
-  var d = await r.json();
-  return d.FormDigestValue;
+async function spPost(listName, fields){
+  var digest = await getDigest();
+  var meta = await getListItemType(listName);
+  fields.__metadata = { type: meta };
+  var url = SP_API + "/getbytitle('" + listName + "')/items";
+  return _spRequest(url, { method:'POST', headers:{'X-RequestDigest':digest}, body:fields });
 }
 
 async function spPatch(listName, itemId, fields){
   var digest = await getDigest();
   var meta = await getListItemType(listName);
   fields.__metadata = { type: meta };
-  var url = SP.siteUrl + "/_api/web/lists/getbytitle('" + listName + "')/items(" + itemId + ")";
+  var url = SP_API + "/getbytitle('" + listName + "')/items(" + itemId + ")";
   return _spRequest(url, {
-    method: 'POST',
-    headers: { 'IF-MATCH': '*', 'X-HTTP-Method': 'MERGE', 'X-RequestDigest': digest },
-    body: fields
+    method:'POST',
+    headers:{'IF-MATCH':'*','X-HTTP-Method':'MERGE','X-RequestDigest':digest},
+    body:fields
   });
 }
 
-async function spPost(listName, fields){
-  var digest = await getDigest();
-  var meta = await getListItemType(listName);
-  fields.__metadata = { type: meta };
-  var url = SP.siteUrl + "/_api/web/lists/getbytitle('" + listName + "')/items";
-  return _spRequest(url, {
-    method: 'POST',
-    headers: { 'X-RequestDigest': digest },
-    body: fields
-  });
-}
 // ============================================================
-// Auto-fill Manual Entry screen from parsed GS1 data
-// UPC lookup stub — requires paid API key for CORS access
-// Set UPC_API_KEY to enable automatic product name lookup
-var UPC_API_KEY = null; // e.g. 'your_key_here'
-async function lookupUPC(upc){
-  if(!UPC_API_KEY) return null;
-  try{
-    var res = await fetch('https://api.upcitemdb.com/prod/v1/lookup?upc=' + upc, {
-      headers: { 'Accept': 'application/json', 'user_key': UPC_API_KEY }
-    });
-    if(!res.ok) return null;
-    var data = await res.json();
-    if(data.items && data.items.length > 0){
-      var item = data.items[0];
-      return { title: item.title || null, brand: item.brand || null,
-               description: item.description || null, category: item.category || null };
+// GS1 BARCODE PARSER
+// ============================================================
+function parseGS1(raw){
+  var result = { raw:raw, gtin:null, catalogNumber:null, expiry:null, lot:null, quantity:null, isGS1:false, barcodeType:'Unknown' };
+  var str = raw;
+  if(str.startsWith(']d2') || str.startsWith(']C1')){ str=str.slice(3); result.isGS1=true; result.barcodeType='GS1-DataMatrix'; }
+  var hasParens = str.includes('(');
+  if(hasParens){
+    result.isGS1=true;
+    if(result.barcodeType==='Unknown') result.barcodeType='GS1-128';
+    var regex=/\((\d{2,4})\)([^(]*)/g, match;
+    while((match=regex.exec(str))!==null) applyAI(result,match[1],match[2].trim());
+  } else if(result.isGS1 || /^\d{14}/.test(str)){
+    result.isGS1=true;
+    if(result.barcodeType==='Unknown') result.barcodeType='GS1-DataMatrix';
+    var pos=0;
+    while(pos<str.length){
+      var ai2=str.slice(pos,pos+2);
+      if(ai2==='01'&&pos+16<=str.length){ applyAI(result,'01',str.slice(pos+2,pos+16)); pos+=16; }
+      else if(ai2==='17'&&pos+8<=str.length){ applyAI(result,'17',str.slice(pos+2,pos+8)); pos+=8; }
+      else if(ai2==='10'){ var val=''; pos+=2; while(pos<str.length&&!/^(01|17|10|30)/.test(str.slice(pos))){ val+=str[pos]; pos++; } applyAI(result,'10',val); }
+      else { pos++; }
     }
-  } catch(e){ console.warn('UPC lookup failed:', e); }
-  return null;
+  } else if(/^\d{12,13}$/.test(str)){ result.barcodeType=str.length===12?'UPC-A':'EAN-13'; result.catalogNumber=str; }
+  else if(/^[A-Z0-9\-]{4,}$/i.test(str)){ result.barcodeType='Code128'; result.catalogNumber=str; }
+  return result;
 }
 
-function resetManualScreen(){
-  lastScannedRaw = '';
-  lastParsedGS1 = null;
-  document.getElementById('manual-name').value = '';
-  document.getElementById('manual-lot').value = '';
-  document.getElementById('manual-expiry').value = '';
-  document.getElementById('manual-notes').value = '';
-  document.getElementById('manual-barcode').value = '';
-  document.getElementById('manual-catalog-number').value = '';
-  document.getElementById('manual-qty').value = '1';
-  document.getElementById('manual-action').value = 'Received';
-  document.getElementById('manual-instrument').value = 'XN';
-  var typeEl = document.getElementById('manual-barcode-type');
-  if(typeEl) typeEl.style.display = 'none';
-  var alertEl = document.getElementById('manual-alert');
-  if(alertEl) alertEl.textContent = 'Enter item details below.';
+function applyAI(result,ai,val){
+  if(ai==='01'){ result.gtin=val; result.catalogNumber=val.replace(/^0+/,'')||val; }
+  else if(ai==='17'&&val.length===6){ var yy=parseInt(val.slice(0,2)),year=yy<50?2000+yy:1900+yy,mm=val.slice(2,4),dd=val.slice(4,6)==='00'?'28':val.slice(4,6); result.expiry=year+'-'+mm+'-'+dd; }
+  else if(ai==='10'){ result.lot=val.trim(); }
+  else if(ai==='30'){ result.quantity=parseInt(val)||null; }
 }
 
-async function autoFillManualScreen(parsed, raw){
-  // Pre-fill barcode field
-  document.getElementById('manual-barcode').value = raw;
-
-  // Pre-fill expiry if parsed
-  if(parsed.expiry){
-    document.getElementById('manual-expiry').value = parsed.expiry;
-  }
-
-  // Pre-fill lot if parsed
-  if(parsed.lot){
-    document.getElementById('manual-lot').value = parsed.lot;
-  }
-
-  // Pre-fill catalog number in notes if available
-  if(parsed.catalogNumber){
-    document.getElementById('manual-catalog-number').value = parsed.catalogNumber;
-  }
-
-  // Guess instrument
-  var instGuess = guessInstrument(parsed);
-  document.getElementById('manual-instrument').value = instGuess;
-
-  // Show barcode type badge
-  var typeEl = document.getElementById('manual-barcode-type');
-  if(typeEl){
-    typeEl.textContent = parsed.barcodeType + (parsed.isGS1 ? ' · GS1 parsed' : '');
-    typeEl.style.display = 'inline-flex';
-  }
-
-  // Update alert message based on what was parsed
-  var alertEl = document.getElementById('manual-alert');
-  if(alertEl){
-    var parsed_fields = [];
-    if(parsed.expiry) parsed_fields.push('expiry');
-    if(parsed.lot) parsed_fields.push('lot number');
-    if(parsed.catalogNumber) parsed_fields.push('catalog number');
-    if(parsed_fields.length > 0){
-      alertEl.innerHTML = 'Barcode not in catalog. Auto-filled: <strong>' + parsed_fields.join(', ') + '</strong>. Enter item name to add it.';
-    } else {
-      alertEl.textContent = 'Barcode not in catalog. Enter details to add it.';
-    }
-  }
-
-  // For UPC-A/EAN barcodes, try to auto-fill item name from UPCItemDB
-  if(parsed.barcodeType === 'UPC-A' || parsed.barcodeType === 'EAN-13'){
-    var nameField = document.getElementById('manual-name');
-    var alertEl2 = document.getElementById('manual-alert');
-    if(alertEl2) alertEl2.innerHTML += ' <em style="color:var(--text-muted)">Looking up product name...</em>';
-    var upcData = await lookupUPC(raw);
-    if(upcData && upcData.title){
-      nameField.value = upcData.title;
-      // Guess instrument from category
-      var cat = (upcData.category || '').toLowerCase();
-      if(cat.includes('office') || cat.includes('paper') || cat.includes('pen') || cat.includes('marker') || cat.includes('ink')){
-        document.getElementById('manual-instrument').value = 'Office Supplies';
-      } else if(cat.includes('lab') || cat.includes('medical') || cat.includes('glove') || cat.includes('safety')){
-        document.getElementById('manual-instrument').value = 'Lab Supplies';
-      }
-      if(alertEl2) alertEl2.innerHTML = 'Auto-filled: <strong>product name</strong> from UPC database' + (parsed_fields && parsed_fields.length ? ', ' + parsed_fields.join(', ') : '') + '. Review and submit.';
-    } else {
-      if(alertEl2){
-        var base = alertEl2.innerHTML.replace(/<em[^>]*>.*?<\/em>/g, '');
-        alertEl2.innerHTML = base;
-      }
-    }
-  }
+function guessInstrument(parsed){
+  var cat=(parsed.catalogNumber||'').toUpperCase();
+  if(cat.startsWith('XE')||cat.includes('CELLPACK')||cat.includes('SULFO')||cat.includes('LYSER')||cat.includes('FLUORO')||cat.includes('STOMATO')||cat.includes('DILUENT')) return 'XN';
+  if(cat.includes('STA-')||cat.includes('PTT')||cat.includes('FIB')||cat.startsWith('006')) return 'Stago';
+  if(cat.includes('UN-')||cat.startsWith('UA-')) return 'UN';
+  if(cat.includes('DI-')||cat.includes('DM-')) return 'DI-60';
+  if(cat.startsWith('458')||cat.includes('COBAS')) return 'Roche';
+  return 'XN';
 }
 
+// ============================================================
+// ACTION SELECT
+// ============================================================
+function selectAction(action){
+  currentAction = action;
+  // Update scan screen header and indicator
+  var titles = { receive:'Receiving Stock', remove:'Removing Stock', adjust:'Adjusting Stock' };
+  var subs = { receive:'Scan item to add to inventory', remove:'Scan item to remove from inventory', adjust:'Scan item to set exact count' };
+  document.getElementById('scan-hdr-title').textContent = titles[action];
+  document.getElementById('scan-hdr-sub').textContent = subs[action];
+  // Update action indicator
+  var indicator = document.getElementById('action-indicator');
+  indicator.className = 'action-indicator ' + action;
+  var icons = { receive:'add_circle', remove:'remove_circle', adjust:'tune' };
+  var texts = { receive:'Receiving stock', remove:'Removing from stock', adjust:'Adjusting count' };
+  indicator.innerHTML = '<span class="material-icons-outlined" style="font-size:18px">' + icons[action] + '</span><span>' + texts[action] + '</span>';
+  // Update scan button color
+  var scanBtn = document.getElementById('scan-lookup-btn');
+  scanBtn.className = 'btn btn-' + action;
+  // Update confirm button
+  var submitBtn = document.getElementById('submit-btn');
+  submitBtn.className = 'btn btn-' + action;
+  var submitLabels = { receive:'Receive & Update Stock', remove:'Remove & Update Stock', adjust:'Set Stock Count' };
+  document.getElementById('submit-btn-label').textContent = submitLabels[action];
+  // Show/hide reason field
+  var reasonField = document.getElementById('reason-field');
+  var reasonLabel = document.getElementById('reason-optional-label');
+  reasonField.style.display = 'flex';
+  reasonLabel.textContent = '(optional)';
+  // Show adjust note
+  var adjustField = document.getElementById('adjust-field');
+  adjustField.style.display = action === 'adjust' ? 'flex' : 'none';
+  // Clear scan input
+  document.getElementById('scan-input').value = '';
+  currentItem = null;
+  goScreen('screen-scan');
+  setTimeout(() => document.getElementById('scan-input').focus(), 100);
+}
+
+// ============================================================
+// BARCODE LOOKUP
+// ============================================================
 async function lookupBarcode(){
-  const raw = document.getElementById('scan-input').value.trim();
+  var raw = document.getElementById('scan-input').value.trim();
   if(!raw){ showToast('Please scan or enter a barcode first'); return; }
-
-  showLoading('Looking up barcode...');
+  showLoading('Looking up item...');
   try{
-    var safeRaw = raw.replace(/'/g, "''");
-    // All field names are internal (field_1, field_2 etc)
-    // BarcodeString=field_6, CatalogNumber=field_7
+    var safeRaw = raw.replace(/'/g,"''");
     var catSelect = 'Title,field_1,field_2,field_4,field_5,field_6,field_7,field_8,field_9';
-
-    let data = await spFetch(SP.lists.catalog,
+    var data = await spFetch(SP.lists.catalog,
       '?$top=1&$select=' + catSelect + '&$filter=' + encodeURIComponent("field_6 eq '" + safeRaw + "'"));
-    let catalogRow = data.value?.[0] || null;
-
-    // If no match, try CatalogNumber (field_7)
+    var catalogRow = data.value?.[0] || null;
     if(!catalogRow){
       data = await spFetch(SP.lists.catalog,
         '?$top=1&$select=' + catSelect + '&$filter=' + encodeURIComponent("field_7 eq '" + safeRaw + "'"));
       catalogRow = data.value?.[0] || null;
     }
-
     if(!catalogRow){
-      // Parse GS1/UPC data from the raw barcode
+      // Not in catalog — go to new item screen
       lastScannedRaw = raw;
       lastParsedGS1 = parseGS1(raw);
-
-      // For UPC-A/EAN: try UPCItemDB lookup and auto-confirm if found
-      if(lastParsedGS1.barcodeType === 'UPC-A' || lastParsedGS1.barcodeType === 'EAN-13'){
-        showLoading('Looking up product...');
-        var upcData = await lookupUPC(raw);
-        if(upcData && upcData.title){
-          // Auto-add to catalog and go straight to confirm
-          var cat = (upcData.category || '').toLowerCase();
-          var instrument = 'Office Supplies';
-          if(cat.includes('lab') || cat.includes('medical') || cat.includes('glove') || cat.includes('safety')) instrument = 'Lab Supplies';
-          var catalogID = 'UPC-' + raw;
-          var today = new Date().toISOString().slice(0,10);
-          var catalogData = catFields({
-            CatalogID: catalogID,
-            BarcodeString: raw,
-            CatalogNumber: raw,
-            Instrument: instrument,
-            Unit: 'ea',
-            Manufacturer: upcData.brand || 'Other',
-            BarcodeType: 'UPC-A',
-            GS1ParsesExpiry: 'No',
-            GS1ParsesLot: 'No',
-            Notes: (upcData.description || '').slice(0,255) || 'Added via UPC lookup'
-          });
-          catalogData.Title = upcData.title;
-          try{
-            await spPost(SP.lists.catalog, catalogData);
-          } catch(e){ console.warn('Catalog add failed:', e); }
-          // Set up a synthetic currentItem for the confirm screen
-          currentItem = {
-            Title: upcData.title,
-            ID: null, // new item, no inventory row yet
-            _instrument: instrument,
-            _unit: 'ea',
-            _isNew: true,
-            _catalogID: catalogID
-          };
-          // Also create an inventory row for it
-          try{
-            var newInvData = invFields({
-              Instrument: instrument,
-              ItemType: 'Supply',
-              Unit: 'ea',
-              InStock: 0,
-              MinPAR: 1,
-              DailyUse: 0,
-              CatalogID: catalogID,
-              IsActive: 'Yes'
-            });
-            invData.Title = upcData.title;
-            var invRes = await spPost(SP.lists.inventory, newInvData);
-            var invJson = await invRes.json();
-            currentItem.ID = invJson.d ? invJson.d.ID : invJson.ID;
-            currentItem.InStock = 0;
-            currentItem.MinPAR = 1;
-            currentItem[INV_FIELDS.Instrument] = instrument;
-            currentItem[INV_FIELDS.Unit] = 'ea';
-            currentItem[INV_FIELDS.ItemType] = 'Supply';
-          } catch(e){ console.warn('Inventory add failed:', e); }
-          hideLoading();
-          showToast('Found: ' + upcData.title);
-          populateConfirmScreen();
-          goScreen('screen-confirm');
-          return;
-        }
-      }
-
-      // No UPC match or GS1 barcode — go to manual screen
-      hideLoading();
       autoFillManualScreen(lastParsedGS1, raw);
+      hideLoading();
       goScreen('screen-manual');
       return;
     }
-
     currentCatalog = catalogRow;
-
-    // Now look up the inventory row
-    var safeTitle = (catalogRow.Title || '').replace(/'/g, "''");
-    const invData = await spFetch(SP.lists.inventory, '?$top=1&$filter=' + encodeURIComponent("Title eq '" + safeTitle + "'"));
-
-    const invRow = invData.value?.[0] || null;
+    // Look up inventory row by Title
+    var safeTitle = (catalogRow.Title||'').replace(/'/g,"''");
+    var invSelect = 'Title,Id,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9,field_10,field_11,field_12,field_13';
+    var invData = await spFetch(SP.lists.inventory,
+      '?$top=1&$select=' + invSelect + '&$filter=' + encodeURIComponent("Title eq '" + safeTitle + "'"));
+    var invRow = invData.value?.[0] || null;
     if(!invRow){
-      hideLoading();
-      showToast('Item found in catalog but not in inventory — contact Jesus or Roy', true);
-      return;
+      // In catalog but no inventory row — create one automatically
+      invRow = await createInventoryRow(catalogRow);
     }
-
     currentItem = invRow;
+    // Pre-fill lot/expiry from GS1 if scanned
+    var parsed = parseGS1(raw);
+    if(parsed.expiry) document.getElementById('expiry-input').value = parsed.expiry;
+    if(parsed.lot) document.getElementById('lot-input').value = parsed.lot;
     populateConfirmScreen();
     hideLoading();
     goScreen('screen-confirm');
-
   } catch(e){
     hideLoading();
-    console.error('Lookup error full:', e);
-    // Show the actual error message so we can debug
-    var msg = e.message || String(e);
-    showToast('Error: ' + msg.slice(0, 80), true);
+    console.error('Lookup error:', e);
+    showToast('Error: ' + (e.message||'').slice(0,60), true);
   }
+}
+
+async function createInventoryRow(catalogRow){
+  showLoading('Setting up item...');
+  var instrument = catalogRow[CAT_FIELDS.Instrument] || 'XN';
+  var unit = catalogRow[CAT_FIELDS.Unit] || 'ea';
+  var catalogID = catalogRow[CAT_FIELDS.CatalogID] || '';
+  var fields = invFields({
+    Instrument: instrument, ItemType: 'Reagent', Unit: unit,
+    InStock: 0, MinPAR: 1, DailyUse: 0, CatalogID: catalogID, IsActive: 'Yes'
+  });
+  fields.Title = catalogRow.Title;
+  var res = await spPost(SP.lists.inventory, fields);
+  var json = await res.json();
+  var newRow = json.d || json;
+  newRow.Title = catalogRow.Title;
+  // Re-fetch to get all fields
+  var fetched = await spFetch(SP.lists.inventory,
+    '?$top=1&$select=Title,Id,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9,field_10,field_11,field_12,field_13&$filter=' +
+    encodeURIComponent("Title eq '" + catalogRow.Title.replace(/'/g,"''") + "'"));
+  return fetched.value?.[0] || newRow;
 }
 
 // ============================================================
@@ -1022,70 +915,62 @@ async function lookupBarcode(){
 // ============================================================
 function populateConfirmScreen(){
   if(!currentItem) return;
-  // Support both internal field names (from SP) and display names (synthetic items)
-  var getName = function(k){ return invVal(currentItem,k) || currentItem['_'+k.toLowerCase()] || currentItem[k] || null; };
   document.getElementById('preview-name').textContent = currentItem.Title;
-  document.getElementById('preview-instrument').textContent = getName('Instrument') || '—';
-  document.getElementById('preview-unit').textContent = getName('Unit') || '—';
-  document.getElementById('preview-type').textContent = getName('ItemType') || '—';
-  document.getElementById('preview-stock').textContent = invVal(currentItem,'InStock') ?? currentItem.InStock ?? '0';
-  document.getElementById('preview-par').textContent = invVal(currentItem,'MinPAR') ?? currentItem.MinPAR ?? '—';
+  document.getElementById('preview-instrument').textContent = invVal(currentItem,'Instrument') || '—';
+  document.getElementById('preview-unit').textContent = invVal(currentItem,'Unit') || '—';
+  document.getElementById('preview-type').textContent = invVal(currentItem,'ItemType') || '—';
+  var stock = parseFloat(invVal(currentItem,'InStock')) || 0;
+  var par = parseFloat(invVal(currentItem,'MinPAR')) || 0;
+  var stockEl = document.getElementById('preview-stock');
+  stockEl.textContent = stock;
+  stockEl.className = 'stock-num ' + (stock <= 0 ? 'critical' : stock < par ? 'low' : 'ok');
+  document.getElementById('preview-par').textContent = par || '—';
   document.getElementById('qty-input').value = 1;
-  document.getElementById('lot-input').value = '';
-  document.getElementById('expiry-input').value = '';
   document.getElementById('reason-input').value = '';
-  document.getElementById('action-select').value = 'Received';
-  toggleReasonField();
+  // For adjust — pre-fill current stock as starting point
+  if(currentAction === 'adjust'){
+    document.getElementById('qty-input').value = stock;
+  }
 }
 
-function toggleReasonField(){
-  const action = document.getElementById('action-select').value;
-  const reasonField = document.getElementById('reason-field');
-  const qtyField = document.getElementById('qty-field');
-  reasonField.style.display = (action === 'Adjusted' || action === 'Discarded') ? 'flex' : 'none';
-  // For Opened action, hide quantity since it doesn't change stock count
-  qtyField.style.display = action === 'Opened' ? 'none' : 'flex';
+function stepQty(delta){
+  var input = document.getElementById('qty-input');
+  var val = parseFloat(input.value) || 0;
+  input.value = Math.max(0, val + delta);
+}
+function stepManualQty(delta){
+  var input = document.getElementById('manual-qty');
+  var val = parseFloat(input.value) || 0;
+  input.value = Math.max(0, val + delta);
 }
 
 // ============================================================
-// SUBMIT ENTRY (from Confirm screen)
+// SUBMIT ENTRY
 // ============================================================
 async function submitEntry(){
   if(!currentItem){ showToast('No item selected', true); return; }
-
-  const action = document.getElementById('action-select').value;
-  const qty = parseFloat(document.getElementById('qty-input').value) || 0;
-  const lot = document.getElementById('lot-input').value.trim();
-  const expiry = document.getElementById('expiry-input').value;
-  const reason = document.getElementById('reason-input').value.trim();
-
-  if((action === 'Adjusted' || action === 'Discarded') && !reason){
-    showToast('Reason is required for Adjust/Discard actions', true);
-    return;
-  }
-
-  const oldStock = parseFloat(currentItem.InStock) || 0;
-  let newStock = oldStock;
-  let delta = qty;
-
-  if(action === 'Received') newStock = oldStock + qty;
-  else if(action === 'Discarded'){ newStock = Math.max(0, oldStock - qty); delta = -qty; }
-  else if(action === 'Adjusted'){ newStock = qty; delta = qty - oldStock; }
-  // Opened: stock doesn't change, just updates DateOpened
-
+  var qty = parseFloat(document.getElementById('qty-input').value) || 0;
+  var lot = document.getElementById('lot-input').value.trim();
+  var expiry = document.getElementById('expiry-input').value;
+  var reason = document.getElementById('reason-input').value.trim();
+  var oldStock = parseFloat(invVal(currentItem,'InStock')) || 0;
+  var newStock, delta;
+  if(currentAction === 'receive'){ newStock = oldStock + qty; delta = qty; }
+  else if(currentAction === 'remove'){ newStock = Math.max(0, oldStock - qty); delta = -qty; }
+  else { newStock = qty; delta = qty - oldStock; } // adjust
   showLoading('Updating inventory...');
   try{
-    // Patch ReagentInventory
+    // Patch inventory
     var patchData = invFields({ InStock: newStock });
     if(lot) patchData[INV_FIELDS.LotNumber] = lot;
     if(expiry) patchData[INV_FIELDS.ExpiryDate] = expiry;
-    if(action === 'Opened') patchData[INV_FIELDS.DateOpened] = new Date().toISOString().slice(0,10);
+    if(currentAction === 'receive' && lot) patchData[INV_FIELDS.DateOpened] = '';
     await spPatch(SP.lists.inventory, currentItem.ID, patchData);
-
-    // Append InventoryLog — Title is built-in, Action/etc are custom
-    const today = new Date().toISOString().slice(0,10);
+    // Log entry
+    var today = new Date().toISOString().slice(0,10);
+    var actionLabel = currentAction.charAt(0).toUpperCase() + currentAction.slice(1);
     var logData = logFields({
-      Action: action,
+      Action: actionLabel,
       QuantityDelta: delta,
       QuantityAfter: newStock,
       LotNumber: lot || '',
@@ -1093,304 +978,285 @@ async function submitEntry(){
       Timestamp: new Date().toISOString(),
       ReasonNote: reason || ''
     });
-    logData.Title = currentItem.Title + ' — ' + action + ' — ' + today;
+    logData.Title = currentItem.Title + ' — ' + actionLabel + ' — ' + today;
     await spPost(SP.lists.log, logData);
-
     lastEntry = {
       item: currentItem.Title,
-      action,
-      delta: action === 'Opened' ? '—' : (delta > 0 ? `+${delta}` : String(delta)),
-      newStock: action === 'Opened' ? oldStock : newStock,
+      action: actionLabel,
+      delta: delta > 0 ? '+' + delta : String(delta),
+      newStock: newStock,
       lot: lot || '—',
       time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})
     };
-
     hideLoading();
     showSuccessScreen();
-
   } catch(e){
     hideLoading();
     console.error('Submit error:', e);
-    showToast('Submit failed — check connection. Entry NOT saved.', true);
+    showToast('Submit failed — ' + (e.message||'').slice(0,50), true);
   }
 }
 
 // ============================================================
-// SUBMIT MANUAL ENTRY
+// MANUAL / NEW ITEM
 // ============================================================
+function resetManualScreen(){
+  lastScannedRaw=''; lastParsedGS1=null;
+  ['manual-name','manual-lot','manual-expiry','manual-notes','manual-barcode','manual-catalog-number'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('manual-qty').value='1';
+  document.getElementById('manual-instrument').value='XN';
+  document.getElementById('manual-unit').value='L';
+  var typeEl=document.getElementById('manual-barcode-type');
+  if(typeEl) typeEl.style.display='none';
+  document.getElementById('manual-alert').textContent='Enter item details below.';
+}
+
+function autoFillManualScreen(parsed, raw){
+  document.getElementById('manual-barcode').value = raw;
+  if(parsed.expiry) document.getElementById('manual-expiry').value = parsed.expiry;
+  if(parsed.lot) document.getElementById('manual-lot').value = parsed.lot;
+  if(parsed.catalogNumber) document.getElementById('manual-catalog-number').value = parsed.catalogNumber;
+  document.getElementById('manual-instrument').value = guessInstrument(parsed);
+  var typeEl = document.getElementById('manual-barcode-type');
+  if(typeEl){ typeEl.textContent = parsed.barcodeType + (parsed.isGS1?' · GS1 parsed':''); typeEl.style.display='inline-flex'; }
+  var alertEl = document.getElementById('manual-alert');
+  if(alertEl){
+    var fields=[];
+    if(parsed.expiry) fields.push('expiry');
+    if(parsed.lot) fields.push('lot number');
+    if(parsed.catalogNumber) fields.push('catalog number');
+    alertEl.innerHTML = fields.length ? 'Barcode not in catalog. Auto-filled: <strong>' + fields.join(', ') + '</strong>. Enter item name to add it.' : 'Barcode not in catalog. Enter details to add it.';
+  }
+}
+
 async function submitManual(addToCatalog){
-  if(addToCatalog === undefined) addToCatalog = true;
-  const name = document.getElementById('manual-name').value.trim();
-  const instrument = document.getElementById('manual-instrument').value;
-  const unit = document.getElementById('manual-unit').value;
-  const action = document.getElementById('manual-action').value;
-  const qty = parseFloat(document.getElementById('manual-qty').value) || 0;
-  const lot = document.getElementById('manual-lot').value.trim();
-  const expiry = document.getElementById('manual-expiry').value;
-  const notes = document.getElementById('manual-notes').value.trim();
-  const barcodeStr = document.getElementById('manual-barcode').value.trim();
-  const catalogNum = document.getElementById('manual-catalog-number').value.trim();
-
+  var name = document.getElementById('manual-name').value.trim();
+  var instrument = document.getElementById('manual-instrument').value;
+  var unit = document.getElementById('manual-unit').value;
+  var qty = parseFloat(document.getElementById('manual-qty').value) || 0;
+  var lot = document.getElementById('manual-lot').value.trim();
+  var expiry = document.getElementById('manual-expiry').value;
+  var notes = document.getElementById('manual-notes').value.trim();
+  var barcodeStr = document.getElementById('manual-barcode').value.trim();
+  var catalogNum = document.getElementById('manual-catalog-number').value.trim();
   if(!name){ showToast('Item name is required', true); return; }
-
-  const parsed = lastParsedGS1 || (barcodeStr ? parseGS1(barcodeStr) : null);
-  const barcodeType = parsed ? parsed.barcodeType : 'Unknown';
-  const gs1Expiry = parsed && parsed.expiry ? 'Yes' : 'No';
-  const gs1Lot = parsed && parsed.lot ? 'Yes' : 'No';
-
+  var parsed = lastParsedGS1 || (barcodeStr ? parseGS1(barcodeStr) : null);
+  var barcodeType = parsed ? parsed.barcodeType : 'Unknown';
+  var actionLabel = currentAction.charAt(0).toUpperCase() + currentAction.slice(1);
+  var delta = currentAction==='remove' ? -qty : qty;
   showLoading('Saving...');
   try{
-    const today = new Date().toISOString().slice(0,10);
-    const catalogID = 'MAN-' + Date.now();
-
-    // Always add to catalog if barcode present and addToCatalog = true
+    var today = new Date().toISOString().slice(0,10);
+    var catalogID = 'MAN-' + Date.now();
     if(addToCatalog && barcodeStr){
       var catalogData = catFields({
-        CatalogID: catalogID,
-        BarcodeString: barcodeStr,
-        CatalogNumber: catalogNum || barcodeStr,
-        Instrument: instrument,
-        Unit: unit,
-        Manufacturer: 'Other',
-        BarcodeType: barcodeType,
-        GS1ParsesExpiry: gs1Expiry,
-        GS1ParsesLot: gs1Lot,
-        Notes: notes || 'Added via scanner — ' + today
+        CatalogID: catalogID, BarcodeString: barcodeStr,
+        CatalogNumber: catalogNum||barcodeStr, Instrument: instrument, Unit: unit,
+        Manufacturer: 'Other', BarcodeType: barcodeType,
+        GS1ParsesExpiry: parsed&&parsed.expiry?'Yes':'No',
+        GS1ParsesLot: parsed&&parsed.lot?'Yes':'No',
+        Notes: notes||'Added via scanner — '+today
       });
       catalogData.Title = name;
       await spPost(SP.lists.catalog, catalogData);
-      showToast('Added to catalog');
+      // Also create inventory row
+      var invRowData = invFields({
+        Instrument: instrument, ItemType: 'Reagent', Unit: unit,
+        InStock: qty, MinPAR: 1, DailyUse: 0, CatalogID: catalogID, IsActive: 'Yes'
+      });
+      invRowData.Title = name;
+      await spPost(SP.lists.inventory, invRowData);
     }
-
-    // Log the transaction
-    var manualLogData = logFields({
-      Action: action,
-      QuantityDelta: action === 'Discarded' ? -qty : qty,
-      QuantityAfter: qty,
-      LotNumber: lot || '',
-      ExpiryDate: expiry || '',
-      Timestamp: new Date().toISOString(),
-      ReasonNote: notes || ''
+    var logData = logFields({
+      Action: actionLabel, QuantityDelta: delta, QuantityAfter: qty,
+      LotNumber: lot||'', ExpiryDate: expiry||'',
+      Timestamp: new Date().toISOString(), ReasonNote: notes||''
     });
-    manualLogData.Title = name + ' — ' + action + ' — ' + today;
-    await spPost(SP.lists.log, manualLogData);
-
-    lastEntry = {
-      item: name,
-      action: action,
-      delta: action === 'Discarded' ? '-'+qty : '+'+qty,
-      newStock: qty,
-      lot: lot || '—',
-      time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})
-    };
-
-    // Reset manual screen for next use
-    lastScannedRaw = '';
-    lastParsedGS1 = null;
-
+    logData.Title = name + ' — ' + actionLabel + ' — ' + today;
+    await spPost(SP.lists.log, logData);
+    lastEntry = { item:name, action:actionLabel, delta:delta>0?'+'+delta:String(delta), newStock:qty, lot:lot||'—', time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) };
+    lastScannedRaw=''; lastParsedGS1=null;
     hideLoading();
     showSuccessScreen();
-
   } catch(e){
     hideLoading();
     console.error('Manual submit error:', e);
-    showToast('Submit failed — check connection. Entry NOT saved.', true);
+    showToast('Submit failed — ' + (e.message||'').slice(0,50), true);
   }
-}
-
-async function submitManualLogOnly(){
-  await submitManual(false);
 }
 
 // ============================================================
 // SUCCESS SCREEN
 // ============================================================
 function showSuccessScreen(){
-  const log = document.getElementById('success-log');
+  var log = document.getElementById('success-log');
+  var icon = document.getElementById('success-icon');
+  icon.className = 'success-icon ' + currentAction;
+  var iconColors = { receive:'var(--teal-light)', remove:'#FCA5A5', adjust:'#FCD34D' };
+  icon.innerHTML = '<span class="material-icons-outlined" style="font-size:48px;color:' + (iconColors[currentAction]||'var(--teal-light)') + '">check_circle</span>';
   log.innerHTML = [
-    ['Item', lastEntry.item],
-    ['Action', lastEntry.action],
-    ['Quantity Change', lastEntry.delta],
-    ['New Stock', lastEntry.newStock],
-    ['Lot Number', lastEntry.lot],
-    ['Time', lastEntry.time],
-  ].map(([l,v])=>`<div class="success-log-row"><span class="lbl">${l}</span><span class="val">${v}</span></div>`).join('');
+    ['Item', lastEntry.item],['Action', lastEntry.action],
+    ['Quantity Change', lastEntry.delta],['New Stock', lastEntry.newStock],
+    ['Lot Number', lastEntry.lot],['Time', lastEntry.time]
+  ].map(function(r){ return '<div class="log-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>'; }).join('');
   goScreen('screen-success');
 }
 
-// ============================================================
-// MANUAL CATALOG TOGGLE
-// ============================================================
+function scanAnother(){
+  document.getElementById('scan-input').value = '';
+  currentItem = null; currentCatalog = null;
+  document.getElementById('lot-input').value = '';
+  document.getElementById('expiry-input').value = '';
+  document.getElementById('reason-input').value = '';
+  goScreen('screen-scan');
+  setTimeout(()=>document.getElementById('scan-input').focus(), 100);
+}
 
 // ============================================================
-// CAMERA BARCODE SCANNING
+// CAMERA
 // ============================================================
-var cameraStream = null;
-var barcodeDetector = null;
-var cameraAnimFrame = null;
+var cameraStream = null, barcodeDetector = null, cameraAnimFrame = null;
 
 async function startCamera(){
-  var container = document.getElementById('camera-container');
-  var video = document.getElementById('camera-video');
-  var status = document.getElementById('camera-status');
-
-  // Check BarcodeDetector support (Android Chrome, some desktop)
-  var hasBarcodeDetector = 'BarcodeDetector' in window;
-
-  if(!hasBarcodeDetector){
-    // No BarcodeDetector — fall back to file/camera input
+  var hasBD = 'BarcodeDetector' in window;
+  if(!hasBD){
     var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     document.getElementById(isIOS ? 'camera-ios-input' : 'camera-file-input').click();
     return;
   }
-  // On Android, BarcodeDetector exists but getUserMedia gives better UX
-  // Try getUserMedia first, fall back to file input on permission denial
-
   try{
-    // Request camera access
     cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      video: { facingMode:'environment', width:{ideal:1280}, height:{ideal:720} }
     });
+    var video = document.getElementById('camera-video');
     video.srcObject = cameraStream;
-    container.style.display = 'block';
-    document.getElementById('camera-btn').innerHTML = '<span class="material-icons-outlined" style="font-size:22px">stop_circle</span>';
-    document.getElementById('camera-btn').onclick = stopCamera;
-
-    // Init BarcodeDetector
+    document.getElementById('camera-view').style.display = 'block';
+    var camBtn = document.getElementById('camera-btn');
+    camBtn.innerHTML = '<span class="material-icons-outlined">stop_circle</span>';
+    camBtn.onclick = stopCamera;
     barcodeDetector = new BarcodeDetector({
-      formats: ['code_128','code_39','data_matrix','ean_13','ean_8','qr_code','upc_a','upc_e']
+      formats:['code_128','code_39','data_matrix','ean_13','ean_8','qr_code','upc_a','upc_e']
     });
-
-    // Start scanning loop
-    scanCameraFrame(video, status);
+    scanFrame(video);
   } catch(e){
     console.error('Camera error:', e);
-    showToast('Camera access denied — use file input instead', true);
     document.getElementById('camera-file-input').click();
   }
 }
 
-async function scanCameraFrame(video, status){
+async function scanFrame(video){
   if(!cameraStream) return;
   try{
     var barcodes = await barcodeDetector.detect(video);
     if(barcodes && barcodes.length > 0){
-      var code = barcodes[0].rawValue;
-      document.getElementById('scan-input').value = code;
+      document.getElementById('scan-input').value = barcodes[0].rawValue;
       stopCamera();
       showToast('Barcode scanned');
       lookupBarcode();
       return;
     }
   } catch(e){}
-  cameraAnimFrame = requestAnimationFrame(() => scanCameraFrame(video, status));
+  cameraAnimFrame = requestAnimationFrame(()=>scanFrame(video));
 }
 
 function stopCamera(){
-  if(cameraStream){
-    cameraStream.getTracks().forEach(t => t.stop());
-    cameraStream = null;
-  }
-  if(cameraAnimFrame){ cancelAnimationFrame(cameraAnimFrame); cameraAnimFrame = null; }
-  var container = document.getElementById('camera-container');
-  var video = document.getElementById('camera-video');
-  if(container) container.style.display = 'none';
-  if(video) video.srcObject = null;
+  if(cameraStream){ cameraStream.getTracks().forEach(t=>t.stop()); cameraStream=null; }
+  if(cameraAnimFrame){ cancelAnimationFrame(cameraAnimFrame); cameraAnimFrame=null; }
+  document.getElementById('camera-view').style.display = 'none';
   var btn = document.getElementById('camera-btn');
-  if(btn){ btn.innerHTML = '<span class="material-icons-outlined" style="font-size:22px">photo_camera</span>'; btn.onclick = startCamera; }
+  if(btn){ btn.innerHTML='<span class="material-icons-outlined">photo_camera</span>'; btn.onclick=startCamera; }
 }
 
 async function handleCameraFile(input){
-  // iOS fallback — use BarcodeDetector on captured image if available
-  var file = input.files[0];
-  if(!file) return;
+  var file = input.files[0]; if(!file) return;
   if('BarcodeDetector' in window){
     try{
       var bitmap = await createImageBitmap(file);
-      var detector = new BarcodeDetector({
-        formats: ['code_128','code_39','data_matrix','ean_13','ean_8','qr_code','upc_a','upc_e']
-      });
+      var detector = new BarcodeDetector({ formats:['code_128','code_39','data_matrix','ean_13','ean_8','qr_code','upc_a','upc_e'] });
       var barcodes = await detector.detect(bitmap);
       if(barcodes && barcodes.length > 0){
         document.getElementById('scan-input').value = barcodes[0].rawValue;
         showToast('Barcode detected');
         lookupBarcode();
-        input.value = '';
-        return;
+        input.value=''; return;
       }
-    } catch(e){ console.warn('Image decode error:', e); }
+    } catch(e){ console.warn('Image decode:', e); }
   }
-  showToast('Could not read barcode from image — try again or type manually', true);
-  input.value = '';
+  showToast('Could not read barcode — type it manually', true);
+  input.value='';
 }
 
 // ============================================================
-// SCAN INPUT — ENTER KEY & AUTO-SUBMIT
+// NAVIGATION
 // ============================================================
-const scanInput = document.getElementById('scan-input');
-scanInput.addEventListener('keydown', e=>{
-  if(e.key === 'Enter') lookupBarcode();
+function goScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ============================================================
+// PWA INSTALL
+// ============================================================
+var deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault(); deferredInstallPrompt = e;
+  setTimeout(function(){
+    if(!localStorage.getItem('scanner_install_dismissed')){
+      var b = document.getElementById('install-banner');
+      if(b) b.classList.add('show');
+    }
+  }, 4000);
 });
-// USB HID scanners fire quickly — debounce auto-lookup
-let scanTimer;
-scanInput.addEventListener('input', ()=>{
+async function installApp(){
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  document.getElementById('install-banner').classList.remove('show');
+}
+function dismissInstall(){
+  document.getElementById('install-banner').classList.remove('show');
+  localStorage.setItem('scanner_install_dismissed','1');
+}
+window.addEventListener('appinstalled', function(){
+  document.getElementById('install-banner').classList.remove('show');
+  showToast('Scanner installed to home screen');
+});
+
+// ============================================================
+// HELPERS
+// ============================================================
+function showLoading(msg){ document.getElementById('loading-text').textContent=msg||'Loading...'; document.getElementById('loading').classList.add('show'); }
+function hideLoading(){ document.getElementById('loading').classList.remove('show'); }
+var _toastTimer;
+function showToast(msg, isError){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show'+(isError?' error':'');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>t.classList.remove('show'), 3500);
+}
+
+// Scan input listeners
+var scanInput = document.getElementById('scan-input');
+scanInput.addEventListener('keydown', function(e){ if(e.key==='Enter') lookupBarcode(); });
+var scanTimer;
+scanInput.addEventListener('input', function(){
   clearTimeout(scanTimer);
-  const val = scanInput.value.trim();
+  var val = scanInput.value.trim();
   if(val.length >= 8){
-    scanTimer = setTimeout(()=>{
-      // UPC-A is exactly 12 digits — auto-lookup on complete scan
-      if(/^\d{12,13}$/.test(val) || val.length >= 20){
-        lookupBarcode();
-      }
+    scanTimer = setTimeout(function(){
+      if(/^\d{12,13}$/.test(val) || val.length >= 20) lookupBarcode();
     }, 300);
   }
 });
 
 // ============================================================
-// UI HELPERS
+// INIT
 // ============================================================
-function showLoading(msg='Loading...'){
-  document.getElementById('loading-text').textContent = msg;
-  document.getElementById('loading').classList.add('show');
-}
-function hideLoading(){
-  document.getElementById('loading').classList.remove('show');
-}
-let toastTimer;
-function showToast(msg, isError=false){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (isError ? ' error' : '');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>t.classList.remove('show'), 3000);
-}
-
-// ============================================================
-// INIT — Test SP connection on load
-// ============================================================
-window.addEventListener('load', async ()=>{
-  showLoading('Connecting to SharePoint...');
-  try{
-    var token = getTokenFromMSALCache();
-    if(!token){
-      document.getElementById('sp-status-text').textContent = 'Open Shift Hub first to sign in';
-      hideLoading();
-      showToast('Open the Shift Hub to authenticate, then return here');
-      return;
-    }
-    spUserName = getUserFromMSALCache();
-    document.getElementById('sp-user-text').textContent = spUserName;
-    await spFetch(SP.lists.inventory, '?$top=1&$select=Title');
-    document.getElementById('sp-status-text').textContent = 'SharePoint connected';
-    hideLoading();
-    scanInput.focus();
-  } catch(e){
-    hideLoading();
-    console.error('Init error:', e);
-    document.getElementById('sp-status-text').textContent = e.message || 'Connection error';
-    showToast('Could not connect — open Shift Hub first', true);
-  }
-});
+window.addEventListener('load', initAuth);
 </script>
 </body>
 </html>
