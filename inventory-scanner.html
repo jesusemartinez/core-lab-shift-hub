@@ -413,7 +413,15 @@ let spTokenExpiry = 0;
 
 async function initMSAL(){
   msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
-  try{ await msalInstance.handleRedirectPromise(); } catch(e){}
+  // Handle redirect response first — this fires after returning from login
+  try{
+    const response = await msalInstance.handleRedirectPromise();
+    if(response && response.account){
+      msalInstance.setActiveAccount(response.account);
+      spToken = response.accessToken;
+      spTokenExpiry = response.expiresOn?.getTime() || Date.now() + 3600000;
+    }
+  } catch(e){ console.error('Redirect handle error:', e); }
   const accounts = msalInstance.getAllAccounts();
   if(accounts.length > 0) msalInstance.setActiveAccount(accounts[0]);
   return accounts[0] || null;
@@ -424,8 +432,9 @@ async function getToken(){
   if(!msalInstance) await initMSAL();
   const accounts = msalInstance.getAllAccounts();
   if(!accounts.length){
-    // Trigger login
-    await msalInstance.loginPopup({ scopes: SP.scopes });
+    // No account — redirect to Microsoft login
+    await msalInstance.loginRedirect({ scopes: SP.scopes });
+    return; // Page will redirect, execution stops here
   }
   try{
     const result = await msalInstance.acquireTokenSilent({
@@ -436,10 +445,9 @@ async function getToken(){
     spTokenExpiry = result.expiresOn?.getTime() || Date.now() + 3600000;
     return spToken;
   } catch(e){
-    const result = await msalInstance.acquireTokenPopup({ scopes: SP.scopes });
-    spToken = result.accessToken;
-    spTokenExpiry = result.expiresOn?.getTime() || Date.now() + 3600000;
-    return spToken;
+    // Silent failed — redirect to login
+    await msalInstance.acquireTokenRedirect({ scopes: SP.scopes });
+    return;
   }
 }
 
@@ -813,20 +821,21 @@ function showToast(msg, isError=false){
 // INIT — Test SP connection on load
 // ============================================================
 window.addEventListener('load', async ()=>{
-  scanInput.focus();
   showLoading('Connecting to SharePoint...');
   try{
     await initMSAL();
     const accounts = msalInstance.getAllAccounts();
     if(accounts.length === 0){
+      // No cached account — redirect to Microsoft login (no popup needed)
+      document.getElementById('sp-status-text').textContent = 'Redirecting to sign in...';
       hideLoading();
-      document.getElementById('sp-status-text').textContent = 'Sign in required';
-      showToast('Please sign in to continue');
-      await msalInstance.loginPopup({ scopes: SP.scopes });
+      await msalInstance.loginRedirect({ scopes: SP.scopes });
+      return; // Redirect takes over
     }
-    const account = msalInstance.getAllAccounts()[0];
+    const account = accounts[0];
     document.getElementById('sp-user-text').textContent = account?.name || account?.username || '';
-    // Test connection
+    // Acquire token silently then test SP connection
+    await getToken();
     await spFetch(SP.lists.inventory, '?$top=1&$select=Title');
     document.getElementById('sp-status-text').textContent = 'SharePoint connected';
     hideLoading();
@@ -834,8 +843,13 @@ window.addEventListener('load', async ()=>{
   } catch(e){
     hideLoading();
     console.error('Init error:', e);
-    document.getElementById('sp-status-text').textContent = 'Connection error';
-    showToast('Could not connect to SharePoint — check network', true);
+    // If it's a token error, try redirect
+    if(e.name === 'InteractionRequiredAuthError'){
+      await msalInstance.acquireTokenRedirect({ scopes: SP.scopes });
+    } else {
+      document.getElementById('sp-status-text').textContent = 'Connection error';
+      showToast('Could not connect to SharePoint — check network', true);
+    }
   }
 });
 </script>
