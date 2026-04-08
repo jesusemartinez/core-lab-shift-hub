@@ -822,17 +822,21 @@ async function getToken(){
 }
 
 async function testSPConnection(){
+  function setEl(id, val, prop){
+    var el = document.getElementById(id);
+    if(!el) return;
+    if(prop === 'class') el.className = val;
+    else el.textContent = val;
+  }
   try{
     await spFetch(SP.lists.inventory, '?$top=1&$select=Title');
-    document.getElementById('sp-status-text').textContent = 'SharePoint connected';
-    document.getElementById('sp-dot').className = 'status-dot';
-    var navStatus = document.getElementById('nav-sp-status');
-    if(navStatus) navStatus.textContent = 'SharePoint connected';
+    setEl('sp-status-text', 'SharePoint connected', 'text');
+    setEl('sp-dot', 'status-dot', 'class');
+    setEl('nav-sp-status', 'SharePoint connected', 'text');
   } catch(e){
-    document.getElementById('sp-status-text').textContent = 'Connection error';
-    document.getElementById('sp-dot').className = 'status-dot red';
-    var navStatus = document.getElementById('nav-sp-status');
-    if(navStatus) navStatus.textContent = 'Connection error';
+    setEl('sp-status-text', 'Connection error', 'text');
+    setEl('sp-dot', 'status-dot red', 'class');
+    setEl('nav-sp-status', 'Connection error', 'text');
   }
 }
 
