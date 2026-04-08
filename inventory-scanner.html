@@ -23,9 +23,60 @@
   --border:#3A3D44;--text:#F0F1F4;--text-secondary:#A0A6B4;--text-muted:#5E6478;
   --radius:14px;--font:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
-html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden}
-.screen{display:none;flex-direction:column;height:100vh;max-width:480px;margin:0 auto}
-.screen.active{display:flex}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text)}
+
+/* DESKTOP LAYOUT */
+body{display:flex;flex-direction:column}
+
+/* On desktop, show a sidebar + main content layout */
+@media(min-width:768px){
+  body{flex-direction:row;overflow:hidden;height:100vh}
+  .screen{display:none;flex-direction:column;flex:1;height:100vh;overflow:hidden}
+  .screen.active{display:flex}
+  .body{padding:28px 32px;gap:20px}
+  .action-grid{grid-template-columns:1fr 1fr 1fr;padding:28px 32px 0}
+  .action-card{flex-direction:column;align-items:flex-start;gap:12px;padding:24px}
+  .scan-area{padding:40px 32px}
+  .scan-bottom{padding:0 32px 32px}
+  .footer{padding:20px 32px;flex-direction:row;gap:12px}
+  .footer .btn{flex:1}
+  .hdr{padding:20px 32px 18px}
+  .status-bar{padding:8px 32px}
+  .action-indicator{margin:0 32px}
+  .camera-view{margin:0 32px 12px}
+  /* Desktop sidebar nav */
+  #desktop-nav{display:flex}
+  /* Two column confirm on desktop */
+  #screen-confirm .body{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-content:start}
+  #screen-confirm .footer{grid-column:1/-1}
+}
+
+@media(max-width:767px){
+  html,body{overflow:hidden;height:100%}
+  #desktop-nav{display:none}
+  .screen{display:none;flex-direction:column;height:100vh;max-width:100%;margin:0}
+  .screen.active{display:flex}
+}
+
+/* Desktop nav sidebar */
+#desktop-nav{
+  display:none;width:220px;background:var(--bg-card);border-right:1px solid var(--border);
+  flex-direction:column;padding:24px 0;flex-shrink:0;
+}
+.nav-logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.nav-logo-title{font-size:16px;font-weight:800;color:var(--text)}
+.nav-logo-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 20px;
+  font-size:14px;font-weight:600;color:var(--text-secondary);cursor:pointer;
+  border-left:3px solid transparent;transition:.15s;-webkit-tap-highlight-color:transparent}
+.nav-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.nav-item.active{color:var(--text);border-left-color:var(--purple);background:rgba(76,29,149,.08)}
+.nav-item .material-icons-outlined{font-size:20px}
+.nav-section{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text-muted);padding:16px 20px 6px}
+.nav-user{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);
+  font-size:12px;color:var(--text-muted)}
+.nav-user-name{font-weight:600;color:var(--text);font-size:13px;margin-bottom:2px}
 .material-icons-outlined{font-family:'Material Icons Outlined';font-style:normal;font-weight:normal;
   font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;
   white-space:nowrap;word-wrap:normal;direction:ltr;-webkit-font-feature-settings:'liga';
@@ -236,6 +287,40 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 </div>
 <div class="toast" id="toast"></div>
 
+<!-- DESKTOP SIDEBAR NAV -->
+<nav id="desktop-nav">
+  <div class="nav-logo">
+    <div class="nav-logo-title">Inventory Scanner</div>
+    <div class="nav-logo-sub">Renton Core Lab · DLMP</div>
+  </div>
+  <div class="nav-section">Actions</div>
+  <div class="nav-item" id="nav-receive" onclick="selectAction('receive')">
+    <span class="material-icons-outlined" style="color:var(--teal-light)">add_circle</span>
+    Receive Stock
+  </div>
+  <div class="nav-item" id="nav-remove" onclick="selectAction('remove')">
+    <span class="material-icons-outlined" style="color:#F87171">remove_circle</span>
+    Remove Stock
+  </div>
+  <div class="nav-item" id="nav-adjust" onclick="selectAction('adjust')">
+    <span class="material-icons-outlined" style="color:#FCD34D">tune</span>
+    Adjust Count
+  </div>
+  <div class="nav-section">Navigation</div>
+  <div class="nav-item" onclick="goScreen('screen-action')">
+    <span class="material-icons-outlined">home</span>
+    Home
+  </div>
+  <div class="nav-item" onclick="resetManualScreen();goScreen('screen-manual')">
+    <span class="material-icons-outlined">edit</span>
+    Manual Entry
+  </div>
+  <div class="nav-user">
+    <div class="nav-user-name" id="nav-user-name">—</div>
+    <div id="nav-sp-status">Connecting...</div>
+  </div>
+</nav>
+
 <!-- ===== AUTH SCREEN ===== -->
 <div class="screen active" id="screen-auth">
   <div class="hdr"><div class="hdr-title">Inventory Scanner</div></div>
@@ -255,74 +340,16 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   </div>
 </div>
 
-<!-- ===== ACTION SELECT SCREEN ===== -->
-<div class="screen" id="screen-action">
-  <div class="hdr">
-    <div>
-      <div class="hdr-title">Inventory Scanner</div>
-      <div class="hdr-sub" id="user-name-display">Renton Core Lab · UW Medicine DLMP</div>
-    </div>
-  </div>
-  <div class="status-bar">
-    <span><span class="status-dot" id="sp-dot"></span><span id="sp-status-text">Connecting...</span></span>
-    <span id="sp-user-text" style="font-size:10px"></span>
-  </div>
-  <div class="install-banner" id="install-banner">
-    <span style="font-size:13px;color:#fff">Add to home screen</span>
-    <div style="display:flex;gap:8px">
-      <button onclick="installApp()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">Install</button>
-      <button onclick="dismissInstall()" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:20px;cursor:pointer;padding:0 4px;line-height:1">×</button>
-    </div>
-  </div>
-  <div style="padding:20px 20px 8px">
-    <div style="font-size:13px;color:var(--text-muted);font-weight:600;letter-spacing:.05em;text-transform:uppercase">What are you doing?</div>
-  </div>
-  <div class="action-grid">
-    <div class="action-card receive" onclick="selectAction('receive')">
-      <div class="action-icon receive">
-        <span class="material-icons-outlined" style="font-size:28px;color:var(--teal-light)">add_circle</span>
-      </div>
-      <div>
-        <div class="action-title" style="color:var(--teal-light)">Receive</div>
-        <div class="action-desc">Adding new stock — shipment arrived, restocking</div>
-      </div>
-    </div>
-    <div class="action-card remove" onclick="selectAction('remove')">
-      <div class="action-icon remove">
-        <span class="material-icons-outlined" style="font-size:28px;color:#F87171">remove_circle</span>
-      </div>
-      <div>
-        <div class="action-title" style="color:#F87171">Remove</div>
-        <div class="action-desc">Pulling from stock — used up, expired, discarded</div>
-      </div>
-    </div>
-    <div class="action-card adjust" onclick="selectAction('adjust')">
-      <div class="action-icon adjust">
-        <span class="material-icons-outlined" style="font-size:28px;color:#FCD34D">tune</span>
-      </div>
-      <div>
-        <div class="action-title" style="color:#FCD34D">Adjust</div>
-        <div class="action-desc">Correct the count — physical inventory, discrepancy</div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- ===== SCAN SCREEN ===== -->
 <div class="screen" id="screen-scan">
   <div class="hdr">
-    <button class="hdr-back" onclick="goScreen('screen-action')">
-      <span class="material-icons-outlined" style="font-size:20px">arrow_back</span>
-    </button>
     <div>
-      <div class="hdr-title" id="scan-hdr-title">Scan Item</div>
-      <div class="hdr-sub" id="scan-hdr-sub">Point scanner at barcode</div>
+      <div class="hdr-title">Inventory Scanner</div>
+      <div class="hdr-sub" id="sp-status-sub">Renton Core Lab · UW Medicine DLMP</div>
     </div>
   </div>
-  <div id="action-indicator" class="action-indicator receive">
-    <span class="material-icons-outlined" style="font-size:18px">add_circle</span>
-    <span id="action-indicator-text">Receiving stock</span>
-  </div>
+
+
   <div class="scan-area">
     <div class="scan-icon-box">
       <span class="material-icons-outlined" style="font-size:52px;color:var(--teal-light)">qr_code_scanner</span>
@@ -346,7 +373,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
         <span class="material-icons-outlined">photo_camera</span>
       </button>
     </div>
-    <button class="btn btn-receive" id="scan-lookup-btn" onclick="lookupBarcode()">
+    <button class="btn btn-purple" id="scan-lookup-btn" onclick="lookupBarcode()">
       <span class="material-icons-outlined" style="font-size:20px">search</span>
       Look Up Item
     </button>
@@ -389,19 +416,127 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       </div>
     </div>
 
+    <!-- METRICS CARD -->
+    <div class="card" id="metrics-card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+        Item Status
+        <button id="edit-btn" onclick="toggleEdit()" style="display:none;
+          background:rgba(76,29,149,.15);border:1px solid rgba(76,29,149,.3);
+          color:#A78BFA;border-radius:6px;padding:4px 10px;font-size:11px;
+          font-weight:700;cursor:pointer;display:none;align-items:center;gap:4px">
+          <span class="material-icons-outlined" style="font-size:14px">edit</span>
+          Edit
+        </button>
+      </div>
+      <!-- VIEW MODE -->
+      <div id="metrics-view">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <div style="background:var(--bg-input);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Days Supply</div>
+            <div style="font-size:22px;font-weight:800" id="metric-days-supply">—</div>
+          </div>
+          <div style="background:var(--bg-input);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Daily Use</div>
+            <div style="font-size:22px;font-weight:800" id="metric-daily-use">—</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;
+            background:var(--bg-input);border-radius:8px;padding:10px 14px">
+            <span style="font-size:13px;color:var(--text-secondary)">Order Status</span>
+            <span id="metric-order-status" style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;
+            background:var(--bg-input);border-radius:8px;padding:10px 14px">
+            <span style="font-size:13px;color:var(--text-secondary)">Waste Risk</span>
+            <span id="metric-waste-risk" style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;
+            background:var(--bg-input);border-radius:8px;padding:10px 14px">
+            <span style="font-size:13px;color:var(--text-secondary)">Open Life</span>
+            <span id="metric-open-life" style="font-size:13px;font-weight:600;color:var(--text)">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;
+            background:var(--bg-input);border-radius:8px;padding:10px 14px">
+            <span style="font-size:13px;color:var(--text-secondary)">Item Type</span>
+            <span id="metric-item-type" style="font-size:13px;font-weight:600;color:var(--text)">—</span>
+          </div>
+        </div>
+      </div>
+      <!-- EDIT MODE (admin only) -->
+      <div id="metrics-edit" style="display:none;flex-direction:column;gap:12px">
+        <div class="field">
+          <label>Min PAR</label>
+          <div class="qty-stepper">
+            <button onclick="stepField('edit-par',-1)">−</button>
+            <input type="number" id="edit-par" min="0" step="0.5">
+            <button onclick="stepField('edit-par',1)">+</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Daily Use</label>
+          <div class="qty-stepper">
+            <button onclick="stepField('edit-dailyuse',-0.1)">−</button>
+            <input type="number" id="edit-dailyuse" min="0" step="0.1">
+            <button onclick="stepField('edit-dailyuse',0.1)">+</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Open Life (days)</label>
+          <div class="qty-stepper">
+            <button onclick="stepField('edit-openlife',-1)">−</button>
+            <input type="number" id="edit-openlife" min="0" step="1">
+            <button onclick="stepField('edit-openlife',1)">+</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Item Type</label>
+          <select id="edit-itemtype">
+            <option value="Reagent">Reagent</option>
+            <option value="QC Material">QC Material</option>
+            <option value="Calibrator">Calibrator</option>
+            <option value="Supply">Supply</option>
+            <option value="Part">Part</option>
+          </select>
+        </div>
+        <div class="field">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="edit-isactive" style="width:auto;accent-color:var(--teal)">
+            Item is Active
+          </label>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-purple" style="flex:1" onclick="saveItemEdits()">
+            <span class="material-icons-outlined" style="font-size:18px">save</span>
+            Save Changes
+          </button>
+          <button class="btn btn-ghost" style="flex:1" onclick="cancelEdit()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-title" id="confirm-card-title">Transaction Details</div>
       <div class="field">
-        <label>Quantity</label>
+        <label>Quantity Change
+          <span style="color:var(--text-muted);font-weight:400;margin-left:4px">
+            positive = add · negative = remove · 0 = no change
+          </span>
+        </label>
         <div class="qty-stepper">
           <button onclick="stepQty(-1)">−</button>
-          <input type="number" id="qty-input" value="1" min="0" step="0.1">
+          <input type="number" id="qty-input" value="1" step="0.1"
+            oninput="updateQtyHint(this.value)">
           <button onclick="stepQty(1)">+</button>
         </div>
+        <div id="qty-hint" style="font-size:12px;margin-top:6px;font-weight:600;color:var(--teal-light)"></div>
       </div>
-      <div class="field" id="adjust-field" style="display:none">
-        <label>Set stock to this exact amount</label>
-        <div class="field-hint">Current stock will be replaced with this value</div>
+      <div class="field">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="set-exact-check" style="width:auto;accent-color:var(--purple-light)"
+            onchange="toggleSetExact(this.checked)">
+          Set exact count instead
+        </label>
       </div>
       <div class="field">
         <label>Lot Number <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
@@ -418,9 +553,9 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
     </div>
   </div>
   <div class="footer">
-    <button class="btn btn-receive" id="submit-btn" onclick="submitEntry()">
+    <button class="btn btn-purple" id="submit-btn" onclick="submitEntry()">
       <span class="material-icons-outlined" style="font-size:20px">check_circle</span>
-      <span id="submit-btn-label">Submit</span>
+      Submit Entry
     </button>
   </div>
 </div>
@@ -541,7 +676,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       <span class="material-icons-outlined" style="font-size:20px">qr_code_scanner</span>
       Scan Another Item
     </button>
-    <button class="btn btn-ghost" onclick="goScreen('screen-action')">
+    <button class="btn btn-ghost" onclick="goScreen('screen-scan')">
       <span class="material-icons-outlined" style="font-size:20px">home</span>
       Back to Home
     </button>
@@ -591,12 +726,17 @@ function logFields(obj){ var o={}; for(var k in obj) o[LOG_FIELDS[k]||k]=obj[k];
 function invVal(row,k){ return row[INV_FIELDS[k]||k]; }
 
 // ============================================================
+// CONFIG
+// ============================================================
+var ADMIN_EMAIL = 'jesusem@uw.edu';
+
+// ============================================================
 // STATE
 // ============================================================
 var msalInstance = null;
+var isAdmin = false;
 var spToken = null;
 var spTokenExpiry = 0;
-var currentAction = 'receive'; // receive | remove | adjust
 var currentItem = null;
 var currentCatalog = null;
 var lastScannedRaw = '';
@@ -632,10 +772,14 @@ async function initAuth(){
     if(account){
       document.getElementById('user-name-display').textContent = account.name || account.username;
       document.getElementById('sp-user-text').textContent = account.name || '';
+      isAdmin = (account.username || '').toLowerCase() === ADMIN_EMAIL.toLowerCase();
+      var navName = document.getElementById('nav-user-name');
+      if(navName) navName.textContent = account.name || account.username || '';
     }
     await testSPConnection();
     hideLoading();
-    goScreen('screen-action');
+    goScreen('screen-scan');
+    setTimeout(()=>document.getElementById('scan-input').focus(), 200);
   } catch(e){
     hideLoading();
     console.error('Auth init error:', e);
@@ -683,9 +827,13 @@ async function testSPConnection(){
     await spFetch(SP.lists.inventory, '?$top=1&$select=Title');
     document.getElementById('sp-status-text').textContent = 'SharePoint connected';
     document.getElementById('sp-dot').className = 'status-dot';
+    var navStatus = document.getElementById('nav-sp-status');
+    if(navStatus) navStatus.textContent = 'SharePoint connected';
   } catch(e){
     document.getElementById('sp-status-text').textContent = 'Connection error';
     document.getElementById('sp-dot').className = 'status-dot red';
+    var navStatus = document.getElementById('nav-sp-status');
+    if(navStatus) navStatus.textContent = 'Connection error';
   }
 }
 
@@ -798,44 +946,8 @@ function guessInstrument(parsed){
   return 'XN';
 }
 
-// ============================================================
-// ACTION SELECT
-// ============================================================
-function selectAction(action){
-  currentAction = action;
-  // Update scan screen header and indicator
-  var titles = { receive:'Receiving Stock', remove:'Removing Stock', adjust:'Adjusting Stock' };
-  var subs = { receive:'Scan item to add to inventory', remove:'Scan item to remove from inventory', adjust:'Scan item to set exact count' };
-  document.getElementById('scan-hdr-title').textContent = titles[action];
-  document.getElementById('scan-hdr-sub').textContent = subs[action];
-  // Update action indicator
-  var indicator = document.getElementById('action-indicator');
-  indicator.className = 'action-indicator ' + action;
-  var icons = { receive:'add_circle', remove:'remove_circle', adjust:'tune' };
-  var texts = { receive:'Receiving stock', remove:'Removing from stock', adjust:'Adjusting count' };
-  indicator.innerHTML = '<span class="material-icons-outlined" style="font-size:18px">' + icons[action] + '</span><span>' + texts[action] + '</span>';
-  // Update scan button color
-  var scanBtn = document.getElementById('scan-lookup-btn');
-  scanBtn.className = 'btn btn-' + action;
-  // Update confirm button
-  var submitBtn = document.getElementById('submit-btn');
-  submitBtn.className = 'btn btn-' + action;
-  var submitLabels = { receive:'Receive & Update Stock', remove:'Remove & Update Stock', adjust:'Set Stock Count' };
-  document.getElementById('submit-btn-label').textContent = submitLabels[action];
-  // Show/hide reason field
-  var reasonField = document.getElementById('reason-field');
-  var reasonLabel = document.getElementById('reason-optional-label');
-  reasonField.style.display = 'flex';
-  reasonLabel.textContent = '(optional)';
-  // Show adjust note
-  var adjustField = document.getElementById('adjust-field');
-  adjustField.style.display = action === 'adjust' ? 'flex' : 'none';
-  // Clear scan input
-  document.getElementById('scan-input').value = '';
-  currentItem = null;
-  goScreen('screen-scan');
-  setTimeout(() => document.getElementById('scan-input').focus(), 100);
-}
+// Action select removed — using +/- quantity directly
+
 
 // ============================================================
 // BARCODE LOOKUP
@@ -928,10 +1040,11 @@ function populateConfirmScreen(){
   document.getElementById('preview-par').textContent = par || '—';
   document.getElementById('qty-input').value = 1;
   document.getElementById('reason-input').value = '';
-  // For adjust — pre-fill current stock as starting point
-  if(currentAction === 'adjust'){
-    document.getElementById('qty-input').value = stock;
-  }
+  if(document.getElementById('set-exact-check')) document.getElementById('set-exact-check').checked = false;
+  // Show default qty hint
+  updateQtyHint(1);
+  // Render metrics panel
+  renderMetrics(currentItem);
 }
 
 function stepQty(delta){
@@ -946,30 +1059,204 @@ function stepManualQty(delta){
 }
 
 // ============================================================
+// METRICS + EDIT
+// ============================================================
+function calcMetrics(item){
+  var inStock = parseFloat(invVal(item,'InStock')) || 0;
+  var minPAR = parseFloat(invVal(item,'MinPAR')) || 0;
+  var dailyUse = parseFloat(invVal(item,'DailyUse')) || 0;
+  var openLife = parseFloat(invVal(item,'OpenLifeDays')) || 0;
+  var itemType = invVal(item,'ItemType') || '—';
+
+  // Days supply
+  var daysSupply = dailyUse > 0 ? Math.round(inStock / dailyUse) : null;
+
+  // Order status
+  var orderStatus, orderColor, orderBg;
+  if(inStock <= 0){
+    orderStatus='OUT OF STOCK'; orderColor='#FCA5A5'; orderBg='rgba(185,28,28,.15)';
+  } else if(inStock < minPAR){
+    orderStatus='ORDER NOW'; orderColor='#FCD34D'; orderBg='rgba(146,64,14,.15)';
+  } else if(minPAR > 0 && inStock < minPAR * 1.5){
+    orderStatus='WATCH'; orderColor='#FDE68A'; orderBg='rgba(146,64,14,.08)';
+  } else {
+    orderStatus='OK'; orderColor='var(--teal-light)'; orderBg='rgba(13,122,95,.12)';
+  }
+
+  // Waste risk
+  var wasteRisk, wasteColor, wasteBg;
+  if(openLife > 0 && daysSupply !== null){
+    var ratio = daysSupply / openLife;
+    if(ratio > 1.5){ wasteRisk='HIGH'; wasteColor='#FCA5A5'; wasteBg='rgba(185,28,28,.15)'; }
+    else if(ratio > 1.0){ wasteRisk='MEDIUM'; wasteColor='#FCD34D'; wasteBg='rgba(146,64,14,.15)'; }
+    else { wasteRisk='LOW'; wasteColor='var(--teal-light)'; wasteBg='rgba(13,122,95,.12)'; }
+  } else {
+    wasteRisk='—'; wasteColor='var(--text-muted)'; wasteBg='transparent';
+  }
+
+  return { inStock, minPAR, dailyUse, openLife, itemType, daysSupply, 
+           orderStatus, orderColor, orderBg, wasteRisk, wasteColor, wasteBg };
+}
+
+function renderMetrics(item){
+  var m = calcMetrics(item);
+  document.getElementById('metric-days-supply').textContent = m.daysSupply !== null ? m.daysSupply + 'd' : '—';
+  document.getElementById('metric-daily-use').textContent = m.dailyUse > 0 ? m.dailyUse : '—';
+  var orderEl = document.getElementById('metric-order-status');
+  orderEl.textContent = m.orderStatus;
+  orderEl.style.background = m.orderBg;
+  orderEl.style.color = m.orderColor;
+  var wasteEl = document.getElementById('metric-waste-risk');
+  wasteEl.textContent = m.wasteRisk;
+  wasteEl.style.background = m.wasteBg;
+  wasteEl.style.color = m.wasteColor;
+  document.getElementById('metric-open-life').textContent = m.openLife > 0 ? m.openLife + ' days' : '—';
+  document.getElementById('metric-item-type').textContent = m.itemType;
+  // Show edit button for admin only
+  var editBtn = document.getElementById('edit-btn');
+  if(editBtn) editBtn.style.display = isAdmin ? 'flex' : 'none';
+}
+
+function toggleEdit(){
+  var view = document.getElementById('metrics-view');
+  var edit = document.getElementById('metrics-edit');
+  var isEditing = edit.style.display !== 'none';
+  if(isEditing){
+    cancelEdit();
+  } else {
+    // Populate edit fields from current item
+    document.getElementById('edit-par').value = parseFloat(invVal(currentItem,'MinPAR')) || 0;
+    document.getElementById('edit-dailyuse').value = parseFloat(invVal(currentItem,'DailyUse')) || 0;
+    document.getElementById('edit-openlife').value = parseFloat(invVal(currentItem,'OpenLifeDays')) || 0;
+    document.getElementById('edit-itemtype').value = invVal(currentItem,'ItemType') || 'Reagent';
+    document.getElementById('edit-isactive').checked = (invVal(currentItem,'IsActive') || 'Yes') !== 'No';
+    view.style.display = 'none';
+    edit.style.display = 'flex';
+    var editBtn = document.getElementById('edit-btn');
+    if(editBtn){ editBtn.innerHTML = '<span class="material-icons-outlined" style="font-size:14px">close</span> Cancel'; }
+  }
+}
+
+function cancelEdit(){
+  document.getElementById('metrics-view').style.display = 'block';
+  document.getElementById('metrics-edit').style.display = 'none';
+  var editBtn = document.getElementById('edit-btn');
+  if(editBtn){ editBtn.innerHTML = '<span class="material-icons-outlined" style="font-size:14px">edit</span> Edit'; }
+}
+
+async function saveItemEdits(){
+  if(!currentItem || !isAdmin) return;
+  var par = parseFloat(document.getElementById('edit-par').value) || 0;
+  var dailyUse = parseFloat(document.getElementById('edit-dailyuse').value) || 0;
+  var openLife = parseFloat(document.getElementById('edit-openlife').value) || 0;
+  var itemType = document.getElementById('edit-itemtype').value;
+  var isActive = document.getElementById('edit-isactive').checked ? 'Yes' : 'No';
+  showLoading('Saving changes...');
+  try{
+    var patchData = invFields({
+      MinPAR: par, DailyUse: dailyUse,
+      OpenLifeDays: openLife, ItemType: itemType, IsActive: isActive
+    });
+    await spPatch(SP.lists.inventory, currentItem.ID, patchData);
+    // Update local currentItem
+    currentItem[INV_FIELDS.MinPAR] = par;
+    currentItem[INV_FIELDS.DailyUse] = dailyUse;
+    currentItem[INV_FIELDS.OpenLifeDays] = openLife;
+    currentItem[INV_FIELDS.ItemType] = itemType;
+    currentItem[INV_FIELDS.IsActive] = isActive;
+    // Re-render
+    populateConfirmScreen();
+    cancelEdit();
+    hideLoading();
+    showToast('Item updated', false);
+  } catch(e){
+    hideLoading();
+    showToast('Save failed: ' + (e.message||'').slice(0,40), true);
+  }
+}
+
+function stepField(id, delta){
+  var input = document.getElementById(id);
+  var val = parseFloat(input.value) || 0;
+  input.value = Math.max(0, Math.round((val + delta) * 100) / 100);
+}
+
+// ============================================================
 // SUBMIT ENTRY
 // ============================================================
+function updateQtyHint(val){
+  var qty = parseFloat(val);
+  var oldStock = parseFloat(invVal(currentItem,'InStock')) || 0;
+  var hintEl = document.getElementById('qty-hint');
+  if(!hintEl) return;
+  var setExact = document.getElementById('set-exact-check')?.checked;
+  if(setExact){
+    hintEl.textContent = 'Stock will be set to ' + (qty || 0);
+    hintEl.style.color = 'var(--text-secondary)';
+    return;
+  }
+  if(isNaN(qty) || qty === 0){
+    hintEl.textContent = 'No stock change';
+    hintEl.style.color = 'var(--text-muted)';
+  } else if(qty > 0){
+    hintEl.textContent = oldStock + ' + ' + qty + ' = ' + (oldStock + qty);
+    hintEl.style.color = 'var(--teal-light)';
+  } else {
+    var newVal = Math.max(0, oldStock + qty);
+    hintEl.textContent = oldStock + ' − ' + Math.abs(qty) + ' = ' + newVal;
+    hintEl.style.color = '#FCA5A5';
+  }
+}
+
+function toggleSetExact(checked){
+  var qtyInput = document.getElementById('qty-input');
+  var hint = document.getElementById('qty-hint');
+  if(checked){
+    var oldStock = parseFloat(invVal(currentItem,'InStock')) || 0;
+    qtyInput.value = oldStock;
+    if(hint){ hint.textContent = 'Stock will be set to ' + oldStock; hint.style.color='var(--text-secondary)'; }
+  } else {
+    qtyInput.value = 1;
+    updateQtyHint(1);
+  }
+}
+
 async function submitEntry(){
   if(!currentItem){ showToast('No item selected', true); return; }
-  var qty = parseFloat(document.getElementById('qty-input').value) || 0;
+  var qty = parseFloat(document.getElementById('qty-input').value);
   var lot = document.getElementById('lot-input').value.trim();
   var expiry = document.getElementById('expiry-input').value;
   var reason = document.getElementById('reason-input').value.trim();
+  var setExact = document.getElementById('set-exact-check')?.checked;
   var oldStock = parseFloat(invVal(currentItem,'InStock')) || 0;
-  var newStock, delta;
-  if(currentAction === 'receive'){ newStock = oldStock + qty; delta = qty; }
-  else if(currentAction === 'remove'){ newStock = Math.max(0, oldStock - qty); delta = -qty; }
-  else { newStock = qty; delta = qty - oldStock; } // adjust
+  var newStock, delta, actionLabel;
+
+  if(isNaN(qty)){ showToast('Enter a valid quantity', true); return; }
+
+  if(setExact){
+    newStock = Math.max(0, qty);
+    delta = newStock - oldStock;
+    actionLabel = 'Adjusted';
+  } else if(qty > 0){
+    newStock = oldStock + qty;
+    delta = qty;
+    actionLabel = 'Received';
+  } else if(qty < 0){
+    newStock = Math.max(0, oldStock + qty);
+    delta = qty;
+    actionLabel = 'Removed';
+  } else {
+    showToast('Quantity is 0 — no change to submit', true);
+    return;
+  }
+
   showLoading('Updating inventory...');
   try{
-    // Patch inventory
     var patchData = invFields({ InStock: newStock });
     if(lot) patchData[INV_FIELDS.LotNumber] = lot;
     if(expiry) patchData[INV_FIELDS.ExpiryDate] = expiry;
-    if(currentAction === 'receive' && lot) patchData[INV_FIELDS.DateOpened] = '';
     await spPatch(SP.lists.inventory, currentItem.ID, patchData);
-    // Log entry
     var today = new Date().toISOString().slice(0,10);
-    var actionLabel = currentAction.charAt(0).toUpperCase() + currentAction.slice(1);
     var account = msalInstance?.getActiveAccount();
     var scannedBy = account ? (account.name || account.username || '') : '';
     var logData = logFields({
@@ -1118,6 +1405,9 @@ function scanAnother(){
   document.getElementById('lot-input').value = '';
   document.getElementById('expiry-input').value = '';
   document.getElementById('reason-input').value = '';
+  if(document.getElementById('set-exact-check')) document.getElementById('set-exact-check').checked = false;
+  document.getElementById('qty-input').value = 1;
+  var hint = document.getElementById('qty-hint'); if(hint) hint.textContent='';
   goScreen('screen-scan');
   setTimeout(()=>document.getElementById('scan-input').focus(), 100);
 }
