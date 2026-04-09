@@ -43,6 +43,10 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 }
 @media(max-width:767px){
   #desktop-nav{display:none}
+  html,body{overflow:auto}
+  .screen{height:auto;min-height:100vh;min-height:100dvh;overflow:visible}
+  .scan-bottom{padding:0 20px calc(24px + env(safe-area-inset-bottom))}
+  .footer{padding:16px 20px calc(16px + env(safe-area-inset-bottom))}
 }
 
 /* DESKTOP NAV */
