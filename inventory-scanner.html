@@ -385,14 +385,16 @@ async function spPost(listName,fields){var digest=await getDigest(),meta=await g
 async function spPatch(listName,itemId,fields){var digest=await getDigest(),meta=await getItemType(listName);fields.__metadata={type:meta};return _req(SP_API+"/getbytitle('"+listName+"')/items("+itemId+")",{method:'POST',headers:{'IF-MATCH':'*','X-HTTP-Method':'MERGE','X-RequestDigest':digest},body:fields});}
 
 function parseGS1(raw){
-  // Clean raw for storage/display (strip control chars) but keep GS for parsing
   var GS=String.fromCharCode(29);
-  var cleanRaw=raw.replace(/[\x1d\x1e\x1f\x04]/g,'');
+  // Strip all control chars for clean storage/display
+  var cleanRaw=raw.replace(/[\x00-\x1f\x7f]/g,'');
   var r={raw:cleanRaw,gtin:null,catalogNumber:null,expiry:null,lot:null,isGS1:false,barcodeType:'Unknown'};
-  // Normalize all GS-like control chars to \x1D for parsing
-  var str=raw.replace(/[\x1e\x1f\x04]/g,GS);
+  // For parsing: keep \x1D as GS delimiter, strip everything else
+  var str=raw.replace(/[\x00-\x1c\x1e\x1f\x7f]/g,'');
   // Strip symbology prefixes
   if(str.startsWith(']d2')||str.startsWith(']C1')){str=str.slice(3);r.isGS1=true;r.barcodeType='GS1-DataMatrix';}
+  // Strip leading GS chars (some readers prepend FNC1 as \x1D)
+  while(str.charAt(0)===GS)str=str.slice(1);
   // Parenthetical AIs: (01)...(17)...(10)...
   if(str.includes('(')){r.isGS1=true;if(r.barcodeType==='Unknown')r.barcodeType='GS1-128';var rx=/\((\d{2,4})\)([^(]*)/g,m;while((m=rx.exec(str))!==null)applyAI(r,m[1],m[2].trim());}
   // Fixed-length AI parsing starting at position 0
@@ -490,14 +492,14 @@ function parseGS1(raw){
   return r;
 }
 function applyAI(r,ai,val){if(ai==='01'){r.gtin=val;r.catalogNumber=val.replace(/^0+/,'')||val;r.gtinRaw=val;}else if(ai==='17'&&val.length===6){var yy=parseInt(val.slice(0,2)),yr=yy<50?2000+yy:1900+yy;var dd=val.slice(4,6)==='00'?'28':val.slice(4,6);r.expiry=yr+'-'+val.slice(2,4)+'-'+dd;}else if(ai==='10'){r.lot=val.trim();}else if(ai==='21'){r.serial=val.trim();}}
-function guessInst(p){var c=(p.catalogNumber||'').toUpperCase();var g=(p.gtin||'').toUpperCase();var rm=(p.rocheMaterial||'');if(c.startsWith('XE')||c.includes('CELLPACK')||c.includes('SULFO')||c.includes('LYSER')||c.includes('FLUORO')||c.includes('STOMATO')||c.includes('DILUENT'))return'XN';if(c.includes('STA-')||c.includes('PTT')||c.includes('FIB')||c.startsWith('006'))return'Stago';if(c.includes('UN-')||c.startsWith('UA-'))return'UN';if(c.includes('DI-')||c.includes('DM-'))return'DI-60';if(c.startsWith('458')||c.includes('COBAS')||g.startsWith('0762651')||c.startsWith('762651')||/^\d{8}$/.test(rm)||c.startsWith('0702'))return'Roche';return'XN';}
+function guessInst(p){var c=(p.catalogNumber||'').toUpperCase();var g=(p.gtin||p.gtinRaw||'').toUpperCase();var rm=(p.rocheMaterial||'');if(c.startsWith('XE')||c.includes('CELLPACK')||c.includes('SULFO')||c.includes('LYSER')||c.includes('FLUORO')||c.includes('STOMATO')||c.includes('DILUENT'))return'XN';if(c.includes('STA-')||c.includes('PTT')||c.includes('FIB')||c.startsWith('006'))return'Stago';if(c.includes('UN-')||c.startsWith('UA-'))return'UN';if(c.includes('DI-')||c.includes('DM-'))return'DI-60';if(c.startsWith('458')||c.includes('COBAS')||g.startsWith('0401563')||g.startsWith('0761091')||g.startsWith('0762651')||c.startsWith('762651')||/^\d{8}$/.test(rm)||c.startsWith('0702')||c.startsWith('0725'))return'Roche';return'XN';}
 
 async function lookupBarcode(){
   var raw=document.getElementById('scan-input').value.trim();
   if(!raw){showToast('Please scan or enter a barcode');return;}
   showLoad('Looking up item...');
   try{
-    var safe=raw.replace(/[\x1d\x1e\x1f\x04]/g,'').replace(/'/g,"''");
+    var safe=raw.replace(/[\x00-\x1f\x7f]/g,'').replace(/'/g,"''");
     var parsed=parseGS1(raw);
     var sel='Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9,field_10,field_11,field_12,field_13';
     var catSel='Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9';
