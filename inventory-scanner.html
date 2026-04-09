@@ -385,11 +385,14 @@ async function spPost(listName,fields){var digest=await getDigest(),meta=await g
 async function spPatch(listName,itemId,fields){var digest=await getDigest(),meta=await getItemType(listName);fields.__metadata={type:meta};return _req(SP_API+"/getbytitle('"+listName+"')/items("+itemId+")",{method:'POST',headers:{'IF-MATCH':'*','X-HTTP-Method':'MERGE','X-RequestDigest':digest},body:fields});}
 
 function parseGS1(raw){
-  var r={raw,gtin:null,catalogNumber:null,expiry:null,lot:null,isGS1:false,barcodeType:'Unknown'};var str=raw;
+  // Clean raw for storage/display (strip control chars) but keep GS for parsing
+  var GS=String.fromCharCode(29);
+  var cleanRaw=raw.replace(/[\x1d\x1e\x1f\x04]/g,'');
+  var r={raw:cleanRaw,gtin:null,catalogNumber:null,expiry:null,lot:null,isGS1:false,barcodeType:'Unknown'};
+  // Normalize all GS-like control chars to \x1D for parsing
+  var str=raw.replace(/[\x1e\x1f\x04]/g,GS);
   // Strip symbology prefixes
   if(str.startsWith(']d2')||str.startsWith(']C1')){str=str.slice(3);r.isGS1=true;r.barcodeType='GS1-DataMatrix';}
-  // Strip FNC1/GS characters
-  str=str.replace(/[\x1d\x1e]/g,String.fromCharCode(29));
   // Parenthetical AIs: (01)...(17)...(10)...
   if(str.includes('(')){r.isGS1=true;if(r.barcodeType==='Unknown')r.barcodeType='GS1-128';var rx=/\((\d{2,4})\)([^(]*)/g,m;while((m=rx.exec(str))!==null)applyAI(r,m[1],m[2].trim());}
   // Fixed-length AI parsing starting at position 0
@@ -461,20 +464,24 @@ function parseGS1(raw){
     // Try to identify segments by pattern
     for(var i=0;i<parts.length;i++){
       var p=parts[i];
-      // Date-like: YYYYMMDD or YYYY-MM-DD
+      // Date-like: YYYYMMDD or YYYY-MM-DD (validate ranges)
       if(!r.expiry&&/^\d{4}[-]?\d{2}[-]?\d{2}$/.test(p)){
-        var d=p.replace(/-/g,'');r.expiry=d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);
+        var d=p.replace(/-/g,'');
+        var yr=parseInt(d.slice(0,4)),mm=parseInt(d.slice(4,6)),dd=parseInt(d.slice(6,8));
+        if(yr>=2020&&yr<=2040&&mm>=1&&mm<=12&&dd>=1&&dd<=31){
+          r.expiry=d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);continue;
+        }
       }
-      // First numeric segment 6+ digits: likely material/catalog number
-      else if(!r.catalogNumber&&/^\d{6,}$/.test(p)&&i===0){
+      // First numeric segment 6+ digits at position 0: material/catalog number
+      if(!r.catalogNumber&&/^\d{6,}$/.test(p)&&i===0){
         r.catalogNumber=p;r.rocheMaterial=p;
       }
-      // Second numeric segment 9+ digits: product/GTIN code
+      // Subsequent numeric segment 9+ digits: product/GTIN code
       else if(r.catalogNumber&&!r.gtin&&/^\d{9,}$/.test(p)){
         r.gtin=p;r.gtinRaw=p;
       }
-      // Shorter alphanumeric at end: lot number
-      else if(!r.lot&&i>=1&&/^[A-Z0-9]{3,}$/i.test(p)&&!/^\d{4}[-]?\d{2}[-]?\d{2}$/.test(p)){
+      // Shorter alphanumeric: lot number
+      else if(!r.lot&&i>=1&&/^[A-Z0-9]{3,}$/i.test(p)){
         r.lot=p;
       }
     }
@@ -490,7 +497,7 @@ async function lookupBarcode(){
   if(!raw){showToast('Please scan or enter a barcode');return;}
   showLoad('Looking up item...');
   try{
-    var safe=raw.replace(/'/g,"''");
+    var safe=raw.replace(/[\x1d\x1e\x1f\x04]/g,'').replace(/'/g,"''");
     var parsed=parseGS1(raw);
     var sel='Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9,field_10,field_11,field_12,field_13';
     var catSel='Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9';
@@ -517,7 +524,7 @@ async function lookupBarcode(){
       }
     }
     // 8. Not found anywhere
-    if(!catRow){lastRaw=raw;lastParsedGS1=parsed;fillManualFromBarcode(parsed,raw);hideLoad();goScreen('screen-manual');return;}
+    if(!catRow){lastRaw=parsed.raw;lastParsedGS1=parsed;fillManualFromBarcode(parsed,parsed.raw);hideLoad();goScreen('screen-manual');return;}
     var safeCatID=(catRow[CAT.CatalogID]||'').replace(/'/g,"''");
     var invData;
     if(safeCatID){invData=await spFetch(SP.lists.inventory,'?$top=1&$select='+sel+'&$filter='+encodeURIComponent("field_12 eq '"+safeCatID+"'"));}
