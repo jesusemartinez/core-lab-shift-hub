@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<!--
+  Core Lab Inventory Scanner
+  Copyright (c) 2026 Jesus Martinez. All rights reserved.
+
+  This software is the original work of Jesus Martinez and is protected
+  by copyright law. Unauthorized reproduction, distribution, modification,
+  or use of this software, in whole or in part, without the express written
+  permission of the copyright holder is strictly prohibited.
+
+  Author:  Jesus Martinez (jesusem@uw.edu)
+  Created: 2026
+  Version: 3.0
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Inventory Scanner">
+<meta name="theme-color" content="#EFEDE6">
+<meta name="author" content="Jesus Martinez">
+<meta name="copyright" content="Copyright (c) 2026 Jesus Martinez. All rights reserved.">
+<link rel="manifest" href="manifest.json">
+<title>Renton Inventory Scanner</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --md-primary:#00696E;--md-on-primary:#FFFFFF;
+  --md-primary-container:#C4EEF0;--md-on-primary-container:#003D40;
+  --md-secondary:#5C6360;--md-on-secondary:#FFFFFF;
+  --md-secondary-container:#E0E7E3;--md-on-secondary-container:#1A2120;
+  --md-tertiary:#5B5F6B;--md-on-tertiary:#FFFFFF;
+  --md-tertiary-container:#DFE3F0;--md-on-tertiary-container:#181C26;
+  --md-surface:#FAFAF5;--md-surface-dim:#DBD9D2;
+  --md-surface-container-lowest:#FFFFFF;--md-surface-container-low:#F5F3EC;
+  --md-surface-container:#EFEDE6;--md-surface-container-high:#E9E7E0;
+  --md-surface-container-highest:#E3E1DA;
+  --md-on-surface:#1B1C19;--md-on-surface-variant:#44483E;
+  --md-outline:#757870;--md-outline-variant:#C6C8BC;
+  --md-error:#BA1A1A;--md-on-error:#FFFFFF;
+  --md-error-container:#FFDAD6;--md-on-error-container:#410002;
+  --receive:#2D6B46;--receive-bg:#D0EADB;--receive-surface:#E6F3EC;
+  --remove:#BA1A1A;--remove-bg:#FFDAD6;--remove-surface:#FFF0EE;
+  --adjust:#6B5000;--adjust-bg:#FADFAD;--adjust-surface:#FFF4DE;
+  --ok:#2D6B46;--ok-bg:#D0EADB;
+  --watch:#6B5000;--watch-bg:#FADFAD;
+  --order:#8B5E00;--order-bg:#FFE1A8;
+  --out:#BA1A1A;--out-bg:#FFDAD6;
+  --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:28px;--radius-full:9999px;
+  --font:'Google Sans','Google Sans Text',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --font-body:'Google Sans Text','Google Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --shadow-1:0 1px 2px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.1);
+  --shadow-2:0 1px 2px rgba(0,0,0,.06),0 2px 6px rgba(0,0,0,.1),0 4px 12px rgba(0,0,0,.06);
+  --shadow-3:0 4px 8px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.1);
+}
+
+html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);color:var(--md-on-surface);overflow:hidden}
+.screen{display:none;flex-direction:column;height:100vh;overflow:hidden}
+.screen.active{display:flex}
+
+@media(min-width:768px){
+  body{display:flex;flex-direction:row;height:100vh;overflow:hidden}
+  #desktop-nav{display:none}
+  #desktop-nav.authed{display:flex}
+  #desktop-panel{display:none!important}
+  #desktop-panel.authed{display:flex!important}
+  #scanner-main{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:stretch;min-height:0}
+  .screen{width:100%;height:auto;min-height:100%;overflow:visible}
+  .screen .body,.screen .scan-bottom,.screen .auth-center,.screen .success-body{max-width:580px;margin:0 auto;width:100%}
+  .body{padding:28px 32px}
+  .scan-bottom{padding:0 32px 28px}
+  .hdr{padding:16px 24px}
+  .status-bar{padding:8px 24px}
+  .footer{padding:16px 32px}
+  #screen-item .body{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-content:start}
+  #screen-item .footer{grid-column:1/-1}
+}
+@media(max-width:767px){
+  #desktop-nav{display:none!important}
+  #desktop-panel{display:none!important}
+  #scanner-main{display:contents}
+  html,body{overflow:auto}
+  .screen{height:auto;min-height:100vh;min-height:100dvh;overflow:visible}
+  .scan-bottom{padding:0 20px calc(24px + env(safe-area-inset-bottom))}
+  .footer{padding:16px 20px calc(16px + env(safe-area-inset-bottom))}
+}
+
+/* Desktop Activity Panel */
+#desktop-panel{
+  display:none;width:340px;background:var(--md-surface-container);
+  border-left:1px solid var(--md-outline-variant);flex-direction:column;
+  overflow-y:auto;flex-shrink:0;order:2;
+}
+.panel-hdr{padding:16px 18px;font-family:var(--font);font-size:14px;font-weight:700;color:var(--md-on-surface);display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--md-outline-variant);background:var(--md-surface-container-low)}
+.panel-section{padding:14px 18px;border-bottom:1px solid var(--md-outline-variant)}
+.panel-section-grow{flex:1;min-height:0;display:flex;flex-direction:column}
+.panel-section-grow .recent-list{flex:1;overflow-y:auto}
+.panel-title{font-family:var(--font);font-size:11px;font-weight:700;color:var(--md-on-surface-variant);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+
+/* Panel Search */
+.panel-search-wrap{display:flex;align-items:center;gap:8px;background:var(--md-surface-container-lowest);border:1.5px solid var(--md-outline-variant);border-radius:var(--radius-full);padding:6px 14px}
+.panel-search-wrap:focus-within{border-color:var(--md-primary);box-shadow:0 0 0 2px rgba(0,105,110,.1)}
+.panel-search{border:none;outline:none;background:transparent;font-size:13px;font-family:var(--font-body);color:var(--md-on-surface);width:100%}
+.panel-search::placeholder{color:var(--md-outline)}
+.panel-search-results{margin-top:8px;display:none}
+.panel-search-results.show{display:block}
+.psr-item{padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:12px;transition:.1s}
+.psr-item:hover{background:var(--md-surface-container-high)}
+.psr-item .psr-name{font-weight:700;color:var(--md-on-surface);margin-bottom:1px}
+.psr-item .psr-meta{font-size:11px;color:var(--md-on-surface-variant)}
+
+/* Panel Alerts */
+.alert-list{display:flex;flex-direction:column;gap:6px}
+.alert-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);font-size:12px;line-height:1.4}
+.alert-item.a-out{background:var(--out-bg);color:var(--out)}
+.alert-item.a-order{background:var(--order-bg);color:var(--order)}
+.alert-item.a-expiry{background:var(--watch-bg);color:var(--watch)}
+.alert-item .material-icons-outlined{font-size:16px;flex-shrink:0;margin-top:1px}
+.alert-item .a-text{font-weight:600}
+
+/* Recent Scans */
+.recent-list{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto}
+.recent-list::-webkit-scrollbar{width:3px}.recent-list::-webkit-scrollbar-thumb{background:var(--md-outline-variant);border-radius:2px}
+.recent-empty{font-size:12px;color:var(--md-outline);font-style:italic;padding:8px 0}
+.recent-item{background:var(--md-surface-container-lowest);border:1px solid var(--md-outline-variant);border-radius:var(--radius-sm);padding:10px 12px}
+.recent-item .ri-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px}
+.recent-item .ri-name{font-family:var(--font);font-size:13px;font-weight:700;color:var(--md-on-surface);line-height:1.3;flex:1}
+.recent-item .ri-time{font-size:10px;color:var(--md-outline);white-space:nowrap;flex-shrink:0}
+.recent-item .ri-details{display:flex;gap:12px;font-size:11px;color:var(--md-on-surface-variant);flex-wrap:wrap}
+.recent-item .ri-detail{display:flex;align-items:center;gap:3px}
+.recent-item .ri-detail strong{color:var(--md-on-surface)}
+.recent-item .ri-action-badge{display:inline-flex;padding:2px 8px;border-radius:var(--radius-full);font-size:10px;font-weight:700;margin-top:4px}
+.ri-badge-receive{background:var(--receive-surface);color:var(--receive)}
+.ri-badge-remove{background:var(--remove-surface);color:var(--remove)}
+.ri-badge-adjust{background:var(--adjust-surface);color:var(--adjust)}
+.ri-badge-new{background:var(--md-primary-container);color:var(--md-on-primary-container)}
+
+/* Stats */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-box{background:var(--md-surface-container-lowest);border:1px solid var(--md-outline-variant);border-radius:var(--radius-sm);padding:10px;text-align:center}
+.stat-val{font-family:var(--font);font-size:22px;font-weight:700;color:var(--md-on-surface);line-height:1}
+.stat-lbl{font-size:10px;color:var(--md-on-surface-variant);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-top:2px}
+
+/* Today's Log */
+.log-item{font-size:12px;padding:7px 0;border-bottom:1px solid var(--md-outline-variant);display:flex;align-items:center;gap:8px}
+.log-item:last-child{border-bottom:none}
+.log-item .li-icon{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
+.li-icon-receive{background:var(--receive-surface);color:var(--receive)}
+.li-icon-remove{background:var(--remove-surface);color:var(--remove)}
+.li-icon-adjust{background:var(--adjust-surface);color:var(--adjust)}
+.log-item .li-icon .material-icons-outlined{font-size:14px}
+.log-item .li-body{flex:1;min-width:0}
+.log-item .li-name{font-weight:600;color:var(--md-on-surface);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log-item .li-sub{font-size:10px;color:var(--md-outline)}
+.log-item .li-qty{font-weight:700;flex-shrink:0;font-size:13px}
+
+/* Inventory Snapshot */
+.snapshot-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.snap-box{border-radius:var(--radius-sm);padding:8px 10px;text-align:center}
+.snap-box .snap-val{font-family:var(--font);font-size:18px;font-weight:700;line-height:1}
+.snap-box .snap-lbl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+.snap-ok{background:var(--ok-bg);color:var(--ok)}
+.snap-watch{background:var(--watch-bg);color:var(--watch)}
+.snap-order{background:var(--order-bg);color:var(--order)}
+.snap-out{background:var(--out-bg);color:var(--out)}
+
+/* NAV */
+#desktop-nav{display:none;width:220px;background:var(--md-surface-container);flex-direction:column;padding:0;flex-shrink:0;border-right:1px solid var(--md-outline-variant)}
+.nav-logo{padding:20px 20px 16px;border-bottom:1px solid var(--md-outline-variant)}
+.nav-logo-title{font-family:var(--font);font-size:16px;font-weight:700;color:var(--md-on-surface)}
+.nav-logo-sub{font-size:11px;color:var(--md-on-surface-variant);margin-top:3px;font-weight:500}
+.nav-section{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--md-on-surface-variant);padding:16px 20px 6px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 20px;font-size:14px;font-weight:500;color:var(--md-on-surface-variant);cursor:pointer;border-radius:0 var(--radius-full) var(--radius-full) 0;margin-right:12px;transition:.2s}
+.nav-item:hover{background:var(--md-surface-container-high);color:var(--md-on-surface)}
+.nav-item.active{background:var(--md-secondary-container);color:var(--md-on-secondary-container);font-weight:700}
+.nav-item .material-icons-outlined{font-size:20px}
+.nav-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--md-outline-variant);font-size:11px;color:var(--md-on-surface-variant)}
+.nav-footer-name{font-weight:700;color:var(--md-on-surface);font-size:12px;margin-bottom:2px}
+
+/* HEADER */
+.hdr{background:var(--md-surface-container);padding:16px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;border-bottom:1px solid var(--md-outline-variant)}
+.hdr-teal{background:var(--receive-surface);border-bottom-color:rgba(27,110,61,.15)}
+.hdr-back{background:var(--md-surface-container-high);border:none;color:var(--md-on-surface-variant);width:40px;height:40px;border-radius:var(--radius-full);cursor:pointer;display:grid;place-items:center;flex-shrink:0;transition:.2s}
+.hdr-back:hover{background:var(--md-surface-container-highest)}
+.hdr-back:active{background:var(--md-outline-variant)}
+.hdr-title{font-family:var(--font);font-size:18px;font-weight:700;color:var(--md-on-surface);flex:1}
+.hdr-sub{font-size:12px;color:var(--md-on-surface-variant);margin-top:1px;font-weight:500}
+
+/* STATUS BAR */
+.status-bar{background:var(--md-surface-container-low);border-bottom:1px solid var(--md-outline-variant);padding:6px 20px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--md-on-surface-variant);flex-shrink:0;font-weight:500}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block;margin-right:6px;animation:pulse 2s ease infinite}
+.dot.err{background:var(--md-error);animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* BODY */
+.body{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.body::-webkit-scrollbar{width:4px}
+.body::-webkit-scrollbar-thumb{background:var(--md-outline-variant);border-radius:2px}
+
+/* CARD */
+.card{background:var(--md-surface-container-lowest);border:1px solid var(--md-outline-variant);border-radius:var(--radius-lg);padding:20px}
+.card-title{font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--md-on-surface-variant);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+
+/* ITEM CARD */
+.item-card{background:var(--md-primary-container);border:none;border-radius:var(--radius-xl);padding:20px;box-shadow:var(--shadow-1)}
+.item-name{font-family:var(--font);font-size:20px;font-weight:700;margin-bottom:8px;line-height:1.3;color:var(--md-on-primary-container)}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:var(--radius-full);font-size:11px;font-weight:700;letter-spacing:.04em}
+.badge-purple{background:var(--md-primary);color:var(--md-on-primary)}
+.badge-teal{background:var(--receive);color:#fff}
+.badge-gray{background:var(--md-surface-container-highest);color:var(--md-on-surface-variant);border:1px solid var(--md-outline-variant)}
+.stock-row{display:flex;justify-content:space-between;align-items:flex-end;padding-top:14px;border-top:1px solid rgba(0,0,0,.08)}
+.stock-num{font-family:var(--font);font-size:40px;font-weight:700;line-height:1;color:var(--md-on-primary-container)}
+.stock-num.ok{color:var(--ok)}.stock-num.low{color:var(--order)}.stock-num.out{color:var(--md-error)}
+.stock-lbl{font-size:11px;color:var(--md-on-primary-container);opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-top:4px;font-weight:600}
+
+/* METRICS */
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.metric-box{background:var(--md-surface-container-low);border-radius:var(--radius-md);padding:14px;text-align:center;border:1px solid var(--md-outline-variant)}
+.metric-val{font-family:var(--font);font-size:20px;font-weight:700;margin-bottom:2px;color:var(--md-on-surface)}
+.metric-lbl{font-size:10px;color:var(--md-on-surface-variant);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.metric-badge{display:inline-flex;align-items:center;padding:4px 14px;border-radius:var(--radius-full);font-size:12px;font-weight:700}
+
+/* ACTION TABS */
+.action-tabs{display:flex;gap:0;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--md-outline-variant);background:var(--md-surface-container-low)}
+.action-tab{flex:1;padding:12px 8px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--md-on-surface-variant);border:none;transition:all .2s;-webkit-tap-highlight-color:transparent;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--font)}
+.action-tab:not(:last-child){border-right:1px solid var(--md-outline-variant)}
+.action-tab.active-receive{background:var(--receive-surface);color:var(--receive)}
+.action-tab.active-remove{background:var(--remove-surface);color:var(--remove)}
+.action-tab.active-adjust{background:var(--adjust-surface);color:var(--adjust)}
+.action-tab .material-icons-outlined{font-size:20px}
+.action-form{display:none;flex-direction:column;gap:14px;padding:18px;background:var(--md-surface-container-lowest);border:1px solid var(--md-outline-variant);border-radius:var(--radius-lg);margin-top:4px}
+.action-form.show{display:flex}
+
+/* FIELD */
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;font-weight:600;color:var(--md-on-surface-variant);font-family:var(--font)}
+.field input,.field select,.field textarea{background:var(--md-surface-container-lowest);border:1.5px solid var(--md-outline-variant);border-radius:var(--radius-md);padding:12px 14px;font-size:15px;color:var(--md-on-surface);font-family:var(--font-body);width:100%;outline:none;transition:.2s;-webkit-appearance:none}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2379747E' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--md-primary);box-shadow:0 0 0 3px rgba(0,105,110,.12)}
+.field textarea{resize:none;min-height:68px}
+
+/* QTY STEPPER */
+.qty-row{display:flex;align-items:center;gap:0;border:1.5px solid var(--md-outline-variant);border-radius:var(--radius-md);overflow:hidden}
+.qty-row button{background:var(--md-surface-container-low);border:none;color:var(--md-on-surface);width:48px;height:48px;font-size:22px;cursor:pointer;flex-shrink:0;display:grid;place-items:center;-webkit-tap-highlight-color:transparent;transition:.15s;font-weight:500}
+.qty-row button:active{background:var(--md-surface-container-highest)}
+.qty-row input{flex:1;background:var(--md-surface-container-lowest);border:none;border-left:1.5px solid var(--md-outline-variant);border-right:1.5px solid var(--md-outline-variant);text-align:center;font-size:22px;font-weight:700;color:var(--md-on-surface);height:48px;outline:none;font-family:var(--font)}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border-radius:var(--radius-full);font-size:15px;font-weight:700;font-family:var(--font);border:none;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;width:100%}
+.btn:active{transform:scale(.97)}
+.btn-purple{background:var(--md-primary);color:var(--md-on-primary)}.btn-purple:hover{box-shadow:var(--shadow-2)}
+.btn-teal{background:var(--receive);color:#fff}.btn-teal:hover{box-shadow:var(--shadow-2)}
+.btn-ghost{background:var(--md-surface-container-lowest);color:var(--md-on-surface-variant);border:1.5px solid var(--md-outline-variant)}.btn-ghost:hover{background:var(--md-surface-container-low)}
+.btn-receive{background:var(--receive);color:#fff}.btn-receive:hover{box-shadow:var(--shadow-2)}
+.btn-remove{background:var(--remove);color:#fff}.btn-remove:hover{box-shadow:var(--shadow-2)}
+.btn-adjust{background:var(--adjust);color:#fff}.btn-adjust:hover{box-shadow:var(--shadow-2)}
+.btn-sm{padding:10px 20px;font-size:13px}
+
+/* EDIT SECTION */
+.edit-section{display:none;flex-direction:column;gap:14px;padding-top:16px;border-top:1px solid var(--md-outline-variant);margin-top:4px}
+.edit-section.show{display:flex}
+
+/* SCAN SCREEN */
+.scan-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:32px 20px}
+.scan-icon-box{width:120px;height:120px;border-radius:var(--radius-xl);background:var(--md-primary-container);display:grid;place-items:center;box-shadow:var(--shadow-1)}
+.scan-hint{font-size:14px;color:var(--md-on-surface-variant);text-align:center;line-height:1.6;font-weight:500}
+.scan-bottom{padding:0 20px 24px;display:flex;flex-direction:column;gap:10px}
+.scan-input-row{display:flex;gap:8px}
+.scan-input-row input{flex:1;background:var(--md-surface-container-lowest);border:1.5px solid var(--md-outline-variant);border-radius:var(--radius-full);padding:14px 20px;font-size:15px;color:var(--md-on-surface);font-family:'Courier New',monospace;outline:none;transition:.2s}
+.scan-input-row input::placeholder{color:var(--md-outline)}
+.scan-input-row input:focus{border-color:var(--md-primary);box-shadow:0 0 0 3px rgba(0,105,110,.12)}
+.cam-btn{background:var(--md-surface-container-low);border:1.5px solid var(--md-outline-variant);border-radius:var(--radius-full);color:var(--md-on-surface-variant);padding:0 16px;cursor:pointer;display:grid;place-items:center;flex-shrink:0;transition:.2s}
+.cam-btn:hover{background:var(--md-surface-container-high);border-color:var(--md-primary);color:var(--md-primary)}
+.cam-btn:active{background:var(--md-surface-container-highest)}
+.divider{display:flex;align-items:center;gap:12px;color:var(--md-outline);font-size:12px;font-weight:500}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--md-outline-variant)}
+
+/* CAMERA */
+.camera-view{display:none;border-radius:var(--radius-lg);overflow:hidden;position:relative;background:#000;margin:0 20px 10px;box-shadow:var(--shadow-2)}
+.camera-view video{width:100%;max-height:200px;object-fit:cover;display:block}
+.cam-overlay{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.cam-frame{width:65%;height:45%;border:2px solid var(--md-primary);border-radius:var(--radius-md);box-shadow:0 0 0 2000px rgba(0,0,0,.45)}
+.cam-close{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);border:none;color:#fff;border-radius:var(--radius-full);padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer}
+
+/* SUCCESS */
+.success-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px 20px;text-align:center}
+.success-icon{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;background:var(--receive-bg);box-shadow:0 0 0 8px var(--receive-surface)}
+.success-log{background:var(--md-surface-container-low);border:1px solid var(--md-outline-variant);border-radius:var(--radius-lg);padding:16px 18px;width:100%;text-align:left}
+.log-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--md-outline-variant)}
+.log-row:last-child{border-bottom:none}
+.log-row .lbl{color:var(--md-on-surface-variant);font-weight:500}
+.log-row .val{font-weight:700;text-align:right;max-width:60%;color:var(--md-on-surface)}
+
+/* AUTH */
+.auth-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:32px 20px;text-align:center}
+.auth-logo{width:88px;height:88px;border-radius:var(--radius-xl);background:var(--md-primary);display:grid;place-items:center;box-shadow:var(--shadow-2);margin-bottom:8px}
+
+/* LOADING + TOAST */
+.loading{display:none;position:fixed;inset:0;background:rgba(254,247,255,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.loading.show{display:flex}
+.spinner{width:44px;height:44px;border-radius:50%;border:3px solid var(--md-outline-variant);border-top-color:var(--md-primary);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:var(--font);font-size:14px;color:var(--md-on-surface-variant);font-weight:500}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--md-on-surface);color:var(--md-surface);padding:12px 24px;border-radius:var(--radius-full);font-size:14px;font-weight:600;font-family:var(--font);box-shadow:var(--shadow-3);transition:transform .3s cubic-bezier(.34,1.56,.64,1);z-index:998;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--md-error);color:var(--md-on-error)}
+.toast.ok{background:var(--receive);color:#fff}
+.material-icons-outlined{font-family:'Material Icons Outlined';font-style:normal;font-weight:normal;font-size:24px;line-height:1;display:inline-block;-webkit-font-smoothing:antialiased}
+.footer{padding:16px 20px;display:flex;flex-direction:column;gap:10px;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="loading" id="loading"><div class="spinner"></div><div class="loading-text" id="loading-text">Connecting...</div></div>
+<div class="toast" id="toast"></div>
+
+<nav id="desktop-nav">
+  <div class="nav-logo"><div class="nav-logo-title">Inventory Scanner</div><div class="nav-logo-sub">Renton Core Lab</div></div>
+  <div class="nav-section">Scanner</div>
+  <div class="nav-item active" onclick="goScan()"><span class="material-icons-outlined">qr_code_scanner</span>Scan Item</div>
+  <div class="nav-item" onclick="resetManual();goScreen('screen-manual')"><span class="material-icons-outlined">edit</span>Manual Entry</div>
+  <div class="nav-section" style="margin-top:12px">Quick Links</div>
+  <div class="nav-item" onclick="window.open('inventory-dashboard.html','_blank')"><span class="material-icons-outlined">analytics</span>Dashboard</div>
+  <div class="nav-footer"><div class="nav-footer-name" id="nav-user-name"></div><div id="nav-sp-status">Connecting...</div><div style="margin-top:10px;font-size:8px;color:var(--md-outline-variant);letter-spacing:.02em;opacity:.5">&copy; 2026 Jesus Martinez. All rights reserved.</div></div>
+</nav>
+
+<!-- Desktop Activity Panel (right side) -->
+<aside id="desktop-panel">
+  <div class="panel-hdr">
+    <span class="material-icons-outlined" style="font-size:20px;color:var(--md-primary)">monitoring</span>
+    <span>Activity Center</span>
+  </div>
+
+  <!-- Quick Search -->
+  <div class="panel-section">
+    <div class="panel-search-wrap">
+      <span class="material-icons-outlined" style="font-size:18px;color:var(--md-outline)">search</span>
+      <input type="text" class="panel-search" id="panel-search" placeholder="Quick item lookup..." oninput="panelSearch(this.value)">
+    </div>
+    <div id="panel-search-results" class="panel-search-results"></div>
+  </div>
+
+  <!-- Alerts -->
+  <div class="panel-section" id="alerts-section" style="display:none">
+    <div class="panel-title"><span class="material-icons-outlined" style="font-size:16px;color:var(--out)">warning</span>Alerts</div>
+    <div id="panel-alerts" class="alert-list"></div>
+  </div>
+
+  <!-- Session Stats -->
+  <div class="panel-section">
+    <div class="panel-title"><span class="material-icons-outlined" style="font-size:16px">assessment</span>This Session</div>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-val" id="stat-scans">0</div><div class="stat-lbl">Scanned</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-received">0</div><div class="stat-lbl">Received</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-removed">0</div><div class="stat-lbl">Removed</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-new">0</div><div class="stat-lbl">New Items</div></div>
+    </div>
+  </div>
+
+  <!-- Recent Scans -->
+  <div class="panel-section panel-section-grow">
+    <div class="panel-title"><span class="material-icons-outlined" style="font-size:16px">qr_code_scanner</span>Recent Scans <span style="font-size:10px;font-weight:400;color:var(--md-outline);margin-left:4px">this session</span></div>
+    <div id="recent-scans" class="recent-list"><div class="recent-empty">Scan an item to see it here</div></div>
+  </div>
+
+  <!-- Today's Log -->
+  <div class="panel-section panel-section-grow">
+    <div class="panel-title"><span class="material-icons-outlined" style="font-size:16px">receipt_long</span>Today's Transactions <span style="font-size:10px;font-weight:400;color:var(--md-outline);margin-left:4px">all users · live</span></div>
+    <div id="today-log" class="recent-list"><div class="recent-empty">Loading...</div></div>
+  </div>
+
+  <!-- Inventory Snapshot -->
+  <div class="panel-section">
+    <div class="panel-title"><span class="material-icons-outlined" style="font-size:16px">inventory_2</span>Inventory Snapshot</div>
+    <div id="inv-snapshot" class="snapshot-grid"></div>
+  </div>
+</aside>
+
+<main id="scanner-main">
+
+<div class="screen active" id="screen-auth">
+  <div class="hdr"><div class="hdr-title">Inventory Scanner</div></div>
+  <div class="auth-center">
+    <div class="auth-logo"><span class="material-icons-outlined" style="font-size:40px;color:#fff">qr_code_scanner</span></div>
+    <div style="font-family:var(--font);font-size:24px;font-weight:700;color:var(--md-on-surface)">Renton Core Lab</div>
+    <div style="font-size:14px;color:var(--md-on-surface-variant);line-height:1.6;max-width:280px;font-weight:500">Sign in with your UW Medicine account to use the inventory scanner.</div>
+    <button class="btn btn-purple" style="max-width:280px" onclick="triggerLogin()"><span class="material-icons-outlined" style="font-size:20px">login</span>Sign in with Microsoft</button>
+    <div style="font-size:12px;color:var(--md-outline);font-weight:500">UW Medicine DLMP</div>
+  </div>
+</div>
+
+<div class="screen" id="screen-scan">
+  <div class="hdr"><div><div class="hdr-title">Inventory Scanner</div><div class="hdr-sub" id="user-sub">Renton Core Lab</div></div></div>
+  <div class="status-bar"><span><span class="dot" id="sp-dot"></span><span id="sp-status">Connecting...</span></span><span id="sp-user" style="font-size:11px;font-weight:600"></span></div>
+  <div class="scan-area">
+    <div class="scan-icon-box"><span class="material-icons-outlined" style="font-size:52px;color:var(--md-primary)">qr_code_scanner</span></div>
+    <div class="scan-hint">Point barcode scanner at label,<br>or type/paste a barcode below</div>
+  </div>
+  <div class="camera-view" id="camera-view"><video id="camera-video" playsinline autoplay muted></video><div class="cam-overlay"><div class="cam-frame"></div></div><button class="cam-close" onclick="stopCamera()">Close</button></div>
+  <input type="file" id="cam-file" accept="image/*" capture="environment" style="display:none" onchange="handleCamFile(this)">
+  <div class="scan-bottom">
+    <div class="scan-input-row">
+      <input type="text" id="scan-input" placeholder="Scan or type barcode..." autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="cam-btn" id="cam-btn" onclick="startCamera()"><span class="material-icons-outlined">photo_camera</span></button>
+    </div>
+    <button class="btn btn-purple" onclick="lookupBarcode()"><span class="material-icons-outlined" style="font-size:20px">search</span>Look Up Item</button>
+    <div class="divider">or</div>
+    <button class="btn btn-ghost" onclick="resetManual();goScreen('screen-manual')"><span class="material-icons-outlined" style="font-size:20px">edit</span>Enter Manually</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-item">
+  <div class="hdr"><button class="hdr-back" onclick="goScan()"><span class="material-icons-outlined" style="font-size:20px">arrow_back</span></button><div><div class="hdr-title">Item Details</div><div class="hdr-sub">Scan result</div></div></div>
+  <div class="body">
+    <div class="item-card">
+      <div class="item-name" id="item-name"></div>
+      <div class="badges"><span class="badge badge-purple" id="item-instrument"></span><span class="badge badge-teal" id="item-unit"></span><span class="badge badge-gray" id="item-type"></span></div>
+      <div class="stock-row"><div><div class="stock-num ok" id="item-stock">0</div><div class="stock-lbl">Current Stock</div></div><div style="text-align:right"><div style="font-family:var(--font);font-size:20px;font-weight:700;color:var(--md-on-primary-container)" id="item-par"></div><div class="stock-lbl">Min PAR</div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Status<button id="edit-btn" onclick="toggleEdit()" style="display:none;background:var(--md-secondary-container);border:1px solid var(--md-outline-variant);color:var(--md-on-secondary-container);border-radius:var(--radius-full);padding:4px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);align-items:center;gap:4px"><span class="material-icons-outlined" style="font-size:14px">edit</span> Edit</button></div>
+      <div class="metrics-grid"><div class="metric-box"><div class="metric-val" id="m-days"></div><div class="metric-lbl">Days Supply</div></div><div class="metric-box"><div class="metric-val" id="m-daily"></div><div class="metric-lbl">Daily Use</div></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--md-surface-container-low);border-radius:var(--radius-md);padding:12px 16px;border:1px solid var(--md-outline-variant)"><span style="font-size:13px;color:var(--md-on-surface-variant);font-weight:500">Order Status</span><span class="metric-badge" id="m-order"></span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--md-surface-container-low);border-radius:var(--radius-md);padding:12px 16px;border:1px solid var(--md-outline-variant)"><span style="font-size:13px;color:var(--md-on-surface-variant);font-weight:500">Waste Risk</span><span class="metric-badge" id="m-waste"></span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--md-surface-container-low);border-radius:var(--radius-md);padding:12px 16px;border:1px solid var(--md-outline-variant)"><span style="font-size:13px;color:var(--md-on-surface-variant);font-weight:500">Open Life</span><span style="font-family:var(--font);font-size:13px;font-weight:700;color:var(--md-on-surface)" id="m-life"></span></div>
+      </div>
+      <div class="edit-section" id="edit-section">
+        <div class="field"><label>Min PAR</label><div class="qty-row"><button onclick="stepF('e-par',-1)">&minus;</button><input type="number" id="e-par" min="0" step="0.5"><button onclick="stepF('e-par',1)">+</button></div></div>
+        <div class="field"><label>Daily Use</label><div class="qty-row"><button onclick="stepF('e-daily',-0.1)">&minus;</button><input type="number" id="e-daily" min="0" step="0.1"><button onclick="stepF('e-daily',0.1)">+</button></div></div>
+        <div class="field"><label>Open Life (days)</label><div class="qty-row"><button onclick="stepF('e-life',-1)">&minus;</button><input type="number" id="e-life" min="0" step="1"><button onclick="stepF('e-life',1)">+</button></div></div>
+        <div class="field"><label>Item Type</label><select id="e-type"><option value="Reagent">Reagent</option><option value="QC Material">QC Material</option><option value="Calibrator">Calibrator</option><option value="Control">Control</option><option value="Consumable">Consumable</option><option value="Supply">Supply</option><option value="Part">Part</option></select></div>
+        <div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="e-active" style="width:auto;accent-color:var(--md-primary)">Item is Active</label></div>
+        <div style="display:flex;gap:8px"><button class="btn btn-purple btn-sm" style="flex:1" onclick="saveEdits()"><span class="material-icons-outlined" style="font-size:16px">save</span> Save</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="cancelEdit()">Cancel</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Update Stock</div>
+      <div class="action-tabs"><button class="action-tab" id="tab-receive" onclick="selectTab('receive')"><span class="material-icons-outlined">add_circle</span>Receive</button><button class="action-tab" id="tab-remove" onclick="selectTab('remove')"><span class="material-icons-outlined">remove_circle</span>Remove</button><button class="action-tab" id="tab-adjust" onclick="selectTab('adjust')"><span class="material-icons-outlined">tune</span>Adjust</button></div>
+      <div class="action-form" id="form-receive"><div class="field"><label>Quantity to Add</label><div class="qty-row"><button onclick="stepQ('q-receive',-1)">&minus;</button><input type="number" id="q-receive" value="1" min="0" step="0.1"><button onclick="stepQ('q-receive',1)">+</button></div></div><div class="field"><label>Lot Number <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><input type="text" id="lot-receive" placeholder="e.g. LOT-2026-001"></div><div class="field"><label>Expiry Date <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><input type="date" id="exp-receive"></div><button class="btn btn-receive" onclick="submitAction('receive')"><span class="material-icons-outlined" style="font-size:20px">check_circle</span>Confirm Receive</button></div>
+      <div class="action-form" id="form-remove"><div class="field"><label>Quantity to Remove</label><div class="qty-row"><button onclick="stepQ('q-remove',-1)">&minus;</button><input type="number" id="q-remove" value="1" min="0" step="0.1"><button onclick="stepQ('q-remove',1)">+</button></div></div><div class="field"><label>Reason <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><textarea id="reason-remove" placeholder="e.g. Used up, expired, discarded..."></textarea></div><button class="btn btn-remove" onclick="submitAction('remove')"><span class="material-icons-outlined" style="font-size:20px">check_circle</span>Confirm Remove</button></div>
+      <div class="action-form" id="form-adjust"><div style="font-size:13px;color:var(--md-on-surface-variant);padding:4px 0;font-weight:500">Set the exact current stock count.</div><div class="field"><label>New Stock Count</label><div class="qty-row"><button onclick="stepQ('q-adjust',-1)">&minus;</button><input type="number" id="q-adjust" value="0" min="0" step="0.1"><button onclick="stepQ('q-adjust',1)">+</button></div></div><div class="field"><label>Reason <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><textarea id="reason-adjust" placeholder="e.g. Physical count, discrepancy..."></textarea></div><button class="btn btn-adjust" onclick="submitAction('adjust')"><span class="material-icons-outlined" style="font-size:20px">check_circle</span>Set Stock Count</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="screen-manual">
+  <div class="hdr"><button class="hdr-back" onclick="goScan()"><span class="material-icons-outlined" style="font-size:20px">arrow_back</span></button><div><div class="hdr-title">New Item</div><div class="hdr-sub">Add to catalog</div></div></div>
+  <div class="body">
+    <div style="background:var(--adjust-surface);border:1px solid rgba(124,88,0,.2);border-radius:var(--radius-lg);padding:14px 16px;font-size:13px;color:var(--adjust);line-height:1.5;font-weight:600" id="manual-alert">Barcode not in catalog. Enter details to add it.</div>
+    <div class="card">
+      <div class="card-title">Catalog Details<span id="barcode-type-badge" class="badge badge-teal" style="display:none;font-size:10px"></span></div>
+      <div class="field"><label>Item Name *</label><input type="text" id="m-name" placeholder="e.g. Cellpack DCL"></div>
+      <div class="field" style="margin-top:14px"><label>Department *</label><select id="m-instrument"><option value="Chemistry">Chemistry</option><option value="Hematology">Hematology</option><option value="Coagulation">Coagulation</option><option value="Urinalysis">Urinalysis</option><option value="Laboratory Supplies">Laboratory Supplies</option><option value="Office Supplies">Office Supplies</option></select></div>
+      <div class="field" style="margin-top:14px"><label>Unit</label><select id="m-unit"><option value="L">L (liter)</option><option value="mL">mL</option><option value="vial">vial</option><option value="kit">kit</option><option value="btl">btl</option><option value="box">box</option><option value="pk">pk (pack)</option><option value="ea">ea (each)</option></select></div>
+      <div class="field" style="margin-top:14px"><label>Catalog Number</label><input type="text" id="m-catnum" placeholder="e.g. XE-2021" style="font-family:'Courier New',monospace;font-size:13px"></div>
+      <div class="field" style="margin-top:14px"><label>Barcode String</label><input type="text" id="m-barcode" style="font-family:'Courier New',monospace;font-size:13px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Initial Stock Entry</div>
+      <div class="field"><label>Quantity</label><div class="qty-row"><button onclick="stepQ('m-qty',-1)">&minus;</button><input type="number" id="m-qty" value="1" min="0" step="0.1"><button onclick="stepQ('m-qty',1)">+</button></div></div>
+      <div class="field" style="margin-top:14px"><label>Lot Number <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><input type="text" id="m-lot" placeholder="e.g. LOT-2026-001"></div>
+      <div class="field" style="margin-top:14px"><label>Expiry Date <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><input type="date" id="m-expiry"></div>
+      <div class="field" style="margin-top:14px"><label>Notes <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><textarea id="m-notes" placeholder="Any additional notes"></textarea></div>
+    </div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-teal" onclick="submitManual(true)"><span class="material-icons-outlined" style="font-size:20px">add_circle</span>Add to Catalog &amp; Submit</button>
+    <button class="btn btn-ghost" onclick="submitManual(false)">Log only</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-success">
+  <div class="hdr hdr-teal"><div><div class="hdr-title" style="color:var(--receive)">Entry Recorded</div><div class="hdr-sub" style="color:var(--receive);opacity:.7">Transaction logged</div></div></div>
+  <div class="success-body">
+    <div class="success-icon"><span class="material-icons-outlined" style="font-size:48px;color:var(--receive)">check_circle</span></div>
+    <div style="font-family:var(--font);font-size:24px;font-weight:700;color:var(--md-on-surface)">Submitted</div>
+    <div style="font-size:14px;color:var(--md-on-surface-variant);text-align:center;max-width:280px;line-height:1.6;font-weight:500">Inventory updated and transaction logged.</div>
+    <div class="success-log" id="success-log"></div>
+  </div>
+  <div class="footer"><button class="btn btn-purple" onclick="goScan()"><span class="material-icons-outlined" style="font-size:20px">qr_code_scanner</span>Scan Another Item</button></div>
+</div>
+</main>
+
+<script>
+var MSAL_CONFIG={auth:{clientId:'24c43cdb-d15a-42ff-9883-cd8c19965a54',authority:'https://login.microsoftonline.com/f6b6dd5b-f02f-441a-99a0-162ac5060bd2',redirectUri:'https://renton-central-lab.github.io/core-lab-shift-hub/inventory-scanner.html'},cache:{cacheLocation:'localStorage',storeAuthStateInCookie:false}};
+var SP={siteUrl:'https://uwnetid.sharepoint.com/sites/og_uw_renton_central_laboratory_-_core_lab',lists:{inventory:'ReagentInventory',log:'InventoryLog',catalog:'ReagentCatalog'}};
+var SP_API=SP.siteUrl+'/_api/web/lists';
+var ADMIN_EMAIL='jesusem@uw.edu';
+var CAT={CatalogID:'field_1',Instrument:'field_2',Manufacturer:'field_3',Unit:'field_4',BarcodeType:'field_5',BarcodeString:'field_6',CatalogNumber:'field_7',GS1ParsesExpiry:'field_8',GS1ParsesLot:'field_9',Notes:'field_10'};
+var INV={Instrument:'field_1',ItemType:'field_2',Unit:'field_3',InStock:'field_4',MinPAR:'field_5',DailyUse:'field_6',ExpiryDate:'field_7',OpenLifeDays:'field_8',DateOpened:'field_9',LotNumber:'field_10',Notes:'field_11',CatalogID:'field_12',IsActive:'field_13'};
+var LOG={Action:'field_1',QuantityDelta:'field_2',QuantityAfter:'field_3',LotNumber:'field_4',ExpiryDate:'field_5',Timestamp:'field_6',ReasonNote:'field_7',ScannedBy:'ScannedBy'};
+function cf(obj,map){var o={};for(var k in obj)o[map[k]||k]=obj[k];return o;}
+function iv(row,k){return row[INV[k]||k];}
+var msalInstance=null,spToken=null,spTokenExpiry=0;
+var isAdmin=false,currentItem=null,currentTab=null;
+var lastEntry={},lastParsedGS1=null,lastRaw='';
+var _listTypes={};
+
+async function initAuth(){
+  showLoad('Signing in...');
+  try{
+    msalInstance=new msal.PublicClientApplication(MSAL_CONFIG);
+    var resp=null;
+    try{resp=await msalInstance.handleRedirectPromise();}catch(e){console.warn('Redirect promise:',e);}
+    if(resp&&resp.account){msalInstance.setActiveAccount(resp.account);spToken=resp.accessToken;spTokenExpiry=resp.expiresOn?.getTime()||Date.now()+3600000;}
+    var accounts=msalInstance.getAllAccounts();
+    if(!accounts.length){hideLoad();goScreen('screen-auth');return;}
+    msalInstance.setActiveAccount(accounts[0]);
+    var acct=accounts[0];
+    isAdmin=(acct.username||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
+    setEl('user-sub',acct.name||acct.username);
+    setEl('sp-user',acct.name||'');
+    setEl('nav-user-name',acct.name||acct.username||'');
+    if(!spToken){try{var r=await msalInstance.acquireTokenSilent({scopes:['https://uwnetid.sharepoint.com/AllSites.Write'],account:acct});spToken=r.accessToken;spTokenExpiry=r.expiresOn?.getTime()||Date.now()+3600000;}catch(e){console.warn('Silent token failed:',e.message);}}
+    // Show desktop chrome after successful auth
+    var dn=document.getElementById('desktop-nav');if(dn)dn.classList.add('authed');
+    var dp=document.getElementById('desktop-panel');if(dp)dp.classList.add('authed');
+    hideLoad();goScreen('screen-scan');
+    testSP().then(function(){loadTodayLog();loadPanelData();setInterval(loadTodayLog,60000);}).catch(function(e){console.warn('SP test:',e);loadTodayLog();loadPanelData();setInterval(loadTodayLog,60000);});
+  }catch(e){hideLoad();console.error('Auth error:',e);goScreen('screen-auth');}
+}
+async function triggerLogin(){if(!msalInstance)msalInstance=new msal.PublicClientApplication(MSAL_CONFIG);await msalInstance.loginRedirect({scopes:['https://uwnetid.sharepoint.com/AllSites.Write','User.Read']});}
+async function getToken(){
+  if(spToken&&Date.now()<spTokenExpiry-60000)return spToken;
+  var acct=msalInstance?.getActiveAccount();if(!acct)throw new Error('Not signed in');
+  try{var r=await msalInstance.acquireTokenSilent({scopes:['https://uwnetid.sharepoint.com/AllSites.Write'],account:acct});spToken=r.accessToken;spTokenExpiry=r.expiresOn?.getTime()||Date.now()+3600000;return spToken;}catch(e){throw new Error('Session expired — please reload');}
+}
+async function testSP(){
+  try{await spFetch(SP.lists.catalog,'?$top=1&$select=Id,Title');setEl('sp-status','SharePoint connected');setEl('nav-sp-status','SharePoint connected');var dot=document.getElementById('sp-dot');if(dot)dot.className='dot';}
+  catch(e){console.error('SP connection test failed:',e);setEl('sp-status','Connection error');setEl('nav-sp-status','Connection error');var dot=document.getElementById('sp-dot');if(dot)dot.className='dot err';}
+}
+async function _req(url,opts){var token=await getToken();var hasBody=opts&&opts.body!=null;var headers=Object.assign({'Accept':'application/json;odata=verbose','Authorization':'Bearer '+token},hasBody?{'Content-Type':'application/json;odata=verbose'}:{},(opts&&opts.headers)||{});var o=Object.assign({},opts||{},{headers});if(o.body&&typeof o.body!=='string')o.body=JSON.stringify(o.body);var res=await fetch(url,o);if(!res.ok){var err=await res.text();throw new Error('SP '+res.status+': '+err);}return res;}
+async function getItemType(listName){if(_listTypes[listName])return _listTypes[listName];var r=await _req(SP_API+"/getbytitle('"+listName+"')?$select=ListItemEntityTypeFullName");var d=await r.json();_listTypes[listName]=d.d.ListItemEntityTypeFullName;return _listTypes[listName];}
+async function getDigest(){var r=await _req(SP.siteUrl+'/_api/contextinfo',{method:'POST'});var d=await r.json();return d.d.GetContextWebInformation.FormDigestValue;}
+async function spFetch(listName,endpoint,opts){endpoint=endpoint||'';opts=opts||{};var url=SP_API+"/getbytitle('"+listName+"')/items"+endpoint;var res=await _req(url,opts);if(!opts.method||opts.method==='GET'){var j=await res.json();return j.d&&j.d.results?{value:j.d.results}:j;}return res;}
+async function spPost(listName,fields){var digest=await getDigest(),meta=await getItemType(listName);fields.__metadata={type:meta};return _req(SP_API+"/getbytitle('"+listName+"')/items",{method:'POST',headers:{'X-RequestDigest':digest},body:fields});}
+async function spPatch(listName,itemId,fields){var digest=await getDigest(),meta=await getItemType(listName);fields.__metadata={type:meta};return _req(SP_API+"/getbytitle('"+listName+"')/items("+itemId+")",{method:'POST',headers:{'IF-MATCH':'*','X-HTTP-Method':'MERGE','X-RequestDigest':digest},body:fields});}
+
+function parseGS1(raw){
+  var GS=String.fromCharCode(29);
+  // Strip all control chars for clean storage/display
+  var cleanRaw=raw.replace(/[\x00-\x1f\x7f]/g,'');
+  var r={raw:cleanRaw,gtin:null,catalogNumber:null,expiry:null,lot:null,isGS1:false,barcodeType:'Unknown'};
+  // For parsing: keep \x1D as GS delimiter, strip everything else
+  var str=raw.replace(/[\x00-\x1c\x1e\x1f\x7f]/g,'');
+  // Strip symbology prefixes
+  if(str.startsWith(']d2')||str.startsWith(']C1')){str=str.slice(3);r.isGS1=true;r.barcodeType='GS1-DataMatrix';}
+  // Strip leading GS chars (some readers prepend FNC1 as \x1D)
+  while(str.charAt(0)===GS)str=str.slice(1);
+  // Parenthetical AIs: (01)...(17)...(10)...
+  if(str.includes('(')){r.isGS1=true;if(r.barcodeType==='Unknown')r.barcodeType='GS1-128';var rx=/\((\d{2,4})\)([^(]*)/g,m;while((m=rx.exec(str))!==null)applyAI(r,m[1],m[2].trim());}
+  // Fixed-length AI parsing starting at position 0
+  else if(r.isGS1||/^\d{14}/.test(str)||str.slice(0,2)==='01'){
+    r.isGS1=true;if(r.barcodeType==='Unknown')r.barcodeType='GS1-DataMatrix';
+    var fixedLen={'01':14,'02':14,'11':6,'13':6,'15':6,'17':6,'20':2};
+    var foundAIs={};
+    function isRealAI(s,j){
+      var a2=s.slice(j,j+2);var fl=fixedLen[a2];
+      if(!fl)return false;if(j+2+fl>s.length)return false;
+      var val=s.slice(j+2,j+2+fl);
+      if(a2==='01'||a2==='02'){if(foundAIs[a2])return false;return /^\d{14}$/.test(val);}
+      if(a2==='11'||a2==='13'||a2==='15'||a2==='17'){
+        if(!/^\d{6}$/.test(val))return false;
+        var mm=parseInt(val.slice(2,4));var dd=parseInt(val.slice(4,6));
+        return mm>=1&&mm<=12&&dd>=0&&dd<=31;
+      }
+      if(a2==='20')return /^\d{2}$/.test(val);
+      return true;
+    }
+    var pos=0;while(pos<str.length){var a2=str.slice(pos,pos+2);
+      if(fixedLen[a2]&&isRealAI(str,pos)){
+        var val=str.slice(pos+2,pos+2+fixedLen[a2]);foundAIs[a2]=true;
+        if(a2==='01')applyAI(r,'01',val);
+        else if(a2==='17')applyAI(r,'17',val);
+        pos+=2+fixedLen[a2];
+      }
+      else if(a2==='10'||a2==='21'||a2==='24'||a2==='30'){
+        pos+=2;var end=str.length;
+        var gs=str.indexOf(String.fromCharCode(29),pos);
+        if(gs>=0)end=gs;
+        else{for(var j=pos+1;j<str.length-1;j++){if(isRealAI(str,j)){end=j;break;}}}
+        var val=str.slice(pos,end);
+        if(a2==='10')applyAI(r,'10',val);
+        else if(a2==='21')r.serial=val.trim();
+        else if(a2==='24'){r.additionalId=val.trim();r.refNumber=val.trim().replace(/^0+/,'')||val.trim();}
+        else if(a2==='30')r.quantity=val.trim();
+        pos=end+(gs>=0&&end===gs?1:0);
+      }
+      else{pos++;}
+    }
+  }
+  // UPC-A / EAN-13
+  else if(/^\d{12,13}$/.test(str)){r.barcodeType=str.length===12?'UPC-A':'EAN-13';r.catalogNumber=str;r.isUPC=true;}
+  // GTIN-14 standalone (14 digits, packaging indicator + UPC/EAN + check digit)
+  else if(/^\d{14}$/.test(str)&&str.slice(0,2)!=='01'){
+    r.barcodeType='GTIN-14';r.gtin=str;r.gtinRaw=str;
+    r.catalogNumber=str.replace(/^0+/,'')||str;
+    // Extract embedded UPC-12 (strip packaging indicator, keep 12 digits before check digit)
+    var innerUPC=str.slice(1,13);r.innerUPC=innerUPC;
+    r.isUPC=true;
+  }
+  // Fallback: scan for embedded AI 01 anywhere in a long numeric string
+  else if(/^\d{20,}$/.test(str)){
+    var idx=str.indexOf('01');
+    if(idx>=0&&idx+16<=str.length){
+      r.isGS1=true;r.barcodeType='GS1-DataMatrix';
+      // Parse from the found 01 position
+      var pos=idx;while(pos<str.length){var a2=str.slice(pos,pos+2);
+        if(a2==='01'&&pos+16<=str.length){applyAI(r,'01',str.slice(pos+2,pos+16));pos+=16;}
+        else if(a2==='17'&&pos+8<=str.length){applyAI(r,'17',str.slice(pos+2,pos+8));pos+=8;}
+        else if(a2==='10'){var v=str.slice(pos+2);applyAI(r,'10',v);pos=str.length;}
+        else{pos++;}
+      }
+      // Prefix before AI 01 could be packaging/internal code
+      if(idx>0)r.prefix=str.slice(0,idx);
+    } else {
+      r.barcodeType='Code128';r.catalogNumber=str;
+    }
+  }
+  // Delimiter-separated QR codes (Roche cobas uses underscore: materialNum_productCode_lot)
+  else if(/[_|;]/.test(str)){
+    var delim=str.includes('_')?'_':str.includes('|')?'|':';';
+    var parts=str.split(delim).map(function(s){return s.trim();}).filter(Boolean);
+    r.barcodeType='QR-Delimited';r.qrSegments=parts;
+    // Roche cobas QR pattern: 8-digit material _ 11-digit product code _ lot
+    // Try to identify segments by pattern
+    for(var i=0;i<parts.length;i++){
+      var p=parts[i];
+      // Date-like: YYYYMMDD or YYYY-MM-DD (validate ranges)
+      if(!r.expiry&&/^\d{4}[-]?\d{2}[-]?\d{2}$/.test(p)){
+        var d=p.replace(/-/g,'');
+        var yr=parseInt(d.slice(0,4)),mm=parseInt(d.slice(4,6)),dd=parseInt(d.slice(6,8));
+        if(yr>=2020&&yr<=2040&&mm>=1&&mm<=12&&dd>=1&&dd<=31){
+          r.expiry=d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);continue;
+        }
+      }
+      // First numeric segment 6+ digits at position 0: material/catalog number
+      if(!r.catalogNumber&&/^\d{6,}$/.test(p)&&i===0){
+        r.catalogNumber=p;r.rocheMaterial=p;
+      }
+      // Subsequent numeric segment 9+ digits: product/GTIN code
+      else if(r.catalogNumber&&!r.gtin&&/^\d{9,}$/.test(p)){
+        r.gtin=p;r.gtinRaw=p;
+      }
+      // Shorter alphanumeric: lot number
+      else if(!r.lot&&i>=1&&/^[A-Z0-9]{3,}$/i.test(p)){
+        r.lot=p;
+      }
+    }
+  }
+  else if(/^[A-Z0-9\-]{4,}$/i.test(str)){r.barcodeType='Code128';r.catalogNumber=str;}
+  return r;
+}
+function applyAI(r,ai,val){if(ai==='01'){r.gtin=val;r.catalogNumber=val.replace(/^0+/,'')||val;r.gtinRaw=val;}else if(ai==='17'&&val.length===6){var yy=parseInt(val.slice(0,2)),yr=yy<50?2000+yy:1900+yy;var dd=val.slice(4,6)==='00'?'28':val.slice(4,6);r.expiry=yr+'-'+val.slice(2,4)+'-'+dd;}else if(ai==='10'){r.lot=val.trim();}else if(ai==='21'){r.serial=val.trim();}}
+function guessInst(p){
+  // UPC/EAN retail barcodes default to Laboratory Supplies
+  if(p.isUPC)return'Laboratory Supplies';
+  var c=(p.catalogNumber||'').toUpperCase();var g=(p.gtin||p.gtinRaw||'').toUpperCase();var rm=(p.rocheMaterial||'');
+  // Sysmex XN → Hematology
+  if(c.startsWith('XE')||c.includes('CELLPACK')||c.includes('SULFO')||c.includes('LYSER')||c.includes('FLUORO')||c.includes('STOMATO')||c.includes('DILUENT')||c.includes('STROMATOL'))return'Hematology';
+  // Stago → Coagulation
+  if(c.includes('STA-')||c.startsWith('PTT')||c.startsWith('FIB')||c.startsWith('006')||c.includes('NEOPTIMAL')||c.includes('CEPHASCREEN'))return'Coagulation';
+  // Sysmex UN → Urinalysis
+  if(c.startsWith('UN-')||c.startsWith('UA-'))return'Urinalysis';
+  // DI-60 → Hematology (morphology)
+  if(c.startsWith('DI-')||c.startsWith('DM-'))return'Hematology';
+  // Default to Chemistry (Roche cobas = chemistry)
+  return'Chemistry';}
+
+async function lookupBarcode(){
+  var raw=document.getElementById('scan-input').value.trim();
+  if(!raw){showToast('Please scan or enter a barcode');return;}
+  showLoad('Looking up item...');
+  try{
+    var safe=raw.replace(/[\x00-\x1f\x7f]/g,'').replace(/'/g,"''");
+    var parsed=parseGS1(raw);
+    var sel='Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9,field_10,field_11,field_12,field_13';
+    var catSel='Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9';
+    // 1. Try full barcode string match (field_6 = BarcodeString)
+    var data=await spFetch(SP.lists.catalog,'?$top=1&$select='+catSel+'&$filter='+encodeURIComponent("field_6 eq '"+safe+"'"));
+    var catRow=data.value?.[0]||null;
+    // 2. Try full barcode as CatalogNumber (field_7)
+    if(!catRow){data=await spFetch(SP.lists.catalog,'?$top=1&$select='+catSel+'&$filter='+encodeURIComponent("field_7 eq '"+safe+"'"));catRow=data.value?.[0]||null;}
+    // 3. If GS1 parsed a catalog number (leading zeros stripped), try that
+    if(!catRow&&parsed.catalogNumber){var safeCat=parsed.catalogNumber.replace(/'/g,"''");data=await spFetch(SP.lists.catalog,'?$top=1&$select='+catSel+'&$filter='+encodeURIComponent("field_7 eq '"+safeCat+"'"));catRow=data.value?.[0]||null;}
+    // 4. If GS1 has raw GTIN (with leading zeros), try that too
+    if(!catRow&&parsed.gtinRaw&&parsed.gtinRaw!==parsed.catalogNumber){var safeGtin=parsed.gtinRaw.replace(/'/g,"''");data=await spFetch(SP.lists.catalog,'?$top=1&$select='+catSel+'&$filter='+encodeURIComponent("field_7 eq '"+safeGtin+"'"));catRow=data.value?.[0]||null;}
+    // 4b. If GTIN-14, try the inner UPC (digits 1-12)
+    if(!catRow&&parsed.innerUPC){var safeInner=parsed.innerUPC.replace(/'/g,"''");data=await spFetch(SP.lists.catalog,'?$top=1&$select='+catSel+'&$filter='+encodeURIComponent("field_6 eq '"+safeInner+"'"));catRow=data.value?.[0]||null;if(!catRow){data=await spFetch(SP.lists.catalog,'?$top=1&$select='+catSel+'&$filter='+encodeURIComponent("field_7 eq '"+safeInner+"'"));catRow=data.value?.[0]||null;}}
+    // 5. If GS1 AI 24 parsed a REF/additional ID (Roche), try that
+    if(!catRow&&parsed.refNumber){var safeRef=parsed.refNumber.replace(/'/g,"''");data=await spFetch(SP.lists.catalog,'?$top=1&$select='+catSel+'&$filter='+encodeURIComponent("field_7 eq '"+safeRef+"'"));catRow=data.value?.[0]||null;}
+    if(!catRow&&parsed.additionalId&&parsed.additionalId!==parsed.refNumber){var safeAid=parsed.additionalId.replace(/'/g,"''");data=await spFetch(SP.lists.catalog,'?$top=1&$select='+catSel+'&$filter='+encodeURIComponent("field_7 eq '"+safeAid+"'"));catRow=data.value?.[0]||null;}
+    // 7. QR-Delimited: try each segment against BarcodeString and CatalogNumber
+    if(!catRow&&parsed.qrSegments&&parsed.qrSegments.length>0){
+      for(var si=0;si<parsed.qrSegments.length&&!catRow;si++){
+        var seg=parsed.qrSegments[si].replace(/'/g,"''");
+        data=await spFetch(SP.lists.catalog,'?$top=1&$select='+catSel+'&$filter='+encodeURIComponent("field_6 eq '"+seg+"'"));catRow=data.value?.[0]||null;
+        if(!catRow){data=await spFetch(SP.lists.catalog,'?$top=1&$select='+catSel+'&$filter='+encodeURIComponent("field_7 eq '"+seg+"'"));catRow=data.value?.[0]||null;}
+        var segStripped=seg.replace(/^0+/,'');
+        if(!catRow&&segStripped!==seg){data=await spFetch(SP.lists.catalog,'?$top=1&$select='+catSel+'&$filter='+encodeURIComponent("field_7 eq '"+segStripped+"'"));catRow=data.value?.[0]||null;}
+      }
+    }
+    // 8. Not found anywhere
+    if(!catRow){lastRaw=parsed.raw;lastParsedGS1=parsed;fillManualFromBarcode(parsed,parsed.raw);hideLoad();goScreen('screen-manual');return;}
+    var safeCatID=(catRow[CAT.CatalogID]||'').replace(/'/g,"''");
+    var invData;
+    if(safeCatID){invData=await spFetch(SP.lists.inventory,'?$top=1&$select='+sel+'&$filter='+encodeURIComponent("field_12 eq '"+safeCatID+"'"));}
+    if(!invData||!invData.value||!invData.value.length){var safeTitle=(catRow.Title||'').replace(/'/g,"''");invData=await spFetch(SP.lists.inventory,'?$top=1&$select='+sel+'&$filter='+encodeURIComponent("Title eq '"+safeTitle+"'"));}
+    var invRow=invData.value?.[0]||null;
+    if(!invRow)invRow=await autoCreateInvRow(catRow);
+    currentItem=invRow;
+    if(parsed.expiry){document.getElementById('exp-receive').value=parsed.expiry;}
+    if(parsed.lot){document.getElementById('lot-receive').value=parsed.lot;}
+    renderItem();hideLoad();goScreen('screen-item');
+  }catch(e){hideLoad();var msg=e.message||'Unknown error';if(msg.indexOf('SP ')===0){try{var j=JSON.parse(msg.slice(msg.indexOf('{')));msg='SP Error: '+(j.error?.message?.value||msg).slice(0,80);}catch(_){}}showToast(msg.slice(0,80),true);}
+}
+async function autoCreateInvRow(catRow){
+  var fields=cf({Instrument:catRow[CAT.Instrument]||'XN',ItemType:'Reagent',Unit:catRow[CAT.Unit]||'ea',InStock:0,MinPAR:1,DailyUse:0,CatalogID:catRow[CAT.CatalogID]||'',IsActive:'Yes'},INV);
+  fields.Title=catRow.Title;var res=await spPost(SP.lists.inventory,fields);var json=await res.json();var nr=json.d||json;nr.Title=catRow.Title;
+  var safe=(catRow.Title||'').replace(/'/g,"''");
+  var sel='Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9,field_10,field_11,field_12,field_13';
+  var fetched=await spFetch(SP.lists.inventory,'?$top=1&$select='+sel+'&$filter='+encodeURIComponent("Title eq '"+safe+"'"));
+  return fetched.value?.[0]||nr;
+}
+
+function renderItem(){
+  if(!currentItem)return;
+  setEl('item-name',currentItem.Title);setEl('item-instrument',iv(currentItem,'Instrument')||'');setEl('item-unit',iv(currentItem,'Unit')||'');setEl('item-type',iv(currentItem,'ItemType')||'');
+  var stock=parseFloat(iv(currentItem,'InStock'))||0;var par=parseFloat(iv(currentItem,'MinPAR'))||0;
+  var stockEl=document.getElementById('item-stock');if(stockEl){stockEl.textContent=stock;stockEl.className='stock-num '+(stock<=0?'out':stock<par?'low':'ok');}
+  setEl('item-par',par||'');
+  var daily=parseFloat(iv(currentItem,'DailyUse'))||0;var life=parseFloat(iv(currentItem,'OpenLifeDays'))||0;var days=daily>0?Math.round(stock/daily):null;
+  setEl('m-days',days!==null?days+'d':'');setEl('m-daily',daily>0?daily:'');setEl('m-life',life>0?life+' days':'');
+  var orderEl=document.getElementById('m-order');
+  if(orderEl){var os,oc,ob;if(stock<=0){os='OUT OF STOCK';oc='var(--out)';ob='var(--out-bg)';}else if(stock<par){os='ORDER NOW';oc='var(--order)';ob='var(--order-bg)';}else if(par>0&&stock<par*1.5){os='WATCH';oc='var(--watch)';ob='var(--watch-bg)';}else{os='OK';oc='var(--ok)';ob='var(--ok-bg)';}orderEl.textContent=os;orderEl.style.color=oc;orderEl.style.background=ob;}
+  var wasteEl=document.getElementById('m-waste');
+  if(wasteEl){if(life>0&&days!==null){var ratio=days/life;var wr,wc,wb;if(ratio>1.5){wr='HIGH';wc='var(--out)';wb='var(--out-bg)';}else if(ratio>1){wr='MEDIUM';wc='var(--watch)';wb='var(--watch-bg)';}else{wr='LOW';wc='var(--ok)';wb='var(--ok-bg)';}wasteEl.textContent=wr;wasteEl.style.color=wc;wasteEl.style.background=wb;}else{wasteEl.textContent='';wasteEl.style.color='var(--md-on-surface-variant)';wasteEl.style.background='transparent';}}
+  var eb=document.getElementById('edit-btn');if(eb)eb.style.display=isAdmin?'inline-flex':'none';
+  selectTab(null);
+  document.getElementById('q-receive').value=1;document.getElementById('q-remove').value=1;document.getElementById('q-adjust').value=parseFloat(iv(currentItem,'InStock'))||0;
+  document.getElementById('lot-receive').value='';document.getElementById('exp-receive').value='';document.getElementById('reason-remove').value='';document.getElementById('reason-adjust').value='';
+}
+
+function selectTab(action){currentTab=action;['receive','remove','adjust'].forEach(function(a){var tab=document.getElementById('tab-'+a);var form=document.getElementById('form-'+a);if(tab)tab.className='action-tab'+(action===a?' active-'+a:'');if(form)form.className='action-form'+(action===a?' show':'');});}
+
+async function submitAction(action){
+  if(!currentItem){showToast('No item selected',true);return;}
+  var qty,lot='',expiry='',reason='';var oldStock=parseFloat(iv(currentItem,'InStock'))||0;var newStock,delta;
+  if(action==='receive'){qty=parseFloat(document.getElementById('q-receive').value)||0;lot=document.getElementById('lot-receive').value.trim();expiry=document.getElementById('exp-receive').value;newStock=oldStock+qty;delta=qty;}
+  else if(action==='remove'){qty=parseFloat(document.getElementById('q-remove').value)||0;reason=document.getElementById('reason-remove').value.trim();newStock=Math.max(0,oldStock-qty);delta=-qty;}
+  else{qty=parseFloat(document.getElementById('q-adjust').value)||0;reason=document.getElementById('reason-adjust').value.trim();newStock=qty;delta=qty-oldStock;}
+  showLoad('Updating inventory...');
+  try{
+    var patchData=cf({InStock:newStock},INV);if(lot)patchData[INV.LotNumber]=lot;if(expiry)patchData[INV.ExpiryDate]=expiry;
+    await spPatch(SP.lists.inventory,currentItem.Id,patchData);
+    var acct=msalInstance?.getActiveAccount();var scannedBy=acct?(acct.name||acct.username||''):'';var today=new Date().toISOString().slice(0,10);var actionLabel=action.charAt(0).toUpperCase()+action.slice(1);
+    var logData=cf({Action:actionLabel,QuantityDelta:delta,QuantityAfter:newStock,LotNumber:lot||'',ExpiryDate:expiry||'',Timestamp:new Date().toISOString(),ReasonNote:reason||'',ScannedBy:scannedBy},LOG);
+    logData.Title=currentItem.Title+' — '+actionLabel+' — '+today;
+    await spPost(SP.lists.log,logData);
+    lastEntry={item:currentItem.Title,action:actionLabel,delta:delta>0?'+'+delta:String(delta),newStock,lot:lot||'—',scannedBy,time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})};
+    hideLoad();showSuccess();
+  }catch(e){hideLoad();showToast('Submit failed: '+(e.message||'').slice(0,50),true);}
+}
+
+function toggleEdit(){var sec=document.getElementById('edit-section');var eb=document.getElementById('edit-btn');if(!sec)return;var showing=sec.classList.contains('show');if(showing){cancelEdit();return;}document.getElementById('e-par').value=parseFloat(iv(currentItem,'MinPAR'))||0;document.getElementById('e-daily').value=parseFloat(iv(currentItem,'DailyUse'))||0;document.getElementById('e-life').value=parseFloat(iv(currentItem,'OpenLifeDays'))||0;document.getElementById('e-type').value=iv(currentItem,'ItemType')||'Reagent';document.getElementById('e-active').checked=(iv(currentItem,'IsActive')||'Yes')!=='No';sec.classList.add('show');if(eb)eb.innerHTML='<span class="material-icons-outlined" style="font-size:14px">close</span> Done';}
+function cancelEdit(){var sec=document.getElementById('edit-section');if(sec)sec.classList.remove('show');var eb=document.getElementById('edit-btn');if(eb)eb.innerHTML='<span class="material-icons-outlined" style="font-size:14px">edit</span> Edit';}
+async function saveEdits(){
+  if(!currentItem||!isAdmin)return;var par=parseFloat(document.getElementById('e-par').value)||0;var daily=parseFloat(document.getElementById('e-daily').value)||0;var life=parseFloat(document.getElementById('e-life').value)||0;var type=document.getElementById('e-type').value;var active=document.getElementById('e-active').checked?'Yes':'No';
+  showLoad('Saving...');
+  try{var pd=cf({MinPAR:par,DailyUse:daily,OpenLifeDays:life,ItemType:type,IsActive:active},INV);await spPatch(SP.lists.inventory,currentItem.Id,pd);currentItem[INV.MinPAR]=par;currentItem[INV.DailyUse]=daily;currentItem[INV.OpenLifeDays]=life;currentItem[INV.ItemType]=type;currentItem[INV.IsActive]=active;cancelEdit();renderItem();hideLoad();showToast('Saved',false);}catch(e){hideLoad();showToast('Save failed: '+(e.message||'').slice(0,40),true);}
+}
+
+function fillManualFromBarcode(parsed,raw){
+  setVal('m-barcode',raw);
+  if(parsed.expiry)setVal('m-expiry',parsed.expiry);
+  if(parsed.lot)setVal('m-lot',parsed.lot);
+  if(parsed.catalogNumber)setVal('m-catnum',parsed.catalogNumber);
+  setVal('m-instrument',guessInst(parsed));
+  var tb=document.getElementById('barcode-type-badge');
+  if(tb){tb.textContent=parsed.barcodeType+(parsed.isGS1?' · GS1':'');tb.style.display='inline-flex';}
+  var al=document.getElementById('manual-alert');
+  if(al){var flds=[];if(parsed.expiry)flds.push('expiry');if(parsed.lot)flds.push('lot');if(parsed.catalogNumber)flds.push('catalog #');al.innerHTML=flds.length?'Barcode not in catalog. Auto-filled: <strong>'+flds.join(', ')+'</strong>. Enter item name to add it.':'Barcode not in catalog. Enter details to add it.';}
+  // Auto-lookup product info via UPCitemdb for UPC/EAN/GTIN barcodes
+  var lookupCode=parsed.innerUPC||parsed.catalogNumber||parsed.gtinRaw||'';
+  if(lookupCode&&/^\d{8,14}$/.test(lookupCode)){
+    upcLookup(lookupCode).then(function(info){
+      if(info){
+        if(info.title&&!getVal('m-name'))setVal('m-name',info.title);
+        if(info.brand){var cur=getVal('m-notes');setVal('m-notes',(cur?cur+' · ':'')+info.brand);}
+        if(al&&info.title)al.innerHTML='Barcode not in catalog. Product identified: <strong>'+esc(info.title)+'</strong>. Confirm and add.';
+      }
+    }).catch(function(){});
+  }
+}
+async function upcLookup(code){
+  // Try multiple UPC lookup services in order
+  var result=null;
+  // 1. UPCitemdb (free, 100/day, no key)
+  result=await tryUPCitemdb(code);if(result)return result;
+  // 2. go-upc.com
+  result=await tryGoUPC(code);if(result)return result;
+  // 3. barcodelookup.com
+  result=await tryBarcodeLookup(code);if(result)return result;
+  return null;
+}
+async function tryUPCitemdb(code){
+  try{
+    var resp=await fetch('https://api.upcitemdb.com/prod/trial/lookup?upc='+encodeURIComponent(code),{headers:{'Accept':'application/json'}});
+    if(!resp.ok)return null;
+    var data=await resp.json();
+    if(data.items&&data.items.length>0){var i=data.items[0];return{title:i.title||'',brand:i.brand||'',source:'UPCitemdb'};}
+  }catch(e){console.warn('UPCitemdb failed:',e);}
+  return null;
+}
+async function tryGoUPC(code){
+  try{
+    var resp=await fetch('https://go-upc.com/api/v1/code/'+encodeURIComponent(code),{headers:{'Accept':'application/json'}});
+    if(!resp.ok)return null;
+    var data=await resp.json();
+    if(data.product&&data.product.name){return{title:data.product.name||'',brand:data.product.brand||'',source:'go-upc'};}
+  }catch(e){console.warn('go-upc failed:',e);}
+  return null;
+}
+async function tryBarcodeLookup(code){
+  try{
+    var resp=await fetch('https://www.barcodelookup.com/restapi?barcode='+encodeURIComponent(code),{headers:{'Accept':'application/json'}});
+    if(!resp.ok)return null;
+    var data=await resp.json();
+    if(data.products&&data.products.length>0){var p=data.products[0];return{title:p.title||p.product_name||'',brand:p.brand||'',source:'barcodelookup'};}
+  }catch(e){console.warn('barcodelookup failed:',e);}
+  return null;
+}
+function resetManual(){lastRaw='';lastParsedGS1=null;['m-name','m-lot','m-expiry','m-notes','m-barcode','m-catnum'].forEach(function(id){setVal(id,'');});setVal('m-qty','1');setVal('m-instrument','Chemistry');setVal('m-unit','L');var tb=document.getElementById('barcode-type-badge');if(tb)tb.style.display='none';var al=document.getElementById('manual-alert');if(al)al.textContent='Enter item details below.';}
+async function submitManual(addToCatalog){
+  var name=getVal('m-name').trim();if(!name){showToast('Item name is required',true);return;}
+  var inst=getVal('m-instrument'),unit=getVal('m-unit');var qty=parseFloat(getVal('m-qty'))||0;var lot=getVal('m-lot').trim(),expiry=getVal('m-expiry');var notes=getVal('m-notes').trim(),barcode=getVal('m-barcode').trim();var catnum=getVal('m-catnum').trim();var parsed=lastParsedGS1||(barcode?parseGS1(barcode):null);var today=new Date().toISOString().slice(0,10);var catalogID='MAN-'+Date.now();
+  showLoad('Saving...');
+  try{
+    if(addToCatalog&&barcode){var cd=cf({CatalogID:catalogID,BarcodeString:barcode,CatalogNumber:catnum||barcode,Instrument:inst,Unit:unit,Manufacturer:'Other',BarcodeType:parsed?parsed.barcodeType:'Unknown',GS1ParsesExpiry:parsed&&parsed.expiry?'Yes':'No',GS1ParsesLot:parsed&&parsed.lot?'Yes':'No',Notes:notes||'Added via scanner — '+today},CAT);cd.Title=name;await spPost(SP.lists.catalog,cd);var autoType=(inst==='Laboratory Supplies'||inst==='Office Supplies')?'Supply':'Reagent';var id=cf({Instrument:inst,ItemType:autoType,Unit:unit,InStock:qty,MinPAR:1,DailyUse:0,CatalogID:catalogID,IsActive:'Yes'},INV);id.Title=name;await spPost(SP.lists.inventory,id);}
+    var acct=msalInstance?.getActiveAccount();var scannedBy=acct?(acct.name||acct.username||''):'';var ld=cf({Action:'Received',QuantityDelta:qty,QuantityAfter:qty,LotNumber:lot||'',ExpiryDate:expiry||'',Timestamp:new Date().toISOString(),ReasonNote:notes||'',ScannedBy:scannedBy},LOG);ld.Title=name+' — Received — '+today;await spPost(SP.lists.log,ld);
+    lastEntry={item:name,action:'Received',delta:'+'+qty,newStock:qty,lot:lot||'—',scannedBy,time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})};lastRaw='';lastParsedGS1=null;hideLoad();showSuccess();
+  }catch(e){hideLoad();showToast('Failed: '+(e.message||'').slice(0,50),true);}
+}
+
+function showSuccess(){
+  var log=document.getElementById('success-log');
+  if(log)log.innerHTML=[['Item',lastEntry.item],['Action',lastEntry.action],['Change',lastEntry.delta],['New Stock',lastEntry.newStock],['Lot',lastEntry.lot],['Scanned By',lastEntry.scannedBy||'—'],['Time',lastEntry.time]].map(function(r){return'<div class="log-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>';}).join('');
+  trackScan(lastEntry.item,lastEntry.action,parseFloat(lastEntry.delta)||0,lastEntry.newStock,lastEntry.lot);
+  goScreen('screen-success');
+}
+
+var camStream=null,bdDetector=null,camFrame=null;
+async function startCamera(){if(!('BarcodeDetector'in window)){document.getElementById('cam-file').click();return;}try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});var vid=document.getElementById('camera-video');vid.srcObject=camStream;document.getElementById('camera-view').style.display='block';var cb=document.getElementById('cam-btn');if(cb){cb.innerHTML='<span class="material-icons-outlined">stop_circle</span>';cb.onclick=stopCamera;}bdDetector=new BarcodeDetector({formats:['code_128','code_39','data_matrix','ean_13','ean_8','qr_code','upc_a','upc_e']});scanFrame(vid);}catch(e){console.error('Camera:',e);document.getElementById('cam-file').click();}}
+async function scanFrame(vid){if(!camStream)return;try{var bc=await bdDetector.detect(vid);if(bc&&bc.length>0){document.getElementById('scan-input').value=bc[0].rawValue;stopCamera();showToast('Barcode scanned');lookupBarcode();return;}}catch(e){}camFrame=requestAnimationFrame(()=>scanFrame(vid));}
+function stopCamera(){if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}if(camFrame){cancelAnimationFrame(camFrame);camFrame=null;}var cv=document.getElementById('camera-view');if(cv)cv.style.display='none';var cb=document.getElementById('cam-btn');if(cb){cb.innerHTML='<span class="material-icons-outlined">photo_camera</span>';cb.onclick=startCamera;}}
+async function handleCamFile(input){var file=input.files[0];if(!file)return;if('BarcodeDetector'in window){try{var bm=await createImageBitmap(file);var d=new BarcodeDetector({formats:['code_128','code_39','data_matrix','ean_13','ean_8','qr_code','upc_a','upc_e']});var bc=await d.detect(bm);if(bc&&bc.length>0){document.getElementById('scan-input').value=bc[0].rawValue;showToast('Barcode detected');lookupBarcode();input.value='';return;}}catch(e){console.warn('Img decode:',e);}}showToast('Could not read barcode — type manually',true);input.value='';}
+
+function goScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');s.style.display='';});
+  var el=document.getElementById(id);
+  if(!el){console.warn('goScreen: missing',id);return;}
+  el.classList.add('active');el.style.display='flex';
+  window.scrollTo({top:0,left:0,behavior:'instant'});
+  document.body.scrollTop=0;document.documentElement.scrollTop=0;el.scrollTop=0;
+}
+function goScan(){
+  // Reset all state
+  currentItem=null;currentTab=null;lastRaw='';lastParsedGS1=null;
+  // Clear scan input
+  var si2=document.getElementById('scan-input');if(si2)si2.value='';
+  // Clear item screen fields
+  setEl('item-name','');setEl('item-instrument','');setEl('item-unit','');setEl('item-type','');
+  setEl('item-stock','0');setEl('item-par','');setEl('m-days','');setEl('m-daily','');setEl('m-life','');
+  var oe=document.getElementById('m-order');if(oe){oe.textContent='';oe.style.background='transparent';}
+  var we=document.getElementById('m-waste');if(we){we.textContent='';we.style.background='transparent';}
+  // Clear action forms
+  ['q-receive','q-remove','q-adjust'].forEach(function(id){setVal(id,id==='q-adjust'?'0':'1');});
+  setVal('lot-receive','');setVal('exp-receive','');setVal('reason-remove','');setVal('reason-adjust','');
+  // Clear manual entry form
+  resetManual();
+  // Clear success log
+  var sl=document.getElementById('success-log');if(sl)sl.innerHTML='';
+  // Hide edit section
+  var es=document.getElementById('edit-section');if(es)es.classList.remove('show');
+  // Force all screens hidden, then show scan
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');s.style.display='none';});
+  var scanScreen=document.getElementById('screen-scan');
+  if(scanScreen){scanScreen.classList.add('active');scanScreen.style.display='flex';}
+  // Force scroll to top
+  window.scrollTo(0,0);document.body.scrollTop=0;document.documentElement.scrollTop=0;
+  // Focus input after paint
+  requestAnimationFrame(function(){
+    window.scrollTo(0,0);
+    if(si2)si2.focus();
+  });
+}
+function stepQ(id,d){var el=document.getElementById(id);if(el)el.value=Math.max(0,Math.round(((parseFloat(el.value)||0)+d)*100)/100);}
+function stepF(id,d){var el=document.getElementById(id);if(el)el.value=Math.max(0,Math.round(((parseFloat(el.value)||0)+d)*100)/100);}
+function setEl(id,val){var el=document.getElementById(id);if(el)el.textContent=val;}
+function setVal(id,val){var el=document.getElementById(id);if(el)el.value=val;}
+function getVal(id){var el=document.getElementById(id);return el?el.value:'';}
+function showLoad(msg){setEl('loading-text',msg||'Loading...');document.getElementById('loading').classList.add('show');}
+function hideLoad(){document.getElementById('loading').classList.remove('show');}
+var _toastTmr;
+function showToast(msg,isErr){var t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.className='toast show'+(isErr?' err':'');clearTimeout(_toastTmr);_toastTmr=setTimeout(()=>t.classList.remove('show'),3500);}
+
+var si=document.getElementById('scan-input');
+si.addEventListener('keydown',function(e){if(e.key==='Enter')lookupBarcode();});
+var _scanTmr;
+si.addEventListener('input',function(){clearTimeout(_scanTmr);var v=si.value.trim();if(v.length>=8){_scanTmr=setTimeout(function(){if(/^\d{12,13}$/.test(v)||v.length>=20)lookupBarcode();},300);}});
+
+// ── Session activity tracking for desktop panel ──
+var sessionScans=[],sessionStats={scans:0,received:0,removed:0,newItems:0};
+var allInvCache=[];
+
+function trackScan(itemName,action,delta,newStock,lot){
+  sessionScans.unshift({name:itemName,action:action,delta:delta,newStock:newStock,lot:lot||'',time:new Date()});
+  if(sessionScans.length>30)sessionScans.pop();
+  sessionStats.scans++;
+  var al=action.toLowerCase();
+  if(al.indexOf('receive')>=0)sessionStats.received++;
+  else if(al.indexOf('remove')>=0)sessionStats.removed++;
+  if(al.indexOf('new')>=0)sessionStats.newItems++;
+  renderPanel();
+}
+
+function renderPanel(){
+  // Recent scans - detailed cards
+  var rs=document.getElementById('recent-scans');
+  if(rs){
+    if(sessionScans.length===0){rs.innerHTML='<div class="recent-empty">Scan an item to see it here</div>';}
+    else{rs.innerHTML=sessionScans.slice(0,10).map(function(s){
+      var acl=s.action.toLowerCase();
+      var badgeCls=acl.indexOf('receive')>=0?'ri-badge-receive':acl.indexOf('remove')>=0?'ri-badge-remove':acl.indexOf('new')>=0?'ri-badge-new':'ri-badge-adjust';
+      var t=s.time.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+      return'<div class="recent-item">'+
+        '<div class="ri-top"><div class="ri-name">'+esc(s.name)+'</div><div class="ri-time">'+t+'</div></div>'+
+        '<div class="ri-details">'+
+          '<div class="ri-detail"><span class="material-icons-outlined" style="font-size:12px">swap_vert</span>'+(s.delta>=0?'+':'')+s.delta+'</div>'+
+          '<div class="ri-detail"><span class="material-icons-outlined" style="font-size:12px">inventory_2</span>Stock: <strong>'+s.newStock+'</strong></div>'+
+          (s.lot&&s.lot!=='—'?'<div class="ri-detail"><span class="material-icons-outlined" style="font-size:12px">tag</span>'+esc(s.lot)+'</div>':'')+
+        '</div>'+
+        '<span class="ri-action-badge '+badgeCls+'">'+esc(s.action)+'</span>'+
+      '</div>';
+    }).join('');}
+  }
+  // Session stats
+  setEl('stat-scans',sessionStats.scans);
+  setEl('stat-received',sessionStats.received);
+  setEl('stat-removed',sessionStats.removed);
+  setEl('stat-new',sessionStats.newItems);
+}
+
+// Quick search
+var _psTimer;
+function panelSearch(q){
+  clearTimeout(_psTimer);
+  var results=document.getElementById('panel-search-results');
+  if(!results)return;
+  if(!q||q.length<2){results.className='panel-search-results';results.innerHTML='';return;}
+  _psTimer=setTimeout(function(){
+    var words=q.toLowerCase().split(/\s+/).filter(function(w){return w.length>0;});
+    var matches=allInvCache.filter(function(r){
+      var title=(r.Title||'').toLowerCase().replace(/[®™©]/g,'');
+      return words.every(function(w){return title.indexOf(w)>=0;});
+    }).slice(0,8);
+    if(matches.length===0){results.innerHTML='<div class="recent-empty">No items found</div>';results.className='panel-search-results show';return;}
+    results.innerHTML=matches.map(function(r){
+      var stock=parseFloat(iv(r,'InStock'))||0;var par=parseFloat(iv(r,'MinPAR'))||0;
+      var statusText=stock<=0?'OUT':stock<par?'LOW':'OK';
+      var statusColor=stock<=0?'var(--out)':stock<par?'var(--order)':'var(--ok)';
+      return'<div class="psr-item"><div class="psr-name">'+esc(r.Title)+'</div><div class="psr-meta">'+esc(iv(r,'Instrument')||'')+' · Stock: <strong style="color:'+statusColor+'">'+stock+'</strong> · PAR: '+par+' · '+statusText+'</div></div>';
+    }).join('');
+    results.className='panel-search-results show';
+  },200);
+}
+
+// Load inventory for panel features
+async function loadPanelData(){
+  try{
+    var invSel='Id,Title,'+Object.values(INV).join(',');
+    allInvCache=await spFetchAll(SP.lists.inventory,invSel);
+    console.log('Panel loaded: '+allInvCache.length+' inventory items');
+    renderAlerts();
+    renderSnapshot();
+  }catch(e){
+    console.warn('Panel data failed:',e);
+    var snap=document.getElementById('inv-snapshot');
+    if(snap)snap.innerHTML='<div style="font-size:11px;color:var(--md-outline)">Could not load</div>';
+  }
+}
+
+// Alerts
+function renderAlerts(){
+  var sec=document.getElementById('alerts-section');
+  var list=document.getElementById('panel-alerts');
+  if(!sec||!list)return;
+  var alerts=[];
+  allInvCache.forEach(function(r){
+    var stock=parseFloat(iv(r,'InStock'))||0;var par=parseFloat(iv(r,'MinPAR'))||0;
+    var exp=(iv(r,'ExpiryDate')||'').split('T')[0];
+    if(stock<=0&&par>0)alerts.push({type:'a-out',icon:'error',text:esc(r.Title)+' is out of stock'});
+    else if(stock<par&&par>0)alerts.push({type:'a-order',icon:'warning',text:esc(r.Title)+' below PAR ('+stock+'/'+par+')'});
+    if(exp){var dl=Math.round((new Date(exp+'T00:00:00')-new Date())/86400000);if(dl>=0&&dl<=14)alerts.push({type:'a-expiry',icon:'schedule',text:esc(r.Title)+' expires in '+dl+'d'});}
+  });
+  if(alerts.length===0){sec.style.display='none';return;}
+  sec.style.display='block';
+  list.innerHTML=alerts.slice(0,8).map(function(a){
+    return'<div class="alert-item '+a.type+'"><span class="material-icons-outlined">'+a.icon+'</span><span class="a-text">'+a.text+'</span></div>';
+  }).join('');
+}
+
+// Inventory snapshot
+function renderSnapshot(){
+  var el=document.getElementById('inv-snapshot');if(!el)return;
+  var ok=0,watch=0,order=0,out=0;
+  allInvCache.forEach(function(r){
+    var s=parseFloat(iv(r,'InStock'))||0,p=parseFloat(iv(r,'MinPAR'))||0;
+    if(s<=0)out++;else if(s<p)order++;else if(p>0&&s<p*1.5)watch++;else ok++;
+  });
+  el.innerHTML='<div class="snap-box snap-ok"><div class="snap-val">'+ok+'</div><div class="snap-lbl">In Stock</div></div>'+
+    '<div class="snap-box snap-watch"><div class="snap-val">'+watch+'</div><div class="snap-lbl">Watch</div></div>'+
+    '<div class="snap-box snap-order"><div class="snap-val">'+order+'</div><div class="snap-lbl">Order</div></div>'+
+    '<div class="snap-box snap-out"><div class="snap-val">'+out+'</div><div class="snap-lbl">Out</div></div>';
+}
+
+// Today's log - rich format
+async function loadTodayLog(){
+  try{
+    var today=new Date().toISOString().slice(0,10);
+    var logFields=Object.values(LOG).filter(function(v,i,a){return a.indexOf(v)===i;});
+    var logs=await spFetchAll(SP.lists.log,'Id,Title,'+logFields.join(','),"field_6 ge '"+today+"T00:00:00'");
+    logs.sort(function(a,b){return(b[LOG.Timestamp]||'').localeCompare(a[LOG.Timestamp]||'');});
+    var tl=document.getElementById('today-log');
+    if(tl){
+      if(logs.length===0){tl.innerHTML='<div class="recent-empty">No transactions today</div>';}
+      else{tl.innerHTML=logs.slice(0,20).map(function(l){
+        var ac=(l[LOG.Action]||'').toLowerCase();
+        var iconCls=ac.indexOf('receive')>=0?'li-icon-receive':ac.indexOf('remove')>=0?'li-icon-remove':'li-icon-adjust';
+        var icon=ac.indexOf('receive')>=0?'add_circle':ac.indexOf('remove')>=0?'remove_circle':'tune';
+        var t=l[LOG.Timestamp]?new Date(l[LOG.Timestamp]).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):'';
+        var d=parseFloat(l[LOG.QuantityDelta])||0;
+        var qtyColor=d>=0?'var(--receive)':'var(--remove)';
+        var by=l[LOG.ScannedBy]||l.ScannedBy||'';
+        return'<div class="log-item">'+
+          '<div class="li-icon '+iconCls+'"><span class="material-icons-outlined">'+icon+'</span></div>'+
+          '<div class="li-body"><div class="li-name">'+esc(l.Title||'')+'</div><div class="li-sub">'+t+(by?' · '+esc(by):'')+'</div></div>'+
+          '<div class="li-qty" style="color:'+qtyColor+'">'+(d>=0?'+':'')+d+'</div>'+
+        '</div>';
+      }).join('');}
+    }
+  }catch(e){
+    console.warn('Today log:',e);
+    var tl=document.getElementById('today-log');
+    if(tl)tl.innerHTML='<div class="recent-empty">No transactions today</div>';
+  }
+}
+
+// SP fetch helper for panel — uses _req (same auth path as scanner) with __next token pagination
+async function spFetchAll(ln,sel,filter){
+  var all=[];
+  var url=SP_API+"/getbytitle('"+ln+"')/items?$top=1000&$select="+sel;
+  if(filter)url+='&$filter='+encodeURIComponent(filter);
+  while(url){
+    try{
+      var res=await _req(url);
+      var d=await res.json();
+      var batch=d.d&&d.d.results?d.d.results:[];
+      all=all.concat(batch);
+      url=(d.d&&d.d.__next)||null;
+    }catch(e){
+      console.warn('spFetchAll error:',e.message);
+      throw e;
+    }
+  }
+  return all;
+}
+
+window.addEventListener('load',function(){
+  initAuth();
+});
+</script>
+</body>
+</html>
