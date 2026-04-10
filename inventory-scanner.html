@@ -405,12 +405,16 @@ html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);
 .cam-btn:active{transform:scale(.9);}
 
 /* ── Toast — spring bounce up ── */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--md-on-surface);color:var(--md-surface);padding:12px 24px;border-radius:var(--radius-full);font-size:14px;font-weight:600;font-family:var(--font);box-shadow:var(--shadow-3);
+.toast{position:fixed;bottom:auto;top:80px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--md-on-surface);color:var(--md-surface);padding:12px 24px;border-radius:var(--radius-full);font-size:14px;font-weight:600;font-family:var(--font);box-shadow:var(--shadow-3);
   transition:transform var(--dur-med) var(--me-spring),opacity var(--dur-short) var(--me-standard);
-  z-index:998;white-space:nowrap;max-width:90vw;text-align:center}
-.toast.show{transform:translateX(-50%) translateY(0)}
+  z-index:998;white-space:nowrap;max-width:90vw;text-align:center;opacity:0;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 .toast.err{background:var(--md-error);color:var(--md-on-error)}
 .toast.ok{background:var(--receive);color:#fff}
+@media(max-width:767px){
+  .toast{top:auto;bottom:24px;transform:translateX(-50%) translateY(80px);}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+}
 
 /* ── Spinner ── */
 .spinner{width:44px;height:44px;border-radius:50%;border:3px solid var(--md-outline-variant);border-top-color:var(--md-primary);animation:spin .7s linear infinite}
@@ -1199,8 +1203,7 @@ function renderPanel(){
         var acl=s.action.toLowerCase();
         var badgeCls=acl.indexOf('receive')>=0?'ri-badge-receive':acl.indexOf('remove')>=0?'ri-badge-remove':acl.indexOf('new')>=0?'ri-badge-new':'ri-badge-adjust';
         var t=s.time.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-        var safeName=s.name.replace(/'/g,"''");
-        return'<div class="recent-item" onclick="lookupByTitle(\''+safeName+'\')" title="Open item details" style="cursor:pointer">'+
+        return'<div class="recent-item panel-nav-item" data-title="'+esc(s.name)+'" title="Open item details" style="cursor:pointer">'+
           '<div class="ri-top"><div class="ri-name">'+esc(s.name)+'</div><div class="ri-time">'+t+'</div></div>'+
           '<div class="ri-details">'+
             '<div class="ri-detail"><span class="material-icons-outlined" style="font-size:12px">swap_vert</span>'+(s.delta>=0?'+':'')+s.delta+'</div>'+
@@ -1245,7 +1248,7 @@ function panelSearch(q){
       var dept=r.field_1||iv(r,'Instrument')||'';
       var statusText=stock<=0?'OUT':stock<par?'LOW':'OK';
       var statusColor=stock<=0?'var(--out)':stock<par?'var(--order)':'var(--ok)';
-      return'<div class="psr-item" onclick="lookupByTitle(\''+esc(r.Title).replace(/'/g,"\\'")+'\')" title="Click to open item">'+
+      return'<div class="psr-item panel-nav-item" data-title="'+esc(r.Title)+'" title="Click to open item">'+
         '<div class="psr-name">'+esc(r.Title)+'</div>'+
         '<div class="psr-meta">'+esc(dept)+' · Stock: <strong style="color:'+statusColor+'">'+stock+'</strong> · PAR: '+par+' · '+statusText+
         ' <span style="float:right;font-size:10px;color:var(--md-primary);font-weight:600">Open →</span></div>'+
@@ -1334,8 +1337,7 @@ async function loadTodayLog(){
           var d=parseFloat(l[LOG.QuantityDelta])||0;
           var qtyColor=d>=0?'var(--receive)':'var(--remove)';
           var by=l[LOG.ScannedBy]||l.ScannedBy||'';
-          var safeTitle=(l.Title||'').replace(/'/g,"''");
-          return'<div class="log-item" onclick="lookupByTitle(\''+safeTitle+'\')" title="Open item details" style="cursor:pointer">'+
+          return'<div class="log-item panel-nav-item" data-title="'+esc(l.Title||'')+'" title="Open item details" style="cursor:pointer">'+
             '<div class="li-icon '+iconCls+'"><span class="material-icons-outlined">'+icon+'</span></div>'+
             '<div class="li-body"><div class="li-name">'+esc(l.Title||'')+'</div><div class="li-sub">'+t+(by?' · '+esc(by):'')+'</div></div>'+
             '<div class="li-qty" style="color:'+qtyColor+'">'+(d>=0?'+':'')+d+'</div>'+
@@ -1446,6 +1448,14 @@ window.addEventListener('load',function(){
   initAuth();
   loadPanelState();
   loadNavState();
+  // Delegated handler for panel clickable items — uses data-title to avoid HTML encoding issues
+  document.addEventListener('click',function(e){
+    var el=e.target.closest('.panel-nav-item');
+    if(el){
+      var title=el.getAttribute('data-title');
+      if(title)lookupByTitle(title);
+    }
+  });
 });
 </script>
 </body>
