@@ -481,7 +481,6 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   </div>
   <div class="hdr-right">
     <div class="hdr-chip" id="clockChip"></div>
-    <div class="hdr-chip" id="countChip">0</div>
     <div class="hdr-chip" id="backupChip" style="font-size:9px;opacity:.7;cursor:help;" title="SharePoint Connected"><span class="mi" style="font-size:12px;vertical-align:middle;">cloud_done</span> <span id="backupTime">SP</span></div>
     <div class="bell-btn" id="bellBtn" onclick="toggleBell(event)">
       <span class="mi" style="font-size:18px;">notifications</span>
@@ -491,8 +490,8 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
         <div class="bell-list" id="bellList"></div>
       </div>
     </div>
-    <div class="av av-hdr" id="hdrAvatar" onclick="openProfile()" data-tip="Profile"></div>
-    <button class="logout-btn" onclick="doLogout()"><span class="mi mi-xs">logout</span> Sign Out</button>
+    <div class="av av-hdr" id="hdrAvatar" onclick="openProfile()" title="Profile" style="cursor:pointer"></div>
+    <button class="logout-btn" onclick="doLogout()" title="Sign Out" style="width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;"><span class="mi" style="font-size:18px;">logout</span></button>
   </div>
 </div>
 
@@ -660,7 +659,6 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 <div class="modal-body">
   <div class="prof-section"><h4>Profile Picture</h4><div class="prof-pic-row"><div class="prof-pic-circle" id="profPicPreview"></div><div><input type="file" id="profPicFile" accept="image/*" onchange="handleProfPic(event)" style="font-size:10px;max-width:180px;"><button class="btn btn-s" style="padding:2px 6px;font-size:9px;margin-top:4px;" onclick="removeProfPic()">Remove</button></div></div></div>
   <div class="prof-section"><h4>Nickname</h4><div class="form-item"><label>Shown instead of initials (max 12 chars)</label><input type="text" id="profNick" maxlength="12" placeholder="e.g., Jesus"></div></div>
-  <div class="prof-section"><h4>Change Password</h4><div class="form-item"><label>Current</label><input type="password" id="profOldPw"></div><div class="form-item" style="margin-top:6px;"><label>New</label><input type="password" id="profNewPw"></div><button class="btn btn-p" style="margin-top:8px;font-size:10px;" onclick="changePassword()">Update</button></div>
   <div class="prof-section" style="border-bottom:none;"><span style="font-size:10px;color:var(--g400);" id="profInfo"></span></div>
 </div>
 <div class="modal-ftr"><button class="btn btn-p" onclick="saveProfile()">Save</button><button class="btn btn-s" onclick="closeProfile()">Cancel</button></div>
@@ -1249,12 +1247,11 @@ switchPage(lastTab);
 setTimeout(function(){checkMandatoryReads();},300);}
 
 // === PROFILE ===
-function openProfile(){if(!me)return;var u=users[me.initials];$('profNick').value=u.nickname||'';$('profOldPw').value='';$('profNewPw').value='';$('profInfo').textContent=me.initials+' / '+u.fullName+' / '+u.role+(u.isAdmin?' (Admin)':'');var p=$('profPicPreview');if(u.picture){p.innerHTML='<img src="'+u.picture+'">';p.style.width='56px';p.style.borderRadius='50%';p.style.padding='0';p.style.fontSize='0';}else if(u.nickname){p.innerHTML=esc(u.nickname);p.style.width='auto';p.style.minWidth='56px';p.style.borderRadius='28px';p.style.padding='0 14px';p.style.fontSize='16px';}else{p.innerHTML=esc(me.initials);p.style.width='56px';p.style.borderRadius='50%';p.style.padding='0';p.style.fontSize='20px';}$('profModalBg').classList.add('open');}
+function openProfile(){if(!me)return;var u=users[me.initials];$('profNick').value=u.nickname||'';$('profInfo').textContent=me.initials+' / '+u.fullName+' / '+u.role+(u.isAdmin?' (Admin)':'');var p=$('profPicPreview');if(u.picture){p.innerHTML='<img src="'+u.picture+'">';p.style.width='56px';p.style.borderRadius='50%';p.style.padding='0';p.style.fontSize='0';}else if(u.nickname){p.innerHTML=esc(u.nickname);p.style.width='auto';p.style.minWidth='56px';p.style.borderRadius='28px';p.style.padding='0 14px';p.style.fontSize='16px';}else{p.innerHTML=esc(me.initials);p.style.width='56px';p.style.borderRadius='50%';p.style.padding='0';p.style.fontSize='20px';}$('profModalBg').classList.add('open');}
 function closeProfile(){$('profModalBg').classList.remove('open');}
 function handleProfPic(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=function(ev){const img=new Image();img.onload=function(){const c=document.createElement('canvas');c.width=80;c.height=80;const ctx=c.getContext('2d');const mn=Math.min(img.width,img.height);ctx.drawImage(img,(img.width-mn)/2,(img.height-mn)/2,mn,mn,0,0,80,80);const url=c.toDataURL('image/jpeg',.8);$('profPicPreview').innerHTML='<img src="'+url+'">';$('profPicPreview').style.fontSize='0';users[me.initials].picture=url;spSaveUser(me.initials,users[me.initials]).catch(function(e){console.error(e);});};img.src=ev.target.result;};r.readAsDataURL(f);}
 function removeProfPic(){users[me.initials].picture='';spSaveUser(me.initials,users[me.initials]).catch(function(e){console.error(e);});var p=$('profPicPreview'),n=users[me.initials].nickname||'';if(n){p.innerHTML=esc(n);p.style.width='auto';p.style.minWidth='56px';p.style.borderRadius='28px';p.style.padding='0 14px';p.style.fontSize='16px';}else{p.innerHTML=esc(me.initials);p.style.width='56px';p.style.borderRadius='50%';p.style.padding='0';p.style.fontSize='20px';}}
 function saveProfile(){var nick=$('profNick').value.trim().slice(0,12);users[me.initials].nickname=nick;spSaveUser(me.initials,users[me.initials]).catch(function(e){console.error(e);});uHA();renderAll();closeProfile();toast('Profile saved');}
-function changePassword(){const o=$('profOldPw').value,n=$('profNewPw').value;if(!o||!n){toast('Fill both fields');return;}if(users[me.initials].password!==o){toast('Wrong password');return;}users[me.initials].password=n;saveAll();$('profOldPw').value='';$('profNewPw').value='';toast('Password updated');}
 
 // === ADMIN ===
 function renderAdmin(){const l=$('adminList'),ua=Object.entries(users).sort((a,b)=>a[1].fullName.localeCompare(b[1].fullName));l.innerHTML=ua.map(([ini,u])=>{const isMe=me&&ini===me.initials;return'<div class="admin-row">'+avH(ini,26)+'<div class="admin-name">'+esc(u.fullName)+' <span style="font-size:9px;color:var(--g400);">('+ini+')</span>'+(u.isAdmin?' <span style="font-size:8px;background:var(--teal);color:var(--white);padding:1px 5px;border-radius:3px;">ADMIN</span>':'')+'</div><select style="font-size:10px;padding:3px 6px;" onchange="chgRole(\''+ini+'\',this.value)"'+(isMe?' disabled':'')+'><option value="MLS1"'+(u.role==='MLS1'?' selected':'')+'>MLS1</option><option value="MLS2"'+(u.role==='MLS2'?' selected':'')+'>MLS2</option><option value="MLS Lead"'+(u.role==='MLS Lead'?' selected':'')+'>MLS Lead</option><option value="Lab Manager"'+(u.role==='Lab Manager'?' selected':'')+'>Lab Manager</option></select></div>';}).join('');}
@@ -1519,7 +1516,7 @@ else if(p==='admin'){$('navAdmin').classList.add('active');renderAdmin();}
 // Persist last tab
 try{localStorage.setItem('rcl7_lastTab',p);localStorage.setItem('rcl7_lastTabDate',new Date().toISOString().split('T')[0]);}catch(e){}}
 
-function renderAll(){renderDash();renderAnn();renderLog();$('countChip').textContent=entries.length+' entries';}
+function renderAll(){renderDash();renderAnn();renderLog();}
 
 // === MODAL HELPERS ===
 function onStatusChange(){const s=$('eStatus').value,sh=s==='Resolved';['resDivider','resByWrap','resDateWrap'].forEach(id=>$(id).style.display=sh?'':'none');if(sh){if(!$('eResDate').value)$('eResDate').value=new Date().toISOString().split('T')[0];pDD('eResBy');}}
