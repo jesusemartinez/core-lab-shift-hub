@@ -1341,22 +1341,25 @@ async function hubManualBackup(){
 
 // Auto-backup on load (once per day)
 async function hubAutoBackup(){
+  var statusEl=$('hub-bk-status');
   var today=new Date().toISOString().slice(0,10);
   var lastAuto=localStorage.getItem('hub-last-auto-backup');
   if(lastAuto===today){
-    $('hub-bk-status').textContent='Current';$('hub-bk-status').style.color='var(--teal)';
+    if(statusEl){statusEl.textContent='Current';statusEl.style.color='var(--teal)';}
     return;
   }
+  if(statusEl){statusEl.textContent='Backing up...';statusEl.style.color='var(--g400)';}
   try{
     var data=buildHubBackup();
     await uploadHubBackupToSP(data);
     localStorage.setItem('hub-last-auto-backup',today);
-    $('hub-bk-status').textContent='Current';$('hub-bk-status').style.color='var(--teal)';
-    $('hub-bk-last').textContent='Auto-backed up today';
+    if(statusEl){statusEl.textContent='Current';statusEl.style.color='var(--teal)';}
+    var lastEl=$('hub-bk-last');
+    if(lastEl)lastEl.textContent='Auto-backed up today';
     console.log('Shift Hub auto-backup completed for '+today);
   }catch(e){
     console.warn('Hub auto-backup failed:',e);
-    $('hub-bk-status').textContent='Failed';$('hub-bk-status').style.color='var(--red)';
+    if(statusEl){statusEl.textContent='Failed — check console';statusEl.style.color='var(--red)';}
   }
 }
 
@@ -1456,23 +1459,36 @@ async function hubRestoreBackup(){
 
 // Backup history from SP doc library
 async function loadHubBackupHistory(){
+  var el=$('hub-bk-history');
+  if(!el)return;
+  el.textContent='Loading...';
   try{
-    var token=await getToken();
+    // Ensure lib name is resolved
+    if(!HUB_BK_LIB){await resolveHubLibName();}
     var siteRelUrl='/sites/og_uw_renton_central_laboratory_-_core_lab';
     var folderRelUrl=siteRelUrl+'/'+HUB_BK_LIB+'/'+HUB_BK_FOLDER;
-    var resp=await spFetch(SP_SITE+"/_api/web/GetFolderByServerRelativeUrl('"+folderRelUrl+"')/Files?$select=Name,Length,TimeCreated&$orderby=TimeCreated desc&$top=15");
-    if(!resp.ok){$('hub-bk-history').textContent='No backups yet';return;}
-    var d=await resp.json();var files=d.d&&d.d.results?d.d.results:[];
-    var el=$('hub-bk-history');
-    if(files.length===0){el.textContent='No backups yet';return;}
+    var resp=await spFetch(SP_SITE+"/_api/web/GetFolderByServerRelativeUrl('"+encodeURIComponent(folderRelUrl).replace(/%2F/g,'/')+"')/Files?$select=Name,Length,TimeCreated&$orderby=TimeCreated desc&$top=15");
+    if(!resp.ok){
+      // Folder may not exist yet — that's fine, no backups yet
+      el.textContent='No backups yet. Run a manual backup to start.';
+      return;
+    }
+    var d=await resp.json();
+    var files=d.d&&d.d.results?d.d.results:[];
+    if(files.length===0){el.textContent='No backups yet. Run a manual backup to start.';return;}
     el.innerHTML='<table style="width:100%;font-size:10px;border-collapse:collapse"><thead><tr style="border-bottom:1px solid var(--g200);text-align:left"><th style="padding:4px 6px">Date</th><th style="padding:4px 6px">File</th><th style="padding:4px 6px">Size</th><th style="padding:4px 6px">Action</th></tr></thead><tbody>'+
       files.map(function(f){
-        var date=f.TimeCreated?new Date(f.TimeCreated).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
+        var date=f.TimeCreated?new Date(f.TimeCreated).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'—';
         var size=f.Length?Math.round(f.Length/1024)+'KB':'—';
-        return'<tr style="border-bottom:1px solid var(--g100)"><td style="padding:4px 6px">'+date+'</td><td style="padding:4px 6px">'+f.Name+'</td><td style="padding:4px 6px">'+size+'</td><td style="padding:4px 6px"><a href="#" onclick="downloadHubBackup(\''+f.Name+'\');return false" style="color:var(--teal);font-weight:600">Download</a></td></tr>';
+        return'<tr style="border-bottom:1px solid var(--g100)"><td style="padding:4px 6px;white-space:nowrap">'+date+'</td><td style="padding:4px 6px;font-size:9px;max-width:180px;overflow:hidden;text-overflow:ellipsis">'+f.Name+'</td><td style="padding:4px 6px">'+size+'</td><td style="padding:4px 6px"><a href="#" onclick="downloadHubBackup(\''+f.Name+'\');return false" style="color:var(--teal);font-weight:600">Download</a></td></tr>';
       }).join('')+'</tbody></table>';
-    if(files.length>0){$('hub-bk-last').textContent='Last: '+new Date(files[0].TimeCreated).toLocaleDateString('en-US',{month:'short',day:'numeric'});}
-  }catch(e){$('hub-bk-history').textContent='Could not load history';}
+    if(files.length>0){
+      $('hub-bk-last').textContent='Last: '+new Date(files[0].TimeCreated).toLocaleTimeString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+    }
+  }catch(e){
+    console.error('loadHubBackupHistory error:',e);
+    el.innerHTML='<span style="color:var(--red)">Could not load history: '+esc(e.message)+'</span>';
+  }
 }
 
 async function downloadHubBackup(fileName){
@@ -1492,7 +1508,7 @@ if(p==='dash'){$('navDash').classList.add('active');renderDash();}
 else if(p==='ann'){$('navAnn').classList.add('active');renderAnn();}
 else if(p==='log'){$('navLog').classList.add('active');renderLog();}
 else if(p==='audit'){$('navAudit').classList.add('active');renderAudit();}
-else if(p==='admin'){$('navAdmin').classList.add('active');renderAdmin();}
+else if(p==='admin'){$('navAdmin').classList.add('active');renderAdmin();loadHubBackupHistory();}
 // Persist last tab
 try{localStorage.setItem('rcl7_lastTab',p);localStorage.setItem('rcl7_lastTabDate',new Date().toISOString().split('T')[0]);}catch(e){}}
 
@@ -1911,10 +1927,14 @@ function dlF(c,n,t){var a=document.createElement('a');a.href=URL.createObjectURL
 
 // === AUTO-BACKUP ===
 var lastSyncTime=null;
-function runAutoBackup(){
-  // Run auto-backup after data is loaded (admin only)
+async function runAutoBackup(){
   if(!me||!me.isAdmin)return;
-  setTimeout(async function(){await resolveHubLibName();hubAutoBackup();loadHubBackupHistory();},3000);
+  // Wait for data load to settle
+  await new Promise(function(r){setTimeout(r,3000);});
+  // Resolve library name FIRST, then run backup and history in sequence
+  try{await resolveHubLibName();}catch(e){console.warn('resolveHubLibName failed:',e);}
+  hubAutoBackup();
+  loadHubBackupHistory();
 }
 function uBD(){
   if(lastSyncTime){
