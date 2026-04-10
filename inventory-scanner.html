@@ -428,6 +428,22 @@ html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);
   transition:transform var(--dur-short) var(--me-spring),box-shadow var(--dur-short) var(--me-standard);}
 .stat-box:hover{box-shadow:0 4px 12px rgba(0,105,110,.12);}
 
+/* Nav collapsible sections */
+.nav-collapsible-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 20px 6px;cursor:pointer;user-select:none;transition:background var(--dur-micro) var(--me-standard);}
+.nav-collapsible-hdr:hover{background:var(--md-surface-container-high);}
+.nav-collapsible-title{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--md-on-surface-variant);display:flex;align-items:center;gap:5px}
+.nav-collapsible-chevron{font-size:15px;color:var(--md-outline);transition:transform var(--dur-med) var(--me-emphasized);}
+.nav-collapsible-body{display:grid;grid-template-rows:1fr;overflow:hidden;opacity:1;transition:grid-template-rows var(--dur-long) var(--me-emphasized),opacity var(--dur-med) var(--me-emphasized);}
+.nav-collapsible-body>*{min-height:0;}
+.nav-collapsible.collapsed .nav-collapsible-body{grid-template-rows:0fr;opacity:0;transition:grid-template-rows var(--dur-med) var(--me-accelerate),opacity var(--dur-short) var(--me-accelerate);}
+.nav-collapsible.collapsed .nav-collapsible-chevron{transform:rotate(-90deg);}
+
+/* Compact stat chips */
+.nav-stat-row{display:flex;gap:4px;padding:2px 12px 10px;}
+.nav-stat-chip{flex:1;background:var(--md-surface-container-lowest);border:1px solid var(--md-outline-variant);border-radius:var(--radius-sm);padding:6px 4px;text-align:center;}
+.nav-stat-chip .nsv{font-family:var(--font);font-size:15px;font-weight:700;color:var(--md-on-surface);line-height:1;}
+.nav-stat-chip .nsl{font-size:8px;color:var(--md-on-surface-variant);text-transform:uppercase;letter-spacing:.03em;font-weight:600;margin-top:1px;}
+
 /* ── Alert items — stagger in ── */
 .alert-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);font-size:12px;line-height:1.4;
   animation:alertSlide var(--dur-med) var(--me-decelerate) both;}
@@ -523,19 +539,31 @@ html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);
   <div class="nav-section" style="margin-top:12px">Quick Links</div>
   <div class="nav-item" onclick="window.open('inventory-dashboard.html','_blank')"><span class="material-icons-outlined">analytics</span>Dashboard</div>
 
-  <!-- Session Stats in left nav -->
-  <div class="nav-section" style="margin-top:16px">This Session</div>
-  <div style="padding:0 12px 8px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
-    <div class="stat-box"><div class="stat-val" id="stat-scans">0</div><div class="stat-lbl">Scanned</div></div>
-    <div class="stat-box"><div class="stat-val" id="stat-received">0</div><div class="stat-lbl">Received</div></div>
-    <div class="stat-box"><div class="stat-val" id="stat-removed">0</div><div class="stat-lbl">Removed</div></div>
-    <div class="stat-box"><div class="stat-val" id="stat-new">0</div><div class="stat-lbl">New Items</div></div>
+  <!-- Session Stats — collapsible -->
+  <div class="nav-collapsible" id="nav-stats-col" style="margin-top:8px;border-top:1px solid var(--md-outline-variant)">
+    <div class="nav-collapsible-hdr" onclick="toggleNavSection('nav-stats-col')">
+      <span class="nav-collapsible-title"><span class="material-icons-outlined" style="font-size:14px">assessment</span>This Session</span>
+      <span class="material-icons-outlined nav-collapsible-chevron">expand_more</span>
+    </div>
+    <div class="nav-collapsible-body">
+      <div class="nav-stat-row">
+        <div class="nav-stat-chip"><div class="nsv" id="stat-scans">0</div><div class="nsl">Scan</div></div>
+        <div class="nav-stat-chip"><div class="nsv" id="stat-received">0</div><div class="nsl">Recv</div></div>
+        <div class="nav-stat-chip"><div class="nsv" id="stat-removed">0</div><div class="nsl">Rmvd</div></div>
+        <div class="nav-stat-chip"><div class="nsv" id="stat-new">0</div><div class="nsl">New</div></div>
+      </div>
+    </div>
   </div>
 
-  <!-- Alerts in left nav -->
-  <div id="nav-alerts-section" style="display:none;padding:0 12px 8px">
-    <div class="nav-section" style="margin-top:4px;padding-left:0;color:var(--md-error)">Alerts</div>
-    <div id="nav-panel-alerts" class="alert-list"></div>
+  <!-- Alerts — collapsible, hidden until alerts exist -->
+  <div class="nav-collapsible" id="nav-alerts-col" style="display:none;border-top:1px solid var(--md-outline-variant)">
+    <div class="nav-collapsible-hdr" onclick="toggleNavSection('nav-alerts-col')">
+      <span class="nav-collapsible-title" style="color:var(--md-error)"><span class="material-icons-outlined" style="font-size:14px;color:var(--md-error)">warning</span>Alerts</span>
+      <span class="material-icons-outlined nav-collapsible-chevron">expand_more</span>
+    </div>
+    <div class="nav-collapsible-body">
+      <div id="nav-panel-alerts" class="alert-list" style="padding:0 10px 8px"></div>
+    </div>
   </div>
 
   <div class="nav-footer"><div class="nav-footer-name" id="nav-user-name"></div><div id="nav-sp-status">Connecting...</div><div style="margin-top:10px;font-size:8px;color:var(--md-outline-variant);letter-spacing:.02em;opacity:.5">&copy; 2026 Jesus Martinez. All rights reserved.</div></div>
@@ -1299,7 +1327,7 @@ async function loadTodayLog(){
 
 // Alerts
 function renderAlerts(){
-  var sec=document.getElementById('nav-alerts-section');
+  var sec=document.getElementById('nav-alerts-col');
   var list=document.getElementById('nav-panel-alerts');
   if(!sec||!list)return;
   var alerts=[];
@@ -1307,14 +1335,13 @@ function renderAlerts(){
     var stock=parseFloat(r.field_4)||0;
     var par=parseFloat(r.field_5)||0;
     var exp=(r.field_7||'').split('T')[0];
-    if(stock<=0&&par>0)alerts.push({type:'a-out',icon:'error',text:esc(r.Title)+' is out of stock'});
-    else if(stock<par&&par>0)alerts.push({type:'a-order',icon:'warning',text:esc(r.Title)+' below PAR ('+stock+'/'+par+')'});
+    if(stock<=0&&par>0)alerts.push({type:'a-out',icon:'error',text:esc(r.Title)+' out of stock'});
+    else if(stock<par&&par>0)alerts.push({type:'a-order',icon:'warning',text:esc(r.Title)+' below PAR'});
     if(exp){var dl=Math.round((new Date(exp+'T00:00:00')-new Date())/86400000);if(dl>=0&&dl<=14)alerts.push({type:'a-expiry',icon:'schedule',text:esc(r.Title)+' expires in '+dl+'d'});}
   });
   if(alerts.length===0){sec.style.display='none';return;}
   sec.style.display='block';
-  list.className='alert-list panel-body';
-  list.innerHTML=alerts.slice(0,8).map(function(a){
+  list.innerHTML=alerts.slice(0,10).map(function(a){
     return'<div class="alert-item '+a.type+'"><span class="material-icons-outlined">'+a.icon+'</span><span class="a-text">'+a.text+'</span></div>';
   }).join('');
 }
@@ -1331,6 +1358,28 @@ function renderSnapshot(){
     '<div class="snap-box snap-watch"><div class="snap-val">'+watch+'</div><div class="snap-lbl">Watch</div></div>'+
     '<div class="snap-box snap-order"><div class="snap-val">'+order+'</div><div class="snap-lbl">Order</div></div>'+
     '<div class="snap-box snap-out"><div class="snap-val">'+out+'</div><div class="snap-lbl">Out</div></div>';
+}
+
+// ── Nav section collapse (left sidebar) ──
+var NAV_STATE_KEY='scanner-nav-state';
+function toggleNavSection(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.classList.toggle('collapsed');
+  try{
+    var s=JSON.parse(localStorage.getItem(NAV_STATE_KEY)||'{}');
+    s[id]=el.classList.contains('collapsed');
+    localStorage.setItem(NAV_STATE_KEY,JSON.stringify(s));
+  }catch(e){}
+}
+function loadNavState(){
+  try{
+    var s=JSON.parse(localStorage.getItem(NAV_STATE_KEY)||'{}');
+    Object.keys(s).forEach(function(id){
+      var el=document.getElementById(id);
+      if(el&&s[id])el.classList.add('collapsed');
+    });
+  }catch(e){}
 }
 
 // ── Panel section collapse ──
@@ -1368,6 +1417,7 @@ async function lookupByTitle(title){
 window.addEventListener('load',function(){
   initAuth();
   loadPanelState();
+  loadNavState();
 });
 </script>
 </body>
