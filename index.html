@@ -496,11 +496,27 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
         <span style="font-size:10px;color:var(--g400);align-self:center;" id="lastSyncLabel">Last sync: --</span>
       </div>
       <h4 style="margin-top:12px;"><span class="mi mi-sm">backup</span> Backup &amp; Restore</h4>
-      <p style="font-size:10px;color:var(--g500);margin-bottom:8px;">Download a full backup of all SharePoint data as JSON. Restore if something goes wrong.</p>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button class="btn btn-s" onclick="exportSPBackup()"><span class="mi mi-xs">download</span> Export Full Backup</button>
-        <button class="btn btn-s" onclick="document.getElementById('restoreFile').click()"><span class="mi mi-xs">upload</span> Restore from Backup</button>
-        <input type="file" id="restoreFile" accept=".json" onchange="restoreSPBackup(event)" style="display:none;">
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+        <span style="font-size:10px;font-weight:700;color:var(--teal);" id="hub-bk-status">Checking...</span>
+        <span style="font-size:10px;color:var(--g400);" id="hub-bk-last"></span>
+      </div>
+      <p style="font-size:10px;color:var(--g500);margin-bottom:8px;">Auto-backup runs once daily when you open the Shift Hub. Backups are stored as JSON in the SharePoint document library.</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        <button class="btn btn-p" onclick="hubManualBackup()" id="hub-bk-btn"><span class="mi mi-xs">cloud_upload</span> Backup to SharePoint</button>
+        <button class="btn btn-s" onclick="exportSPBackup()"><span class="mi mi-xs">download</span> Download JSON</button>
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--g200);">
+        <p style="font-size:10px;font-weight:700;color:var(--g600);margin-bottom:6px;">Restore from Backup</p>
+        <p style="font-size:10px;color:var(--g500);margin-bottom:6px;">Upload a JSON backup to restore data. Existing items with matching IDs will be updated. New items will be created. No data is deleted.</p>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <input type="file" id="restoreFile" accept=".json" style="font-size:10px;max-width:200px;">
+          <button class="btn btn-s" onclick="hubRestoreBackup()" style="background:var(--amber);color:var(--navy);border-color:var(--amber);"><span class="mi mi-xs">restore</span> Restore</button>
+        </div>
+        <div id="hub-restore-status" style="margin-top:6px;font-size:10px;color:var(--g500);display:none"></div>
+      </div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--g200);">
+        <p style="font-size:10px;font-weight:700;color:var(--g600);margin-bottom:6px;">Backup History</p>
+        <div id="hub-bk-history" style="font-size:10px;color:var(--g500);">Loading...</div>
       </div>
     </div>
   </div>
@@ -1091,77 +1107,187 @@ async function manualSync(){
 }
 
 function exportSPBackup(){
-  var d={
-    entries:entries,
-    history:hist,
-    users:users,
-    announcements:announcements,
-    notifications:notifs,
-    dismissed:dismissed,
-    exportDate:new Date().toISOString(),
-    exportedBy:me?me.fullName:'',
-    source:'SharePoint',
-    site:SP_SITE,
-    version:'2.0'
-  };
+  var d=buildHubBackup();
   var a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));
-  a.download='CLSH_Backup_'+new Date().toISOString().split('T')[0]+'.json';
+  a.download='CLSH_Backup_'+d.date+'.json';
   a.click();
-  toast('Backup exported ('+entries.length+' entries, '+announcements.length+' announcements)');
+  toast('Backup downloaded');
 }
 
-async function restoreSPBackup(ev){
-  var f=ev.target.files[0];if(!f)return;
-  if(!confirm('WARNING: This will REPLACE all data in SharePoint.\n\nThis cannot be undone. Continue?')){ev.target.value='';return;}
-  if(!confirm('FINAL CONFIRMATION: Overwrite all SharePoint data?')){ev.target.value='';return;}
-  var reader=new FileReader();
-  reader.onload=async function(e){
-    try{
-      var d=JSON.parse(e.target.result);
-      if(!d.entries||!d.users){toast('Invalid backup file');return;}
-      toast('Restoring to SharePoint... This may take a moment.');
-
-      // Clear existing SP data
-      var [oldEntries,oldAnns,oldAudit]=await Promise.all([
-        spGet('ShiftEntries'),spGet('Announcements'),spGet('AuditLog')
-      ]);
-      toast('Clearing old data ('+oldEntries.length+' entries)...');
-      await Promise.all(oldEntries.map(function(i){return spDelete('ShiftEntries',i.Id);}));
-      await Promise.all(oldAnns.map(function(i){return spDelete('Announcements',i.Id);}));
-      await Promise.all(oldAudit.map(function(i){return spDelete('AuditLog',i.Id);}));
-
-      // Write new data
-      toast('Writing entries...');
-      for(var i=0;i<(d.entries||[]).length;i++){
-        await spAdd('ShiftEntries',entryToSP(d.entries[i]));
-      }
-      toast('Writing announcements...');
-      for(var i=0;i<(d.announcements||[]).length;i++){
-        await spAdd('Announcements',annToSP(d.announcements[i]));
-      }
-      toast('Writing audit log...');
-      for(var i=0;i<Math.min((d.history||[]).length,500);i++){
-        await spAdd('AuditLog',auditToSP(d.history[i]));
-      }
-      // Update users
-      toast('Writing users...');
-      for(var ini in (d.users||{})){
-        await spSaveUser(ini,d.users[ini]);
-      }
-
-      // Reload
-      await loadAllData();
-      lastSyncTime=new Date();uBD();
-      refreshUI();
-      toast('Restore complete: '+entries.length+' entries, '+announcements.length+' announcements');
-    }catch(err){
-      console.error('Restore failed:',err);
-      toast('Restore failed: '+err.message);
-    }
+function buildHubBackup(){
+  return{
+    version:'3.0',
+    timestamp:new Date().toISOString(),
+    date:new Date().toISOString().slice(0,10),
+    source:'SharePoint',site:SP_SITE,
+    exportedBy:me?me.fullName:'',
+    entries:entries,
+    announcements:announcements,
+    history:hist,
+    users:users,
+    notifications:notifs,
+    dismissed:dismissed,
+    counts:{entries:entries.length,announcements:announcements.length,audit:hist.length}
   };
-  reader.readAsText(f);
-  ev.target.value='';
+}
+
+// Upload backup JSON to SP document library
+var HUB_BK_LIB='Shared Documents';
+var HUB_BK_FOLDER='_shifthub_backups';
+
+async function uploadHubBackupToSP(data){
+  var token=await getToken();
+  var json=JSON.stringify(data);
+  var fileName='shifthub-backup-'+data.date+'.json';
+  // Ensure folder exists (ignore errors if it already does)
+  try{
+    var dg=await getDigestValue();
+    await fetch(SP_SITE+"/_api/web/folders",{method:'POST',headers:{'Authorization':'Bearer '+token,'Accept':'application/json;odata=verbose','Content-Type':'application/json;odata=verbose','X-RequestDigest':dg},body:JSON.stringify({__metadata:{type:'SP.Folder'},ServerRelativeUrl:HUB_BK_LIB+'/'+HUB_BK_FOLDER})});
+  }catch(e){}
+  // Upload file
+  var dg=await getDigestValue();
+  var url=SP_SITE+"/_api/web/GetFolderByServerRelativeUrl('"+HUB_BK_LIB+"/"+HUB_BK_FOLDER+"')/Files/add(url='"+fileName+"',overwrite=true)";
+  await fetch(url,{method:'POST',headers:{'Authorization':'Bearer '+token,'Accept':'application/json;odata=verbose','X-RequestDigest':dg},body:json});
+  return fileName;
+}
+
+async function getDigestValue(){
+  var token=await getToken();
+  var r=await fetch(SP_SITE+'/_api/contextinfo',{method:'POST',headers:{'Authorization':'Bearer '+token,'Accept':'application/json;odata=verbose','Content-Length':'0'}});
+  var d=await r.json();return d.d.GetContextWebInformation.FormDigestValue;
+}
+
+// Manual backup to SP
+async function hubManualBackup(){
+  var btn=$('hub-bk-btn');
+  btn.disabled=true;btn.innerHTML='<span class="mi mi-xs">hourglass_empty</span> Backing up...';
+  try{
+    var data=buildHubBackup();
+    await uploadHubBackupToSP(data);
+    btn.innerHTML='<span class="mi mi-xs">check_circle</span> Complete';
+    btn.style.background='#2D6B46';btn.style.color='#fff';
+    $('hub-bk-status').textContent='Current';$('hub-bk-status').style.color='var(--teal)';
+    $('hub-bk-last').textContent='Last: '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    loadHubBackupHistory();
+    setTimeout(function(){btn.innerHTML='<span class="mi mi-xs">cloud_upload</span> Backup to SharePoint';btn.style.background='';btn.style.color='';btn.disabled=false;},2000);
+  }catch(e){
+    console.error('Hub backup failed:',e);
+    btn.innerHTML='<span class="mi mi-xs">error</span> Failed';btn.style.background='var(--red)';btn.style.color='#fff';
+    setTimeout(function(){btn.innerHTML='<span class="mi mi-xs">cloud_upload</span> Backup to SharePoint';btn.style.background='';btn.style.color='';btn.disabled=false;},2000);
+  }
+}
+
+// Auto-backup on load (once per day)
+async function hubAutoBackup(){
+  var today=new Date().toISOString().slice(0,10);
+  var lastAuto=localStorage.getItem('hub-last-auto-backup');
+  if(lastAuto===today){
+    $('hub-bk-status').textContent='Current';$('hub-bk-status').style.color='var(--teal)';
+    return;
+  }
+  try{
+    var data=buildHubBackup();
+    await uploadHubBackupToSP(data);
+    localStorage.setItem('hub-last-auto-backup',today);
+    $('hub-bk-status').textContent='Current';$('hub-bk-status').style.color='var(--teal)';
+    $('hub-bk-last').textContent='Auto-backed up today';
+    console.log('Shift Hub auto-backup completed for '+today);
+  }catch(e){
+    console.warn('Hub auto-backup failed:',e);
+    $('hub-bk-status').textContent='Failed';$('hub-bk-status').style.color='var(--red)';
+  }
+}
+
+// Non-destructive restore
+async function hubRestoreBackup(){
+  var fileInput=$('restoreFile');
+  var statusEl=$('hub-restore-status');
+  if(!fileInput.files||!fileInput.files[0]){toast('Select a backup file first');return;}
+  statusEl.style.display='block';statusEl.textContent='Reading file...';
+  try{
+    var text=await fileInput.files[0].text();
+    var data=JSON.parse(text);
+    if(!data.entries){throw new Error('Invalid backup file: no entries found');}
+
+    var restored=0,errors=0;
+    // Restore entries (match by id/Title)
+    statusEl.textContent='Restoring '+data.entries.length+' entries...';
+    for(var i=0;i<data.entries.length;i++){
+      try{
+        var entry=data.entries[i];
+        var existing=await spGet('ShiftEntries',"Title eq '"+entry.id+"'");
+        if(existing.length>0){
+          await spUpdate('ShiftEntries',existing[0].Id,entryToSP(entry));
+        }else{
+          await spAdd('ShiftEntries',entryToSP(entry));
+        }
+        restored++;
+        if(i%5===0)statusEl.textContent='Entries: '+restored+'/'+data.entries.length+'...';
+      }catch(e){errors++;}
+    }
+
+    // Restore announcements
+    if(data.announcements&&data.announcements.length>0){
+      statusEl.textContent='Restoring '+data.announcements.length+' announcements...';
+      for(var i=0;i<data.announcements.length;i++){
+        try{
+          var ann=data.announcements[i];
+          var existing=await spGet('Announcements',"Title eq '"+ann.id+"'");
+          if(existing.length>0){
+            await spUpdate('Announcements',existing[0].Id,annToSP(ann));
+          }else{
+            await spAdd('Announcements',annToSP(ann));
+          }
+          restored++;
+        }catch(e){errors++;}
+      }
+    }
+
+    // Restore users
+    if(data.users){
+      statusEl.textContent='Restoring users...';
+      for(var ini in data.users){
+        try{await spSaveUser(ini,data.users[ini]);restored++;}catch(e){errors++;}
+      }
+    }
+
+    statusEl.innerHTML='<strong style="color:var(--teal)">Restore complete.</strong> '+restored+' items restored'+(errors?' ('+errors+' errors)':'')+'. Reloading...';
+    await loadAllData();
+    lastSyncTime=new Date();uBD();refreshUI();
+    fileInput.value='';
+  }catch(e){
+    statusEl.innerHTML='<strong style="color:var(--red)">Restore failed:</strong> '+e.message;
+  }
+}
+
+// Backup history from SP doc library
+async function loadHubBackupHistory(){
+  try{
+    var token=await getToken();
+    var resp=await fetch(SP_SITE+"/_api/web/GetFolderByServerRelativeUrl('"+HUB_BK_LIB+"/"+HUB_BK_FOLDER+"')/Files?$select=Name,Length,TimeCreated&$orderby=TimeCreated desc&$top=15",{headers:{'Authorization':'Bearer '+token,'Accept':'application/json;odata=verbose'}});
+    if(!resp.ok){$('hub-bk-history').textContent='No backups yet';return;}
+    var d=await resp.json();var files=d.d&&d.d.results?d.d.results:[];
+    var el=$('hub-bk-history');
+    if(files.length===0){el.textContent='No backups yet';return;}
+    el.innerHTML='<table style="width:100%;font-size:10px;border-collapse:collapse"><thead><tr style="border-bottom:1px solid var(--g200);text-align:left"><th style="padding:4px 6px">Date</th><th style="padding:4px 6px">File</th><th style="padding:4px 6px">Size</th><th style="padding:4px 6px">Action</th></tr></thead><tbody>'+
+      files.map(function(f){
+        var date=f.TimeCreated?new Date(f.TimeCreated).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
+        var size=f.Length?Math.round(f.Length/1024)+'KB':'—';
+        return'<tr style="border-bottom:1px solid var(--g100)"><td style="padding:4px 6px">'+date+'</td><td style="padding:4px 6px">'+f.Name+'</td><td style="padding:4px 6px">'+size+'</td><td style="padding:4px 6px"><a href="#" onclick="downloadHubBackup(\''+f.Name+'\');return false" style="color:var(--teal);font-weight:600">Download</a></td></tr>';
+      }).join('')+'</tbody></table>';
+    if(files.length>0){$('hub-bk-last').textContent='Last: '+new Date(files[0].TimeCreated).toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+  }catch(e){$('hub-bk-history').textContent='Could not load history';}
+}
+
+async function downloadHubBackup(fileName){
+  try{
+    var token=await getToken();
+    var resp=await fetch(SP_SITE+"/_api/web/GetFolderByServerRelativeUrl('"+HUB_BK_LIB+"/"+HUB_BK_FOLDER+"')/Files('"+fileName+"')/$value",{headers:{'Authorization':'Bearer '+token}});
+    var blob=await resp.blob();
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download=fileName;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  }catch(e){toast('Download failed');}
 }
 
 // === PAGE NAV ===
@@ -1407,7 +1533,11 @@ function dlF(c,n,t){var a=document.createElement('a');a.href=URL.createObjectURL
 
 // === AUTO-BACKUP ===
 var lastSyncTime=null;
-function runAutoBackup(){/* No-op in SP version */}
+function runAutoBackup(){
+  // Run auto-backup after data is loaded (admin only)
+  if(!me||!me.isAdmin)return;
+  setTimeout(function(){hubAutoBackup();loadHubBackupHistory();},3000);
+}
 function uBD(){
   if(lastSyncTime){
     $('backupTime').textContent='Synced '+lastSyncTime.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
