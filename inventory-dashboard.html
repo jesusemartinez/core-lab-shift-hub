@@ -165,6 +165,7 @@ select.filter-select{padding:6px 32px 6px 14px;border-radius:var(--radius-full);
       <button class="nav-btn" onclick="showView('expiry')"><span class="material-icons-outlined">event_busy</span>Expiry &amp; Waste</button>
       <button class="nav-btn" onclick="showView('forecast')"><span class="material-icons-outlined">auto_graph</span>Forecasting</button>
       <button class="nav-btn" onclick="showView('log')"><span class="material-icons-outlined">receipt_long</span>Transaction Log</button>
+      <button class="nav-btn" id="nav-backup" onclick="showView('backup')" style="display:none"><span class="material-icons-outlined">backup</span>Backup &amp; Restore</button>
     </nav>
     <div class="sidebar-footer"><div class="name" id="side-user"></div><div id="side-sp">Connecting...</div><div style="margin-top:10px;font-size:8px;color:var(--outline-variant);letter-spacing:.02em;opacity:.5">&copy; 2026 Jesus Martinez. All rights reserved.</div></div>
   </aside>
@@ -223,6 +224,39 @@ select.filter-select{padding:6px 32px 6px 14px;border-radius:var(--radius-full);
         </div>
         <div class="table-wrap"><table class="data-table"><thead><tr><th>Time</th><th>Item</th><th>Action</th><th>Change</th><th>After</th><th>Lot</th><th>By</th><th>Notes</th></tr></thead><tbody id="log-tbody"></tbody></table></div>
       </div>
+
+      <!-- BACKUP & RESTORE (admin only) -->
+      <div class="view" id="view-backup">
+        <div class="summary-bar">
+          <div class="summary-card" style="cursor:default"><div class="val" style="color:var(--primary)" id="bk-status">Checking...</div><div class="lbl">Auto-Backup Status</div></div>
+          <div class="summary-card" style="cursor:default"><div class="val" style="color:var(--on-surface)" id="bk-last">—</div><div class="lbl">Last Backup</div></div>
+          <div class="summary-card" style="cursor:default"><div class="val" style="color:var(--on-surface)" id="bk-items">—</div><div class="lbl">Items Backed Up</div></div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+          <button class="save-all-btn" onclick="manualBackup()" id="bk-manual-btn" style="flex:1;min-width:200px">
+            <span class="material-icons-outlined" style="font-size:18px">cloud_upload</span>Create Backup Now
+          </button>
+          <button class="save-all-btn" onclick="downloadBackup()" style="flex:1;min-width:200px;background:var(--secondary-container);color:var(--on-secondary-container)">
+            <span class="material-icons-outlined" style="font-size:18px">download</span>Download as JSON
+          </button>
+        </div>
+
+        <div style="background:var(--surface-lowest);border:1.5px solid var(--outline-variant);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px">
+          <div style="font-family:var(--font);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--on-surface-variant);margin-bottom:12px;display:flex;align-items:center;gap:8px"><span class="material-icons-outlined" style="font-size:16px">upload_file</span>Restore from Backup</div>
+          <div style="font-size:13px;color:var(--on-surface-variant);margin-bottom:12px;line-height:1.5">Upload a JSON backup file to restore inventory data. Existing items with matching titles will be updated. New items will be created. This will not delete any current data.</div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <input type="file" id="restore-file" accept=".json" style="font-size:13px;font-family:var(--font-body)">
+            <button class="save-all-btn" onclick="restoreFromBackup()" id="restore-btn" style="background:var(--order);min-width:140px">
+              <span class="material-icons-outlined" style="font-size:18px">restore</span>Restore
+            </button>
+          </div>
+          <div id="restore-status" style="margin-top:10px;font-size:12px;color:var(--on-surface-variant);display:none"></div>
+        </div>
+
+        <div style="font-family:var(--font);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--on-surface-variant);margin-bottom:10px">Backup History</div>
+        <div class="table-wrap" style="max-height:300px"><table class="data-table"><thead><tr><th>Date</th><th>Items</th><th>Size</th><th>Action</th></tr></thead><tbody id="bk-history"></tbody></table></div>
+      </div>
     </div>
   </div>
   <nav class="mobile-nav">
@@ -249,7 +283,7 @@ var stockPage=1,ITEMS_PER_PAGE=12,statusFilter=null,pendingEdits={};
 var miniCharts={};
 
 // AUTH
-async function initAuth(){showLoad('Signing in...');try{msalInstance=new msal.PublicClientApplication(MSAL_CONFIG);var resp=null;try{resp=await msalInstance.handleRedirectPromise();}catch(e){}if(resp&&resp.account){msalInstance.setActiveAccount(resp.account);spToken=resp.accessToken;spTokenExpiry=resp.expiresOn?.getTime()||Date.now()+3600000;}var accounts=msalInstance.getAllAccounts();if(!accounts.length){hideLoad();document.getElementById('auth-screen').style.display='flex';return;}msalInstance.setActiveAccount(accounts[0]);var acct=accounts[0];isAdmin=(acct.username||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();document.getElementById('side-user').textContent=acct.name||acct.username;if(!spToken){try{var r=await msalInstance.acquireTokenSilent({scopes:['https://uwnetid.sharepoint.com/AllSites.Write'],account:acct});spToken=r.accessToken;spTokenExpiry=r.expiresOn?.getTime()||Date.now()+3600000;}catch(e){}}if(isAdmin)document.getElementById('admin-edit-btn').classList.add('show');document.getElementById('app').style.display='flex';await loadAllData();hideLoad();}catch(e){hideLoad();console.error('Auth:',e);document.getElementById('auth-screen').style.display='flex';}}
+async function initAuth(){showLoad('Signing in...');try{msalInstance=new msal.PublicClientApplication(MSAL_CONFIG);var resp=null;try{resp=await msalInstance.handleRedirectPromise();}catch(e){}if(resp&&resp.account){msalInstance.setActiveAccount(resp.account);spToken=resp.accessToken;spTokenExpiry=resp.expiresOn?.getTime()||Date.now()+3600000;}var accounts=msalInstance.getAllAccounts();if(!accounts.length){hideLoad();document.getElementById('auth-screen').style.display='flex';return;}msalInstance.setActiveAccount(accounts[0]);var acct=accounts[0];isAdmin=(acct.username||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();document.getElementById('side-user').textContent=acct.name||acct.username;if(!spToken){try{var r=await msalInstance.acquireTokenSilent({scopes:['https://uwnetid.sharepoint.com/AllSites.Write'],account:acct});spToken=r.accessToken;spTokenExpiry=r.expiresOn?.getTime()||Date.now()+3600000;}catch(e){}}if(isAdmin){document.getElementById('admin-edit-btn').classList.add('show');document.getElementById('nav-backup').style.display='flex';}document.getElementById('app').style.display='flex';await loadAllData();hideLoad();}catch(e){hideLoad();console.error('Auth:',e);document.getElementById('auth-screen').style.display='flex';}}
 async function triggerLogin(){if(!msalInstance)msalInstance=new msal.PublicClientApplication(MSAL_CONFIG);await msalInstance.loginRedirect({scopes:['https://uwnetid.sharepoint.com/AllSites.Write','User.Read']});}
 async function getToken(){if(spToken&&Date.now()<spTokenExpiry-60000)return spToken;var acct=msalInstance?.getActiveAccount();if(!acct)throw new Error('Not signed in');var r=await msalInstance.acquireTokenSilent({scopes:['https://uwnetid.sharepoint.com/AllSites.Write'],account:acct});spToken=r.accessToken;spTokenExpiry=r.expiresOn?.getTime()||Date.now()+3600000;return spToken;}
 
@@ -264,8 +298,8 @@ async function spPatch(ln,id,f){var dg=await getDigest(),mt=await getItemType(ln
 async function loadAllData(){showLoad('Loading inventory...');allInventory=await spFetchAll(SP.lists.inventory,'Id,Title,'+Object.values(INV).join(','));showLoad('Loading transactions...');var lf=Object.values(LOG).filter(function(v,i,a){return a.indexOf(v)===i;});allLogs=await spFetchAll(SP.lists.log,'Id,Title,'+lf.join(','));allLogs.sort(function(a,b){return(b[LOG.Timestamp]||'').localeCompare(a[LOG.Timestamp]||'');});var sel=document.getElementById('trend-item');allInventory.map(function(r){return r.Title;}).filter(Boolean).sort().forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});document.getElementById('side-sp').textContent='SharePoint connected';renderAll();}
 
 // VIEWS
-var currentView='stock';var viewTitles={stock:'Stock Overview',trends:'Usage Trends',expiry:'Expiry & Waste Risk',forecast:'Forecasting',log:'Transaction Log'};
-function showView(id){currentView=id;document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});document.getElementById('view-'+id).classList.add('active');document.getElementById('view-title').textContent=viewTitles[id];document.querySelectorAll('.nav-btn').forEach(function(b,i){b.classList.toggle('active',['stock','trends','expiry','forecast','log'][i]===id);});document.querySelectorAll('.mob-btn').forEach(function(b,i){b.classList.toggle('active',['stock','trends','expiry','forecast','log'][i]===id);});if(id==='trends')renderTrends();if(id==='forecast')renderForecast();}
+var currentView='stock';var viewTitles={stock:'Stock Overview',trends:'Usage Trends',expiry:'Expiry & Waste Risk',forecast:'Forecasting',log:'Transaction Log',backup:'Backup & Restore'};
+function showView(id){currentView=id;document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});document.getElementById('view-'+id).classList.add('active');document.getElementById('view-title').textContent=viewTitles[id]||id;document.querySelectorAll('.nav-btn').forEach(function(b,i){b.classList.toggle('active',['stock','trends','expiry','forecast','log','backup'][i]===id);});document.querySelectorAll('.mob-btn').forEach(function(b,i){b.classList.toggle('active',['stock','trends','expiry','forecast','log'][i]===id);});if(id==='trends')renderTrends();if(id==='forecast')renderForecast();if(id==='backup')renderBackupView();}
 function applyFilters(){stockPage=1;renderAll();}
 function getFiltered(){var d=document.getElementById('filter-dept').value;return allInventory.filter(function(r){return!d||iv(r,'Instrument')===d;});}
 function renderAll(){renderStock();renderExpiry();renderLogTable();}
@@ -498,10 +532,196 @@ function renderLogTable(){renderLogRows(allLogs);}
 function renderLogRows(logs){document.getElementById('log-tbody').innerHTML=logs.slice(0,500).map(function(l){var ts=l[LOG.Timestamp]||'';var disp=ts?new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';var d=parseFloat(l[LOG.QuantityDelta])||0;var ds=(d>=0?'+':'')+d;var ac=(l[LOG.Action]||'').toLowerCase();var c=ac.indexOf('receive')>=0?'var(--ok)':ac.indexOf('remove')>=0?'var(--out)':'var(--watch)';return'<tr><td style="white-space:nowrap">'+disp+'</td><td>'+esc(l.Title||'')+'</td><td style="color:'+c+';font-weight:700">'+esc(l[LOG.Action]||'')+'</td><td style="font-weight:700;color:'+c+'">'+ds+'</td><td>'+(l[LOG.QuantityAfter]||'')+'</td><td>'+esc(l[LOG.LotNumber]||'')+'</td><td>'+esc(l[LOG.ScannedBy]||l.ScannedBy||'')+'</td><td style="font-size:12px;color:var(--on-surface-variant)">'+esc(l[LOG.ReasonNote]||'')+'</td></tr>';}).join('');}
 function filterLog(){var q=(document.getElementById('log-search').value||'').toLowerCase(),a=document.getElementById('log-action').value;renderLogRows(allLogs.filter(function(l){if(a&&(l[LOG.Action]||'').indexOf(a)<0)return false;if(q){var h=((l.Title||'')+' '+(l[LOG.ScannedBy]||l.ScannedBy||'')+' '+(l[LOG.LotNumber]||'')+' '+(l[LOG.ReasonNote]||'')).toLowerCase();if(h.indexOf(q)<0)return false;}return true;}));}
 
+// ═══════════════════════════════════════════════
+// BACKUP & RESTORE
+// ═══════════════════════════════════════════════
+var BACKUP_LIB='Shared Documents';
+var BACKUP_FOLDER='_inventory_backups';
+var lastBackupInfo=null;
+
+function buildBackupData(){
+  var now=new Date();
+  return{
+    version:'1.0',
+    timestamp:now.toISOString(),
+    date:now.toISOString().slice(0,10),
+    site:SP.siteUrl,
+    lists:{
+      ReagentInventory:allInventory.map(function(r){var o={Title:r.Title};for(var k in INV)o[INV[k]]=r[INV[k]];return o;}),
+      InventoryLog:allLogs.map(function(r){var o={Title:r.Title};for(var k in LOG)o[LOG[k]]=r[LOG[k]];return o;}),
+    },
+    counts:{inventory:allInventory.length,log:allLogs.length}
+  };
+}
+
+// Download JSON to local machine
+function downloadBackup(){
+  var data=buildBackupData();
+  var json=JSON.stringify(data,null,2);
+  var blob=new Blob([json],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='inventory-backup-'+data.date+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Backup downloaded');
+}
+function showToast(msg){var t=document.createElement('div');t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--on-surface);color:var(--surface);padding:10px 24px;border-radius:9999px;font-size:13px;font-weight:600;font-family:var(--font);z-index:999;box-shadow:0 4px 12px rgba(0,0,0,.15)';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove();},3000);}
+
+// Upload backup to SP document library
+async function uploadBackupToSP(data){
+  var token=await getToken();
+  var json=JSON.stringify(data);
+  var fileName='inventory-backup-'+data.date+'.json';
+  // Ensure folder exists
+  try{await fetch(SP.siteUrl+"/_api/web/GetFolderByServerRelativeUrl('"+BACKUP_LIB+"/"+BACKUP_FOLDER+"')",{headers:{'Authorization':'Bearer '+token,'Accept':'application/json;odata=verbose'}});}
+  catch(e){
+    var dg=await getDigest();
+    await fetch(SP.siteUrl+"/_api/web/folders",{method:'POST',headers:{'Authorization':'Bearer '+token,'Accept':'application/json;odata=verbose','Content-Type':'application/json;odata=verbose','X-RequestDigest':dg},body:JSON.stringify({__metadata:{type:'SP.Folder'},ServerRelativeUrl:BACKUP_LIB+'/'+BACKUP_FOLDER})});
+  }
+  // Upload file
+  var dg=await getDigest();
+  var url=SP.siteUrl+"/_api/web/GetFolderByServerRelativeUrl('"+BACKUP_LIB+"/"+BACKUP_FOLDER+"')/Files/add(url='"+fileName+"',overwrite=true)";
+  await fetch(url,{method:'POST',headers:{'Authorization':'Bearer '+token,'Accept':'application/json;odata=verbose','X-RequestDigest':dg},body:json});
+  return fileName;
+}
+
+// Manual backup
+async function manualBackup(){
+  var btn=document.getElementById('bk-manual-btn');
+  btn.disabled=true;btn.innerHTML='<span class="material-icons-outlined" style="font-size:18px">hourglass_empty</span>Backing up...';
+  try{
+    var data=buildBackupData();
+    var fn=await uploadBackupToSP(data);
+    lastBackupInfo={date:data.date,items:data.counts.inventory+data.counts.log,file:fn};
+    btn.innerHTML='<span class="material-icons-outlined" style="font-size:18px">check_circle</span>Backup Complete';
+    btn.style.background='var(--ok)';
+    renderBackupView();
+    setTimeout(function(){btn.innerHTML='<span class="material-icons-outlined" style="font-size:18px">cloud_upload</span>Create Backup Now';btn.style.background='';btn.disabled=false;},2000);
+  }catch(e){
+    console.error('Backup failed:',e);
+    btn.innerHTML='<span class="material-icons-outlined" style="font-size:18px">error</span>Failed';
+    btn.style.background='var(--error)';
+    setTimeout(function(){btn.innerHTML='<span class="material-icons-outlined" style="font-size:18px">cloud_upload</span>Create Backup Now';btn.style.background='';btn.disabled=false;},2000);
+  }
+}
+
+// Auto-backup on load (once per day)
+async function autoBackupCheck(){
+  if(!isAdmin)return;
+  var today=new Date().toISOString().slice(0,10);
+  var lastAuto=localStorage.getItem('inv-last-auto-backup');
+  if(lastAuto===today){
+    document.getElementById('bk-status').textContent='Current';
+    document.getElementById('bk-status').style.color='var(--ok)';
+    return;
+  }
+  try{
+    var data=buildBackupData();
+    await uploadBackupToSP(data);
+    localStorage.setItem('inv-last-auto-backup',today);
+    lastBackupInfo={date:today,items:data.counts.inventory+data.counts.log,file:'inventory-backup-'+today+'.json'};
+    document.getElementById('bk-status').textContent='Current';
+    document.getElementById('bk-status').style.color='var(--ok)';
+    console.log('Auto-backup completed for '+today);
+  }catch(e){
+    console.warn('Auto-backup failed:',e);
+    document.getElementById('bk-status').textContent='Failed';
+    document.getElementById('bk-status').style.color='var(--error)';
+  }
+}
+
+// Restore from uploaded JSON
+async function restoreFromBackup(){
+  var fileInput=document.getElementById('restore-file');
+  var statusEl=document.getElementById('restore-status');
+  if(!fileInput.files||!fileInput.files[0]){showToast('Select a backup file first');return;}
+  var btn=document.getElementById('restore-btn');
+  btn.disabled=true;btn.textContent='Restoring...';
+  statusEl.style.display='block';statusEl.textContent='Reading file...';
+  try{
+    var text=await fileInput.files[0].text();
+    var data=JSON.parse(text);
+    if(!data.lists||!data.lists.ReagentInventory){throw new Error('Invalid backup file');}
+    var invRows=data.lists.ReagentInventory||[];
+    var restored=0,errors=0;
+    statusEl.textContent='Restoring '+invRows.length+' inventory items...';
+    for(var i=0;i<invRows.length;i++){
+      try{
+        // Check if item exists by Title
+        var safeTitle=(invRows[i].Title||'').replace(/'/g,"''");
+        var existing=await spFetch(SP.lists.inventory,"?$top=1&$select=Id,Title&$filter="+encodeURIComponent("Title eq '"+safeTitle+"'"));
+        if(existing.length>0){
+          // Update existing
+          var fields={};for(var k in invRows[i]){if(k!=='Title'&&k!=='__metadata'&&k!=='Id')fields[k]=invRows[i][k];}
+          await spPatch(SP.lists.inventory,existing[0].Id,fields);
+        }else{
+          // Create new
+          var fields={};for(var k in invRows[i]){if(k!=='__metadata'&&k!=='Id')fields[k]=invRows[i][k];}
+          var dg=await getDigest(),mt=await getItemType(SP.lists.inventory);
+          fields.__metadata={type:mt};
+          var token=await getToken();
+          await fetch(SP_API+"/getbytitle('"+SP.lists.inventory+"')/items",{method:'POST',headers:{'Authorization':'Bearer '+token,'Accept':'application/json;odata=verbose','Content-Type':'application/json;odata=verbose','X-RequestDigest':dg},body:JSON.stringify(fields)});
+        }
+        restored++;
+        if(i%5===0)statusEl.textContent='Restored '+restored+'/'+invRows.length+' items...';
+      }catch(e){errors++;console.warn('Restore error on item '+i,e);}
+    }
+    statusEl.innerHTML='<strong style="color:var(--ok)">Restore complete.</strong> '+restored+' items restored'+(errors?' ('+errors+' errors)':'')+'. Reloading data...';
+    await loadAllData();
+    btn.disabled=false;btn.textContent='Restore';
+  }catch(e){
+    statusEl.innerHTML='<strong style="color:var(--error)">Restore failed:</strong> '+esc(e.message);
+    btn.disabled=false;btn.textContent='Restore';
+  }
+}
+
+// List backup files from SP
+async function loadBackupHistory(){
+  try{
+    var token=await getToken();
+    var resp=await fetch(SP.siteUrl+"/_api/web/GetFolderByServerRelativeUrl('"+BACKUP_LIB+"/"+BACKUP_FOLDER+"')/Files?$select=Name,Length,TimeCreated&$orderby=TimeCreated desc&$top=20",{headers:{'Authorization':'Bearer '+token,'Accept':'application/json;odata=verbose'}});
+    if(!resp.ok)return;
+    var d=await resp.json();var files=d.d&&d.d.results?d.d.results:[];
+    var tbody=document.getElementById('bk-history');
+    if(tbody){
+      if(files.length===0){tbody.innerHTML='<tr><td colspan="4" style="color:var(--outline);font-style:italic">No backups found</td></tr>';}
+      else{tbody.innerHTML=files.map(function(f){
+        var date=f.TimeCreated?new Date(f.TimeCreated).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
+        var size=f.Length?(Math.round(f.Length/1024)+'KB'):'—';
+        return'<tr><td>'+date+'</td><td>'+esc(f.Name)+'</td><td>'+size+'</td><td><a href="#" onclick="downloadSPBackup(\''+esc(f.Name)+'\');return false;" style="color:var(--primary);font-weight:600;font-size:12px;text-decoration:none">Download</a></td></tr>';
+      }).join('');}
+    }
+    if(files.length>0){
+      document.getElementById('bk-last').textContent=new Date(files[0].TimeCreated).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    }
+  }catch(e){console.warn('Backup history:',e);}
+}
+
+async function downloadSPBackup(fileName){
+  try{
+    var token=await getToken();
+    var resp=await fetch(SP.siteUrl+"/_api/web/GetFolderByServerRelativeUrl('"+BACKUP_LIB+"/"+BACKUP_FOLDER+"')/Files('"+fileName+"')/$value",{headers:{'Authorization':'Bearer '+token}});
+    var blob=await resp.blob();
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download=fileName;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  }catch(e){showToast('Download failed');}
+}
+
+function renderBackupView(){
+  var items=allInventory.length+allLogs.length;
+  document.getElementById('bk-items').textContent=items;
+  loadBackupHistory();
+}
+
 function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 function showLoad(m){document.getElementById('loading-text').textContent=m||'Loading...';document.getElementById('loading').classList.add('show');}
 function hideLoad(){document.getElementById('loading').classList.remove('show');}
-window.addEventListener('load',initAuth);
+window.addEventListener('load',function(){
+  initAuth();
+  // Auto-backup after data loads
+  setTimeout(function(){if(spToken&&isAdmin)autoBackupCheck();},4000);
+});
 </script>
 </body>
 </html>
