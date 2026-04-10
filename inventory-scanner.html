@@ -1188,20 +1188,23 @@ function renderPanel(){
   var rs=document.getElementById('recent-scans');
   if(rs){
     if(sessionScans.length===0){rs.innerHTML='<div class="recent-empty">Scan an item to see it here</div>';}
-    else{rs.innerHTML=sessionScans.slice(0,10).map(function(s){
-      var acl=s.action.toLowerCase();
-      var badgeCls=acl.indexOf('receive')>=0?'ri-badge-receive':acl.indexOf('remove')>=0?'ri-badge-remove':acl.indexOf('new')>=0?'ri-badge-new':'ri-badge-adjust';
-      var t=s.time.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-      return'<div class="recent-item">'+
-        '<div class="ri-top"><div class="ri-name">'+esc(s.name)+'</div><div class="ri-time">'+t+'</div></div>'+
-        '<div class="ri-details">'+
-          '<div class="ri-detail"><span class="material-icons-outlined" style="font-size:12px">swap_vert</span>'+(s.delta>=0?'+':'')+s.delta+'</div>'+
-          '<div class="ri-detail"><span class="material-icons-outlined" style="font-size:12px">inventory_2</span>Stock: <strong>'+s.newStock+'</strong></div>'+
-          (s.lot&&s.lot!=='—'?'<div class="ri-detail"><span class="material-icons-outlined" style="font-size:12px">tag</span>'+esc(s.lot)+'</div>':'')+
-        '</div>'+
-        '<span class="ri-action-badge '+badgeCls+'">'+esc(s.action)+'</span>'+
-      '</div>';
-    }).join('');}
+    else{
+      var shown=Math.min(sessionScans.length,5);
+      rs.innerHTML=sessionScans.slice(0,shown).map(function(s){
+        var acl=s.action.toLowerCase();
+        var badgeCls=acl.indexOf('receive')>=0?'ri-badge-receive':acl.indexOf('remove')>=0?'ri-badge-remove':acl.indexOf('new')>=0?'ri-badge-new':'ri-badge-adjust';
+        var t=s.time.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+        return'<div class="recent-item">'+
+          '<div class="ri-top"><div class="ri-name">'+esc(s.name)+'</div><div class="ri-time">'+t+'</div></div>'+
+          '<div class="ri-details">'+
+            '<div class="ri-detail"><span class="material-icons-outlined" style="font-size:12px">swap_vert</span>'+(s.delta>=0?'+':'')+s.delta+'</div>'+
+            '<div class="ri-detail"><span class="material-icons-outlined" style="font-size:12px">inventory_2</span>Stock: <strong>'+s.newStock+'</strong></div>'+
+            (s.lot&&s.lot!=='—'?'<div class="ri-detail"><span class="material-icons-outlined" style="font-size:12px">tag</span>'+esc(s.lot)+'</div>':'')+
+          '</div>'+
+          '<span class="ri-action-badge '+badgeCls+'">'+esc(s.action)+'</span>'+
+        '</div>';
+      }).join('')+(sessionScans.length>shown?'<div style="font-size:9px;color:var(--md-outline);padding:4px 2px;text-align:center">+' +(sessionScans.length-shown)+' more this session</div>':'');
+    }
   }
   // Session stats
   setEl('stat-scans',sessionStats.scans);
@@ -1303,20 +1306,35 @@ async function loadTodayLog(){
     var tl=document.getElementById('today-log');
     if(tl){
       if(logs.length===0){tl.innerHTML='<div class="recent-empty">No transactions today</div>';}
-      else{tl.innerHTML=logs.slice(0,20).map(function(l){
-        var ac=(l[LOG.Action]||'').toLowerCase();
-        var iconCls=ac.indexOf('receive')>=0?'li-icon-receive':ac.indexOf('remove')>=0?'li-icon-remove':'li-icon-adjust';
-        var icon=ac.indexOf('receive')>=0?'add_circle':ac.indexOf('remove')>=0?'remove_circle':'tune';
-        var t=l[LOG.Timestamp]?new Date(l[LOG.Timestamp]).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):'';
-        var d=parseFloat(l[LOG.QuantityDelta])||0;
-        var qtyColor=d>=0?'var(--receive)':'var(--remove)';
-        var by=l[LOG.ScannedBy]||l.ScannedBy||'';
-        return'<div class="log-item">'+
-          '<div class="li-icon '+iconCls+'"><span class="material-icons-outlined">'+icon+'</span></div>'+
-          '<div class="li-body"><div class="li-name">'+esc(l.Title||'')+'</div><div class="li-sub">'+t+(by?' · '+esc(by):'')+'</div></div>'+
-          '<div class="li-qty" style="color:'+qtyColor+'">'+(d>=0?'+':'')+d+'</div>'+
-        '</div>';
-      }).join('');}
+      else{
+        var shown=Math.min(logs.length,8);
+        // Update section title with total count
+        var logTitle=document.querySelector('#ps-log .panel-title');
+        if(logTitle){
+          var existing=logTitle.querySelector('.log-total-count');
+          if(!existing){
+            var countEl=document.createElement('span');
+            countEl.className='log-total-count';
+            countEl.style.cssText='font-size:10px;font-weight:400;color:var(--md-outline);margin-left:2px;text-transform:none;letter-spacing:0';
+            logTitle.insertBefore(countEl,logTitle.querySelector('.pt-chevron'));
+          }
+          logTitle.querySelector('.log-total-count').textContent=logs.length+' today';
+        }
+        tl.innerHTML=logs.slice(0,shown).map(function(l){
+          var ac=(l[LOG.Action]||'').toLowerCase();
+          var iconCls=ac.indexOf('receive')>=0?'li-icon-receive':ac.indexOf('remove')>=0?'li-icon-remove':'li-icon-adjust';
+          var icon=ac.indexOf('receive')>=0?'add_circle':ac.indexOf('remove')>=0?'remove_circle':'tune';
+          var t=l[LOG.Timestamp]?new Date(l[LOG.Timestamp]).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):'';
+          var d=parseFloat(l[LOG.QuantityDelta])||0;
+          var qtyColor=d>=0?'var(--receive)':'var(--remove)';
+          var by=l[LOG.ScannedBy]||l.ScannedBy||'';
+          return'<div class="log-item">'+
+            '<div class="li-icon '+iconCls+'"><span class="material-icons-outlined">'+icon+'</span></div>'+
+            '<div class="li-body"><div class="li-name">'+esc(l.Title||'')+'</div><div class="li-sub">'+t+(by?' · '+esc(by):'')+'</div></div>'+
+            '<div class="li-qty" style="color:'+qtyColor+'">'+(d>=0?'+':'')+d+'</div>'+
+          '</div>';
+        }).join('')+(logs.length>shown?'<div style="font-size:9px;color:var(--md-outline);padding:6px 2px 2px;text-align:center">+' +(logs.length-shown)+' more — see Dashboard log</div>':'');
+      }
     }
   }catch(e){
     console.warn('Today log failed:',e.message);
