@@ -81,8 +81,8 @@ select.filter-select{padding:6px 32px 6px 14px;border-radius:var(--radius-full);
 
 /* Stock list */
 .stock-list{background:var(--surface-lowest);border:1.5px solid var(--outline-variant);border-radius:var(--radius-lg);overflow:hidden}
-.stock-list-hdr{display:grid;grid-template-columns:minmax(180px,2fr) 100px 80px 60px 60px 70px 36px;gap:0;padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--on-surface-variant);border-bottom:2px solid var(--outline-variant);background:var(--surface-high);font-family:var(--font)}
-.stock-row-item{display:grid;grid-template-columns:minmax(180px,2fr) 100px 80px 60px 60px 70px 36px;gap:0;padding:10px 16px;border-bottom:1px solid var(--outline-variant);align-items:center;font-size:13px;transition:.1s}
+.stock-list-hdr{display:grid;grid-template-columns:minmax(180px,2fr) 100px 80px 60px 50px 90px 32px;gap:4px;padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--on-surface-variant);border-bottom:2px solid var(--outline-variant);background:var(--surface-high);font-family:var(--font)}
+.stock-row-item{display:grid;grid-template-columns:minmax(180px,2fr) 100px 80px 60px 50px 90px 32px;gap:4px;padding:10px 16px;border-bottom:1px solid var(--outline-variant);align-items:center;font-size:13px;transition:.1s}
 .stock-row-item:last-child{border-bottom:none}
 .stock-row-item:hover{background:var(--surface-low)}
 .sri-name{font-weight:700;color:var(--on-surface);line-height:1.3}
@@ -160,6 +160,25 @@ select.filter-select{padding:6px 32px 6px 14px;border-radius:var(--radius-full);
 .auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:20px;padding:24px;text-align:center}
 .auth-logo{width:80px;height:80px;border-radius:var(--radius-xl);background:var(--primary);display:grid;place-items:center;box-shadow:var(--shadow-2)}
 .material-icons-outlined{font-family:'Material Icons Outlined';font-style:normal;font-weight:normal;font-size:24px;line-height:1;display:inline-block;-webkit-font-smoothing:antialiased}
+/* Sub-navigation */
+.sub-nav{display:none;padding:2px 0 6px 20px;flex-direction:column;gap:1px}
+.sub-nav.show{display:flex}
+.sub-nav-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--outline);padding:6px 12px 2px;font-family:var(--font)}
+.sub-btn{border:none;background:transparent;text-align:left;padding:5px 12px;font-size:12px;font-weight:500;font-family:var(--font);color:var(--on-surface-variant);cursor:pointer;border-radius:var(--radius-full);transition:.1s}
+.sub-btn:hover{background:var(--surface-high);color:var(--on-surface)}
+.sub-btn.active{color:var(--primary);font-weight:700;background:var(--primary-container)}
+
+/* Bulk edit bar */
+.bulk-bar{display:none;background:var(--primary-container);border:1.5px solid var(--primary);border-radius:var(--radius-lg);padding:12px 18px;margin-bottom:14px;align-items:center;gap:12px;flex-wrap:wrap}
+.bulk-bar.show{display:flex}
+.bulk-count{font-family:var(--font);font-size:13px;font-weight:700;color:var(--on-primary-container)}
+.bulk-field{display:flex;align-items:center;gap:6px}
+.bulk-field label{font-size:11px;font-weight:600;color:var(--on-primary-container);font-family:var(--font);white-space:nowrap}
+.bulk-field select,.bulk-field input{padding:5px 10px;border:1.5px solid var(--primary);border-radius:6px;font-size:12px;font-family:var(--font-body);background:var(--surface-lowest);color:var(--on-surface);outline:none}
+.bulk-apply{padding:6px 16px;border-radius:var(--radius-full);background:var(--primary);color:var(--on-primary);border:none;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer}
+.bulk-cancel{padding:6px 12px;border-radius:var(--radius-full);background:transparent;border:1px solid var(--outline-variant);color:var(--on-surface-variant);font-family:var(--font);font-size:12px;cursor:pointer}
+.sri-check{width:18px;height:18px;accent-color:var(--primary);cursor:pointer;margin-right:4px;flex-shrink:0}
+
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:var(--outline-variant);border-radius:3px}
 </style>
 </head>
@@ -176,6 +195,23 @@ select.filter-select{padding:6px 32px 6px 14px;border-radius:var(--radius-full);
     <div class="sidebar-hdr"><h1>Inventory Dashboard</h1><div class="sub">Renton Core Lab</div></div>
     <nav class="sidebar-nav">
       <button class="nav-btn active" onclick="showView('stock')"><span class="material-icons-outlined">inventory_2</span>Stock Overview</button>
+      <div class="sub-nav" id="stock-subnav">
+        <div class="sub-nav-label">DEPARTMENTS</div>
+        <button class="sub-btn active" onclick="subFilter('dept','')">All</button>
+        <button class="sub-btn" onclick="subFilter('dept','Chemistry')">Chemistry</button>
+        <button class="sub-btn" onclick="subFilter('dept','Hematology')">Hematology</button>
+        <button class="sub-btn" onclick="subFilter('dept','Coagulation')">Coagulation</button>
+        <button class="sub-btn" onclick="subFilter('dept','Urinalysis')">Urinalysis</button>
+        <button class="sub-btn" onclick="subFilter('dept','Laboratory Supplies')">Lab Supplies</button>
+        <button class="sub-btn" onclick="subFilter('dept','Office Supplies')">Office Supplies</button>
+        <div class="sub-nav-label" style="margin-top:6px">TYPE</div>
+        <button class="sub-btn active" onclick="subFilter('type','')">All Types</button>
+        <button class="sub-btn" onclick="subFilter('type','Reagent')">Reagent</button>
+        <button class="sub-btn" onclick="subFilter('type','QC Material')">QC Material</button>
+        <button class="sub-btn" onclick="subFilter('type','Calibrator')">Calibrator</button>
+        <button class="sub-btn" onclick="subFilter('type','Supply')">Supply</button>
+        <button class="sub-btn" onclick="subFilter('type','Part')">Part</button>
+      </div>
       <button class="nav-btn" onclick="showView('trends')"><span class="material-icons-outlined">trending_up</span>Usage Trends</button>
       <button class="nav-btn" onclick="showView('expiry')"><span class="material-icons-outlined">event_busy</span>Expiry &amp; Waste</button>
       <button class="nav-btn" onclick="showView('forecast')"><span class="material-icons-outlined">auto_graph</span>Forecasting</button>
@@ -196,6 +232,13 @@ select.filter-select{padding:6px 32px 6px 14px;border-radius:var(--radius-full);
     <div class="content" id="content">
       <div class="view active" id="view-stock">
         <div class="summary-bar" id="summary-bar"></div>
+        <div class="bulk-bar" id="bulk-bar">
+          <span class="bulk-count" id="bulk-count">0 selected</span>
+          <div class="bulk-field"><label>Set Field:</label><select id="bulk-field" onchange="updateBulkInput()"><option value="Instrument">Department</option><option value="ItemType">Item Type</option><option value="Unit">Unit</option><option value="MinPAR">Min PAR</option><option value="DailyUse">Daily Use</option><option value="IsActive">Active</option></select></div>
+          <div class="bulk-field"><label>To:</label><span id="bulk-value-wrap"><select id="bulk-value"></select></span></div>
+          <button class="bulk-apply" onclick="applyBulkEdit()">Apply to Selected</button>
+          <button class="bulk-cancel" onclick="clearBulkSelection()">Cancel</button>
+        </div>
         <div class="page-controls" id="page-controls">
           <span class="page-info" id="page-info"></span>
           <div class="page-nav">
@@ -287,13 +330,14 @@ var SP={siteUrl:'https://uwnetid.sharepoint.com/sites/og_uw_renton_central_labor
 var SP_API=SP.siteUrl+'/_api/web/lists';var ADMIN_EMAIL='jesusem@uw.edu';
 var INV={Instrument:'field_1',ItemType:'field_2',Unit:'field_3',InStock:'field_4',MinPAR:'field_5',DailyUse:'field_6',ExpiryDate:'field_7',OpenLifeDays:'field_8',DateOpened:'field_9',LotNumber:'field_10',Notes:'field_11',CatalogID:'field_12',IsActive:'field_13'};
 var LOG={Action:'field_1',QuantityDelta:'field_2',QuantityAfter:'field_3',LotNumber:'field_4',ExpiryDate:'field_5',Timestamp:'field_6',ReasonNote:'field_7',ScannedBy:'ScannedBy'};
-var DEPTS=['Chemistry','Hematology','Coagulation','Urinalysis','Laboratory Supplies','Office Supplies'];
+var DEPTS=['Chemistry','Hematology','Coagulation','Urinalysis','Laboratory Supplies','Office Supplies','Roche','XN','Stago','UN','DI-60','Lab Supplies'];
 var ITEM_TYPES=['Reagent','QC Material','Calibrator','Control','Consumable','Supply','Part'];
 var UNITS=['L','mL','vial','kit','btl','box','pk','ea'];
 function iv(r,k){return r[INV[k]||k];}
 var msalInstance=null,spToken=null,spTokenExpiry=0,isAdmin=false,adminMode=false;
 var allInventory=[],allLogs=[],_listTypes={};
 var stockPage=1,ITEMS_PER_PAGE=25,statusFilter=null,pendingEdits={};
+var subDept='',subType='',bulkSelected={};
 var miniCharts={};
 
 // AUTH
@@ -313,9 +357,21 @@ async function loadAllData(){showLoad('Loading inventory...');allInventory=await
 
 // VIEWS
 var currentView='stock';var viewTitles={stock:'Stock Overview',trends:'Usage Trends',expiry:'Expiry & Waste Risk',forecast:'Forecasting',log:'Transaction Log',backup:'Backup & Restore'};
-function showView(id){currentView=id;document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});document.getElementById('view-'+id).classList.add('active');document.getElementById('view-title').textContent=viewTitles[id]||id;document.querySelectorAll('.nav-btn').forEach(function(b,i){b.classList.toggle('active',['stock','trends','expiry','forecast','log','backup'][i]===id);});document.querySelectorAll('.mob-btn').forEach(function(b,i){b.classList.toggle('active',['stock','trends','expiry','forecast','log'][i]===id);});if(id==='trends')renderTrends();if(id==='forecast')renderForecast();if(id==='backup')renderBackupView();}
-function applyFilters(){stockPage=1;renderAll();}
-function getFiltered(){var d=document.getElementById('filter-dept').value;return allInventory.filter(function(r){return!d||iv(r,'Instrument')===d;});}
+function showView(id){currentView=id;document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});document.getElementById('view-'+id).classList.add('active');document.getElementById('view-title').textContent=viewTitles[id]||id;document.querySelectorAll('.nav-btn').forEach(function(b,i){b.classList.toggle('active',['stock','trends','expiry','forecast','log','backup'][i]===id);});document.querySelectorAll('.mob-btn').forEach(function(b,i){b.classList.toggle('active',['stock','trends','expiry','forecast','log'][i]===id);});var sn=document.getElementById('stock-subnav');if(sn)sn.className=id==='stock'?'sub-nav show':'sub-nav';if(id==='trends')renderTrends();if(id==='forecast')renderForecast();if(id==='backup')renderBackupView();}
+function subFilter(kind,val){
+  if(kind==='dept'){subDept=val;document.getElementById('filter-dept').value=val;}
+  else if(kind==='type')subType=val;
+  // Update active states
+  var sn=document.getElementById('stock-subnav');
+  if(sn){sn.querySelectorAll('.sub-btn').forEach(function(b){
+    var oc=b.getAttribute('onclick')||'';
+    if(kind==='dept'&&oc.indexOf("'dept'")>=0){b.classList.toggle('active',oc.indexOf("'"+val+"'")>=0||(val===''&&oc.indexOf("''")>=0));}
+    if(kind==='type'&&oc.indexOf("'type'")>=0){b.classList.toggle('active',oc.indexOf("'"+val+"'")>=0||(val===''&&oc.indexOf("''")>=0));}
+  });}
+  stockPage=1;renderAll();
+}
+function applyFilters(){subDept=document.getElementById('filter-dept').value;stockPage=1;renderAll();}
+function getFiltered(){var d=subDept||document.getElementById('filter-dept').value;return allInventory.filter(function(r){if(d&&iv(r,'Instrument')!==d)return false;if(subType&&iv(r,'ItemType')!==subType)return false;return true;});}
 function renderAll(){renderStock();renderExpiry();renderLogTable();}
 
 // STATUS
@@ -331,11 +387,12 @@ function renderStock(){
   var tp=Math.ceil(sorted.length/ITEMS_PER_PAGE)||1;if(stockPage>tp)stockPage=tp;
   var pg=sorted.slice((stockPage-1)*ITEMS_PER_PAGE,stockPage*ITEMS_PER_PAGE);
   var listEl=document.getElementById('stock-list');
-  var hdr='<div class="stock-list-hdr"><span>Item</span><span>Department</span><span>Type</span><span>Stock</span><span>PAR</span><span>Status</span><span></span></div>';
+  var hdr='<div class="stock-list-hdr">'+(isAdmin?'<input type="checkbox" class="sri-check" onchange="toggleSelectAll(this.checked)" style="margin-right:8px">':'')+'<span>Item</span><span>Department</span><span>Type</span><span>Stock</span><span>PAR</span><span>Status</span>'+(isAdmin?'<span></span>':'')+'</div>';
   listEl.innerHTML='<div class="stock-list">'+hdr+pg.map(function(s){
     var r=s.row,daily=parseFloat(iv(r,'DailyUse'))||0,dept=iv(r,'Instrument')||'',type=iv(r,'ItemType')||'',unit=iv(r,'Unit')||'';
     var expiry=(iv(r,'ExpiryDate')||'').split('T')[0];
     var dotCls='sd-'+s.st.key;
+    var checked=bulkSelected[r.Id]?'checked':'';
     var editRow='';
     if(isAdmin){
       editRow='<div class="sri-edit-row" id="edit-'+r.Id+'"><div class="sri-edit-grid">'+
@@ -354,6 +411,7 @@ function renderStock(){
       '</div></div>';
     }
     return'<div class="stock-row-item">'+
+      (isAdmin?'<input type="checkbox" class="sri-check" '+checked+' onchange="toggleBulkItem('+r.Id+',this.checked)">':'')+
       '<div><div class="sri-name">'+esc(r.Title||'')+'</div><div class="sri-sub">'+esc(unit)+(daily>0?' · '+Math.round(s.stock/daily)+'d supply':'')+'</div></div>'+
       '<div class="sri-dept">'+esc(dept)+'</div>'+
       '<div class="sri-type">'+esc(type)+'</div>'+
@@ -384,6 +442,52 @@ function toggleRowEdit(id){
 function markEdited(el){var id=el.dataset.itemId,f=el.dataset.field;if(!pendingEdits[id])pendingEdits[id]={};pendingEdits[id][f]={value:el.value,isTitle:!!el.dataset.isTitle,type:el.type};el.style.borderColor='var(--primary)';el.style.background='var(--primary-container)';updateSaveBar();}
 function updateSaveBar(){var count=Object.keys(pendingEdits).length;document.getElementById('save-all-bar').className=count>0?'save-all-bar show':'save-all-bar';document.getElementById('save-all-btn').innerHTML='<span class="material-icons-outlined" style="font-size:18px">save</span>Save Changes ('+count+' item'+(count!==1?'s':'')+')';}
 function sumCard(v,l,c,fk){return'<div class="summary-card'+(statusFilter===fk&&fk?' active-filter':'')+'" onclick="toggleStatusFilter('+(fk?"'"+fk+"'":"null")+')"><div class="val" style="color:'+c+'">'+v+'</div><div class="lbl">'+l+'</div></div>';}
+
+// BULK EDIT
+function toggleBulkItem(id,checked){if(checked)bulkSelected[id]=true;else delete bulkSelected[id];updateBulkBar();}
+function toggleSelectAll(checked){
+  var rows=document.querySelectorAll('.stock-row-item .sri-check');
+  rows.forEach(function(cb){cb.checked=checked;var oc=cb.getAttribute('onchange')||'';var m=oc.match(/toggleBulkItem\((\d+)/);if(m){if(checked)bulkSelected[parseInt(m[1])]=true;else delete bulkSelected[parseInt(m[1])];}});
+  updateBulkBar();
+}
+function updateBulkBar(){
+  var count=Object.keys(bulkSelected).length;
+  var bar=document.getElementById('bulk-bar');
+  bar.className=count>0?'bulk-bar show':'bulk-bar';
+  document.getElementById('bulk-count').textContent=count+' selected';
+  if(count>0)updateBulkInput();
+}
+function updateBulkInput(){
+  var field=document.getElementById('bulk-field').value;
+  var wrap=document.getElementById('bulk-value-wrap');
+  var opts={Instrument:DEPTS,ItemType:ITEM_TYPES,Unit:UNITS,IsActive:['Yes','No']};
+  if(opts[field]){wrap.innerHTML='<select id="bulk-value">'+opts[field].map(function(o){return'<option>'+o+'</option>';}).join('')+'</select>';}
+  else{wrap.innerHTML='<input type="number" id="bulk-value" value="0" step="0.1" style="width:70px;padding:5px 8px;border:1.5px solid var(--primary);border-radius:6px;font-size:12px">';}
+}
+async function applyBulkEdit(){
+  var ids=Object.keys(bulkSelected);if(!ids.length)return;
+  var field=document.getElementById('bulk-field').value;
+  var valEl=document.getElementById('bulk-value');
+  var val=valEl.value;
+  var spField=INV[field]||field;
+  var isNum=valEl.type==='number';
+  var btn=document.querySelector('.bulk-apply');
+  btn.disabled=true;btn.textContent='Applying...';
+  var errs=0;
+  for(var i=0;i<ids.length;i++){
+    var itemId=parseInt(ids[i]);
+    var fields={};fields[spField]=isNum?parseFloat(val)||0:val;
+    try{
+      await spPatch(SP.lists.inventory,itemId,fields);
+      var row=allInventory.find(function(r){return r.Id===itemId;});
+      if(row)row[spField]=isNum?parseFloat(val)||0:val;
+    }catch(e){errs++;}
+  }
+  btn.disabled=false;btn.textContent='Apply to Selected';
+  bulkSelected={};updateBulkBar();renderStock();
+  showToast('Updated '+ids.length+' items'+(errs?' ('+errs+' errors)':''));
+}
+function clearBulkSelection(){bulkSelected={};updateBulkBar();renderStock();}
 function toggleStatusFilter(k){statusFilter=statusFilter===k?null:k;stockPage=1;renderStock();}
 function goPage(d){stockPage+=d;renderStock();document.getElementById('content').scrollTo(0,0);}
 function goToPage(val){var p=parseInt(val)||1;stockPage=Math.max(1,p);renderStock();document.getElementById('content').scrollTo(0,0);}
