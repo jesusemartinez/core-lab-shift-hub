@@ -416,6 +416,15 @@ var LOG={Action:'field_1',QuantityDelta:'field_2',QuantityAfter:'field_3',LotNum
 var DEPTS=['Chemistry','Hematology','Coagulation','Urinalysis','Laboratory Supplies','Office Supplies','Roche','XN','Stago','UN','DI-60','Lab Supplies'];
 var ITEM_TYPES=['Reagent','QC Material','Calibrator','Control','Consumable','Supply','Part'];
 var UNITS=['L','mL','vial','kit','btl','box','pk','ea'];
+// Legacy dept name → canonical sidebar name
+var DEPT_ALIASES={'XN':'Hematology','DI-60':'Hematology','Stago':'Coagulation','UN':'Urinalysis','Roche':'Chemistry','Lab Supplies':'Laboratory Supplies'};
+function deptMatch(rowDept,filterDept){
+  if(!filterDept)return true;
+  if(!rowDept)return false;
+  if(rowDept===filterDept)return true;
+  // Legacy alias: map raw dept to canonical
+  return (DEPT_ALIASES[rowDept]||rowDept)===filterDept;
+}
 function iv(r,k){return r[INV[k]||k];}
 var msalInstance=null,spToken=null,spTokenExpiry=0,isAdmin=false,adminMode=false;
 var allInventory=[],allLogs=[],_listTypes={};
@@ -490,7 +499,7 @@ function subFilter(kind,val){
   stockPage=1;renderAll();
 }
 function applyFilters(){stockPage=1;renderAll();}
-function getFiltered(){return allInventory.filter(function(r){if(subDept&&iv(r,'Instrument')!==subDept)return false;if(subType&&iv(r,'ItemType')!==subType)return false;return true;});}
+function getFiltered(){return allInventory.filter(function(r){if(subDept&&!deptMatch(iv(r,'Instrument'),subDept))return false;if(subType&&iv(r,'ItemType')!==subType)return false;return true;});}
 function renderAll(){renderStock();renderExpiry();renderLogTable();}
 
 // STATUS
@@ -690,7 +699,7 @@ function hideItemDropdown(){document.getElementById('trend-item-dropdown').class
 
 function renderTrends(){
   var fromStr=trendFrom,toStr=trendTo;
-  var deptTitles=viewDept?new Set(allInventory.filter(function(r){return iv(r,'Instrument')===viewDept;}).map(function(r){return r.Title;})):null;
+  var deptTitles=viewDept?new Set(allInventory.filter(function(r){return deptMatch(iv(r,'Instrument'),viewDept);}).map(function(r){return r.Title;})):null;
   var fl=allLogs.filter(function(l){
     var ts=(l[LOG.Timestamp]||'').slice(0,10);
     return ts>=fromStr&&ts<=toStr
@@ -708,7 +717,7 @@ function renderTrends(){
 }
 
 // EXPIRY
-function renderExpiry(){var items=allInventory.filter(function(r){return !viewDept||iv(r,'Instrument')===viewDept;}),now=new Date(),exp=0,w30=0,w90=0;var rows=items.filter(function(r){return iv(r,'ExpiryDate');}).map(function(r){var e=(iv(r,'ExpiryDate')||'').split('T')[0];var dl=Math.round((new Date(e+'T00:00:00')-now)/86400000);var s=parseFloat(iv(r,'InStock'))||0,d=parseFloat(iv(r,'DailyUse'))||0;var ds=d>0?Math.round(s/d):null,ol=parseFloat(iv(r,'OpenLifeDays'))||0;var wr=ds!==null&&ol>0?ds/ol:null;if(dl<0)exp++;else if(dl<=30)w30++;else if(dl<=90)w90++;return{t:r.Title,dept:iv(r,'Instrument'),exp:e,dl:dl,s:s,ds:ds,wr:wr};}).sort(function(a,b){return a.dl-b.dl;});document.getElementById('expiry-summary').innerHTML=sumCard(exp,'Expired','var(--out)',null)+sumCard(w30,'<30 Days','var(--order)',null)+sumCard(w90,'<90 Days','var(--watch)',null)+sumCard(rows.length,'Have Expiry','var(--on-surface)',null);document.getElementById('expiry-tbody').innerHTML=rows.map(function(r){var dc=r.dl<0?'exp-urgent':r.dl<=30?'exp-soon':'exp-ok';var wc=r.wr===null?'':'waste-'+(r.wr>1.5?'high':r.wr>1?'med':'low');var wt=r.wr===null?'—':r.wr>1.5?'HIGH':r.wr>1?'MEDIUM':'LOW';return'<tr><td>'+esc(r.t)+'</td><td>'+esc(r.dept||'')+'</td><td>'+r.exp+'</td><td class="'+dc+'">'+r.dl+'d</td><td>'+r.s+'</td><td>'+(r.ds!==null?r.ds+'d':'—')+'</td><td><span class="'+wc+'">'+wt+'</span></td></tr>';}).join('');}
+function renderExpiry(){var items=allInventory.filter(function(r){return deptMatch(iv(r,'Instrument'),viewDept);}),now=new Date(),exp=0,w30=0,w90=0;var rows=items.filter(function(r){return iv(r,'ExpiryDate');}).map(function(r){var e=(iv(r,'ExpiryDate')||'').split('T')[0];var dl=Math.round((new Date(e+'T00:00:00')-now)/86400000);var s=parseFloat(iv(r,'InStock'))||0,d=parseFloat(iv(r,'DailyUse'))||0;var ds=d>0?Math.round(s/d):null,ol=parseFloat(iv(r,'OpenLifeDays'))||0;var wr=ds!==null&&ol>0?ds/ol:null;if(dl<0)exp++;else if(dl<=30)w30++;else if(dl<=90)w90++;return{t:r.Title,dept:iv(r,'Instrument'),exp:e,dl:dl,s:s,ds:ds,wr:wr};}).sort(function(a,b){return a.dl-b.dl;});document.getElementById('expiry-summary').innerHTML=sumCard(exp,'Expired','var(--out)',null)+sumCard(w30,'<30 Days','var(--order)',null)+sumCard(w90,'<90 Days','var(--watch)',null)+sumCard(rows.length,'Have Expiry','var(--on-surface)',null);document.getElementById('expiry-tbody').innerHTML=rows.map(function(r){var dc=r.dl<0?'exp-urgent':r.dl<=30?'exp-soon':'exp-ok';var wc=r.wr===null?'':'waste-'+(r.wr>1.5?'high':r.wr>1?'med':'low');var wt=r.wr===null?'—':r.wr>1.5?'HIGH':r.wr>1?'MEDIUM':'LOW';return'<tr><td>'+esc(r.t)+'</td><td>'+esc(r.dept||'')+'</td><td>'+r.exp+'</td><td class="'+dc+'">'+r.dl+'d</td><td>'+r.s+'</td><td>'+(r.ds!==null?r.ds+'d':'—')+'</td><td><span class="'+wc+'">'+wt+'</span></td></tr>';}).join('');}
 
 // ═══════════════════════════════════════════════
 // FORECASTING (advanced)
@@ -750,8 +759,7 @@ function renderForecast(){
   var deptF=viewDept;
   var sortBy=document.getElementById('fc-sort').value;
   var items=allInventory.filter(function(r){
-    if(deptF&&iv(r,'Instrument')!==deptF)return false;
-    // Include any item with stock, a PAR level, or any daily use configured
+    if(!deptMatch(iv(r,'Instrument'),deptF))return false;
     return(parseFloat(iv(r,'InStock'))||0)>=0&&(parseFloat(iv(r,'MinPAR'))||0)>0;
   });
 
@@ -890,13 +898,13 @@ function renderForecast(){
 
 // TRANSACTION LOG
 function renderLogTable(){
-  var deptTitles=viewDept?new Set(allInventory.filter(function(r){return iv(r,'Instrument')===viewDept;}).map(function(r){return r.Title;})):null;
+  var deptTitles=viewDept?new Set(allInventory.filter(function(r){return deptMatch(iv(r,'Instrument'),viewDept);}).map(function(r){return r.Title;})):null;
   var filtered=allLogs.filter(function(l){return !deptTitles||deptTitles.has(l.Title);});
   filterLogRows(filtered);
 }
 function filterLog(){
   var q=(document.getElementById('log-search').value||'').toLowerCase(),a=document.getElementById('log-action').value;
-  var deptTitles=viewDept?new Set(allInventory.filter(function(r){return iv(r,'Instrument')===viewDept;}).map(function(r){return r.Title;})):null;
+  var deptTitles=viewDept?new Set(allInventory.filter(function(r){return deptMatch(iv(r,'Instrument'),viewDept);}).map(function(r){return r.Title;})):null;
   renderLogRows(allLogs.filter(function(l){
     if(deptTitles&&!deptTitles.has(l.Title))return false;
     if(a&&(l[LOG.Action]||'').indexOf(a)<0)return false;
