@@ -968,6 +968,13 @@ function panelSearch(q){
   if(!results)return;
   if(!q||q.length<2){results.className='panel-search-results';results.innerHTML='';return;}
   _psTimer=setTimeout(function(){
+    if(allInvCache.length===0){
+      results.innerHTML='<div class="recent-empty">Loading inventory...</div>';
+      results.className='panel-search-results show';
+      // Retry once after 2s in case panel data is still loading
+      setTimeout(function(){if(allInvCache.length>0)panelSearch(document.getElementById('panel-search-input')?.value||q);},2000);
+      return;
+    }
     var words=q.toLowerCase().split(/\s+/).filter(function(w){return w.length>0;});
     var matches=allInvCache.filter(function(r){
       var title=(r.Title||'').toLowerCase().replace(/[®™©]/g,'');
@@ -975,10 +982,11 @@ function panelSearch(q){
     }).slice(0,8);
     if(matches.length===0){results.innerHTML='<div class="recent-empty">No items found</div>';results.className='panel-search-results show';return;}
     results.innerHTML=matches.map(function(r){
-      var stock=parseFloat(iv(r,'InStock'))||0;var par=parseFloat(iv(r,'MinPAR'))||0;
+      var stock=parseFloat(r.field_4)||0;var par=parseFloat(r.field_5)||0;
+      var dept=r.field_1||iv(r,'Instrument')||'';
       var statusText=stock<=0?'OUT':stock<par?'LOW':'OK';
       var statusColor=stock<=0?'var(--out)':stock<par?'var(--order)':'var(--ok)';
-      return'<div class="psr-item"><div class="psr-name">'+esc(r.Title)+'</div><div class="psr-meta">'+esc(iv(r,'Instrument')||'')+' · Stock: <strong style="color:'+statusColor+'">'+stock+'</strong> · PAR: '+par+' · '+statusText+'</div></div>';
+      return'<div class="psr-item"><div class="psr-name">'+esc(r.Title)+'</div><div class="psr-meta">'+esc(dept)+' · Stock: <strong style="color:'+statusColor+'">'+stock+'</strong> · PAR: '+par+' · '+statusText+'</div></div>';
     }).join('');
     results.className='panel-search-results show';
   },200);
@@ -1014,11 +1022,11 @@ async function spFetchAll(listName,sel,filter){
 // Load inventory for panel features
 async function loadPanelData(){
   try{
-    // Use minimal select to keep URL short — only fields needed for snapshot/alerts
-    var invSel='Id,Title,field_4,field_5,field_7';// InStock, MinPAR, ExpiryDate
+    var invSel='Id,Title,field_1,field_4,field_5,field_7';// Instrument,InStock,MinPAR,ExpiryDate
     var data=await spFetch(SP.lists.inventory,'?$top=500&$select='+invSel);
-    allInvCache=data.value||[];
-    console.log('Panel loaded: '+allInvCache.length+' inventory items');
+    // spFetch returns {value:[]} shape
+    allInvCache=Array.isArray(data)?data:(data.value||[]);
+    console.log('Panel loaded: '+allInvCache.length+' items, first:',allInvCache[0]?.Title);
     renderAlerts();
     renderSnapshot();
     renderPanel();
