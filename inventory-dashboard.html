@@ -82,7 +82,9 @@ select.filter-select{padding:6px 32px 6px 14px;border-radius:var(--radius-full);
 /* Stock list */
 .stock-list{background:var(--surface-lowest);border:1.5px solid var(--outline-variant);border-radius:var(--radius-lg);overflow:hidden}
 .stock-list-hdr{display:grid;grid-template-columns:minmax(180px,2fr) 100px 80px 60px 50px 90px 32px;gap:4px;padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--on-surface-variant);border-bottom:2px solid var(--outline-variant);background:var(--surface-high);font-family:var(--font)}
+.stock-list-hdr.admin-cols{grid-template-columns:28px minmax(180px,2fr) 100px 80px 60px 50px 90px 32px}
 .stock-row-item{display:grid;grid-template-columns:minmax(180px,2fr) 100px 80px 60px 50px 90px 32px;gap:4px;padding:10px 16px;border-bottom:1px solid var(--outline-variant);align-items:center;font-size:13px;transition:.1s}
+.stock-row-item.admin-cols{grid-template-columns:28px minmax(180px,2fr) 100px 80px 60px 50px 90px 32px}
 .stock-row-item:last-child{border-bottom:none}
 .stock-row-item:hover{background:var(--surface-low)}
 .sri-name{font-weight:700;color:var(--on-surface);line-height:1.3}
@@ -112,7 +114,7 @@ select.filter-select{padding:6px 32px 6px 14px;border-radius:var(--radius-full);
 
 @media(max-width:899px){
   .stock-list-hdr{display:none}
-  .stock-row-item{grid-template-columns:1fr auto auto;gap:6px;padding:12px 16px}
+  .stock-row-item,.stock-row-item.admin-cols{grid-template-columns:1fr auto auto;gap:6px;padding:12px 16px}
   .sri-dept,.sri-type{display:none}
 }
 .save-all-bar{display:none;position:sticky;bottom:0;left:0;right:0;background:var(--surface-container);border-top:1.5px solid var(--outline-variant);padding:12px 28px;z-index:10;text-align:right}.save-all-bar.show{display:block}
@@ -195,7 +197,7 @@ select.filter-select{padding:6px 32px 6px 14px;border-radius:var(--radius-full);
     <div class="sidebar-hdr"><h1>Inventory Dashboard</h1><div class="sub">Renton Core Lab</div></div>
     <nav class="sidebar-nav">
       <button class="nav-btn active" onclick="showView('stock')"><span class="material-icons-outlined">inventory_2</span>Stock Overview</button>
-      <div class="sub-nav" id="stock-subnav">
+      <div class="sub-nav show" id="stock-subnav">
         <div class="sub-nav-label">DEPARTMENTS</div>
         <button class="sub-btn active" onclick="subFilter('dept','')">All</button>
         <button class="sub-btn" onclick="subFilter('dept','Chemistry')">Chemistry</button>
@@ -347,7 +349,7 @@ async function getToken(){if(spToken&&Date.now()<spTokenExpiry-60000)return spTo
 
 // SP API
 async function spFetch(ln,q){var t=await getToken();var res=await fetch(SP_API+"/getbytitle('"+ln+"')/items"+(q||''),{headers:{'Authorization':'Bearer '+t,'Accept':'application/json;odata=verbose'}});if(!res.ok)throw new Error('SP '+res.status);var d=await res.json();return d.d&&d.d.results?d.d.results:[];}
-async function spFetchAll(ln,sel,filter){var all=[],skip=0;while(true){var q='?$top=1000&$skip='+skip+'&$select='+sel;if(filter)q+='&$filter='+encodeURIComponent(filter);var b=await spFetch(ln,q);all=all.concat(b);if(b.length<1000)break;skip+=1000;}return all;}
+async function spFetchAll(ln,sel,filter){var all=[],url=SP_API+"/getbytitle('"+ln+"')/items?$top=1000&$select="+sel;if(filter)url+='&$filter='+encodeURIComponent(filter);while(url){var t=await getToken();var res=await fetch(url,{headers:{'Authorization':'Bearer '+t,'Accept':'application/json;odata=verbose'}});if(!res.ok){console.warn('spFetchAll error',res.status,await res.text());break;}var d=await res.json();var batch=d.d&&d.d.results?d.d.results:[];all=all.concat(batch);url=(d.d&&d.d.__next)||null;}return all;}
 async function getItemType(ln){if(_listTypes[ln])return _listTypes[ln];var t=await getToken();var r=await fetch(SP_API+"/getbytitle('"+ln+"')?$select=ListItemEntityTypeFullName",{headers:{'Authorization':'Bearer '+t,'Accept':'application/json;odata=verbose'}});var d=await r.json();_listTypes[ln]=d.d.ListItemEntityTypeFullName;return _listTypes[ln];}
 async function getDigest(){var t=await getToken();var r=await fetch(SP.siteUrl+'/_api/contextinfo',{method:'POST',headers:{'Authorization':'Bearer '+t,'Accept':'application/json;odata=verbose','Content-Length':'0'}});var d=await r.json();return d.d.GetContextWebInformation.FormDigestValue;}
 async function spPatch(ln,id,f){var dg=await getDigest(),mt=await getItemType(ln);f.__metadata={type:mt};var t=await getToken();await fetch(SP_API+"/getbytitle('"+ln+"')/items("+id+")",{method:'POST',headers:{'Authorization':'Bearer '+t,'Accept':'application/json;odata=verbose','Content-Type':'application/json;odata=verbose','X-RequestDigest':dg,'IF-MATCH':'*','X-HTTP-Method':'MERGE'},body:JSON.stringify(f)});}
@@ -387,7 +389,7 @@ function renderStock(){
   var tp=Math.ceil(sorted.length/ITEMS_PER_PAGE)||1;if(stockPage>tp)stockPage=tp;
   var pg=sorted.slice((stockPage-1)*ITEMS_PER_PAGE,stockPage*ITEMS_PER_PAGE);
   var listEl=document.getElementById('stock-list');
-  var hdr='<div class="stock-list-hdr">'+(isAdmin?'<input type="checkbox" class="sri-check" onchange="toggleSelectAll(this.checked)" style="margin-right:8px">':'')+'<span>Item</span><span>Department</span><span>Type</span><span>Stock</span><span>PAR</span><span>Status</span>'+(isAdmin?'<span></span>':'')+'</div>';
+  var hdr='<div class="stock-list-hdr'+(isAdmin?' admin-cols':'')+'">'+(isAdmin?'<input type="checkbox" class="sri-check" onchange="toggleSelectAll(this.checked)">':'')+'<span>Item</span><span>Department</span><span>Type</span><span>Stock</span><span>PAR</span><span>Status</span>'+(isAdmin?'<span></span>':'')+'</div>';
   listEl.innerHTML='<div class="stock-list">'+hdr+pg.map(function(s){
     var r=s.row,daily=parseFloat(iv(r,'DailyUse'))||0,dept=iv(r,'Instrument')||'',type=iv(r,'ItemType')||'',unit=iv(r,'Unit')||'';
     var expiry=(iv(r,'ExpiryDate')||'').split('T')[0];
@@ -410,7 +412,7 @@ function renderStock(){
         ief('Notes','text',iv(r,'Notes')||'','Notes',r.Id,1)+
       '</div></div>';
     }
-    return'<div class="stock-row-item">'+
+    return'<div class="stock-row-item'+(isAdmin?' admin-cols':'')+'">'+
       (isAdmin?'<input type="checkbox" class="sri-check" '+checked+' onchange="toggleBulkItem('+r.Id+',this.checked)">':'')+
       '<div><div class="sri-name">'+esc(r.Title||'')+'</div><div class="sri-sub">'+esc(unit)+(daily>0?' · '+Math.round(s.stock/daily)+'d supply':'')+'</div></div>'+
       '<div class="sri-dept">'+esc(dept)+'</div>'+
