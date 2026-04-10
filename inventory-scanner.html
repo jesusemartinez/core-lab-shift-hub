@@ -405,14 +405,22 @@ html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);
 .cam-btn:active{transform:scale(.9);}
 
 /* ── Toast — spring bounce up ── */
-.toast{position:fixed;bottom:auto;top:80px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--md-on-surface);color:var(--md-surface);padding:12px 24px;border-radius:var(--radius-full);font-size:14px;font-weight:600;font-family:var(--font);box-shadow:var(--shadow-3);
+.toast{
+  position:fixed;top:16px;
+  left:calc(220px + (100vw - 220px - 300px) / 2);
+  transform:translateX(-50%) translateY(-80px);
+  background:var(--md-on-surface);color:var(--md-surface);
+  padding:12px 24px;border-radius:var(--radius-full);
+  font-size:14px;font-weight:600;font-family:var(--font);
+  box-shadow:var(--shadow-3);
   transition:transform var(--dur-med) var(--me-spring),opacity var(--dur-short) var(--me-standard);
-  z-index:998;white-space:nowrap;max-width:90vw;text-align:center;opacity:0;}
+  z-index:998;white-space:nowrap;max-width:90vw;text-align:center;opacity:0;
+}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 .toast.err{background:var(--md-error);color:var(--md-on-error)}
 .toast.ok{background:var(--receive);color:#fff}
 @media(max-width:767px){
-  .toast{top:auto;bottom:24px;transform:translateX(-50%) translateY(80px);}
+  .toast{top:auto;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);}
   .toast.show{transform:translateX(-50%) translateY(0);}
 }
 
@@ -1337,7 +1345,9 @@ async function loadTodayLog(){
           var d=parseFloat(l[LOG.QuantityDelta])||0;
           var qtyColor=d>=0?'var(--receive)':'var(--remove)';
           var by=l[LOG.ScannedBy]||l.ScannedBy||'';
-          return'<div class="log-item panel-nav-item" data-title="'+esc(l.Title||'')+'" title="Open item details" style="cursor:pointer">'+
+          var rawTitle=l.Title||'';
+          var itemName=rawTitle.indexOf(' \u2014 ')>=0?rawTitle.split(' \u2014 ')[0]:rawTitle;
+          return'<div class="log-item panel-nav-item" data-title="'+esc(itemName)+'" title="Open item details" style="cursor:pointer">'+
             '<div class="li-icon '+iconCls+'"><span class="material-icons-outlined">'+icon+'</span></div>'+
             '<div class="li-body"><div class="li-name">'+esc(l.Title||'')+'</div><div class="li-sub">'+t+(by?' · '+esc(by):'')+'</div></div>'+
             '<div class="li-qty" style="color:'+qtyColor+'">'+(d>=0?'+':'')+d+'</div>'+
