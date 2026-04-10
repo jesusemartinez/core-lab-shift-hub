@@ -265,10 +265,23 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 .b-escalated{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bdr);}
 .b-day{background:#fef3c7;color:#92400e;}.b-evening{background:#ffedd5;color:#c2410c;}.b-night{background:#e0e7ff;color:#3730a3;}
 .b-cat-inst{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-bdr);}
+.b-cat-downtime{background:#f3e8ff;color:#6d28d9;border:1px solid #c4b5fd;}
 .b-cat-qc{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bdr);}
+.b-cat-qcca{background:#fff1f2;color:#be123c;border:1px solid #fda4af;}
+.b-cat-cal{background:#eff6ff;color:#1d4ed8;border:1px solid #93c5fd;}
+.b-cat-maint{background:#f0fdf4;color:#15803d;border:1px solid #86efac;}
+.b-cat-maint2{background:#fefce8;color:#a16207;border:1px solid #fde047;}
+.b-cat-reagent{background:#fff7ed;color:#c2410c;border:1px solid #fdba74;}
+.b-cat-spec{background:#fdf4ff;color:#7e22ce;border:1px solid #e879f9;}
+.b-cat-crit{background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;}
 .b-cat-staff{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bdr);}
+.b-cat-train{background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;}
 .b-cat-pend{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bdr);}
+.b-cat-fu{background:#fffbeb;color:#b45309;border:1px solid #fcd34d;}
 .b-cat-ann{background:var(--teal-bg);color:var(--teal);border:1px solid #99dede;}
+.b-cat-safety{background:#fff1f2;color:#9f1239;border:1px solid #fda4af;}
+.b-cat-process{background:#f8fafc;color:#475569;border:1px solid #cbd5e1;}
+.b-cat-it{background:#f0f9ff;color:#0369a1;border:1px solid #7dd3fc;}
 
 /* Modal */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(28,26,22,.45);z-index:200;justify-content:center;align-items:flex-start;padding-top:32px;overflow-y:auto;backdrop-filter:blur(4px);}
@@ -476,7 +489,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
       <div class="ctrl-group"><label>Month</label><select id="fMonth" onchange="setMonthFromDropdown(this.value)"></select></div>
       <div class="ctrl-group"><label>Year</label><select id="fYear" onchange="setYearFromDropdown(this.value)"></select></div>
       <div class="ctrl-group"><label>Shift</label><select id="fShift"><option value="">All</option><option>Day</option><option>Evening</option><option>Night</option></select></div>
-      <div class="ctrl-group"><label>Category</label><select id="fCat"><option value="">All</option><option>Instrument Issue/Downtime</option><option>QC Flag/Failure</option><option>Staffing Note</option><option>Pending/Follow-Up</option><option>General Announcement</option></select></div>
+      <div class="ctrl-group"><label>Category</label><select id="fCat"><option value="">All</option><option>Instrument Issue</option><option>Instrument Downtime</option><option>QC Flag / Failure</option><option>QC Corrective Action</option><option>Calibration</option><option>Maintenance — Scheduled</option><option>Maintenance — Unscheduled</option><option>Reagent / Supply Issue</option><option>Specimen / Pre-analytical</option><option>Critical Value / Result Review</option><option>Staffing Note</option><option>Training / Competency</option><option>Pending — Action Required</option><option>Follow-Up Item</option><option>Safety / Incident</option><option>Process / Workflow Issue</option><option>IT / LIS Issue</option><option>General Announcement</option></select></div>
       <div class="ctrl-group"><label>Priority</label><select id="fPri"><option value="">All</option><option>High</option><option>Medium</option><option>Low</option></select></div>
       <div class="spacer"></div>
       <button class="btn btn-s" onclick="openExportModal()"><span class="mi mi-xs">download</span> Export</button>
@@ -544,7 +557,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   <div class="form-item"><label>Shift *</label><select id="eShift"><option value="">Select...</option><option>Day</option><option>Evening</option><option>Night</option></select></div>
   <div class="form-item"><label>Department *</label><select id="eDept"><option value="">Select...</option><option>Hematology</option><option>Coagulation</option><option>Chemistry</option><option>Urinalysis</option><option>General</option></select></div>
   <div class="form-item"><label>Reported By *</label><input type="text" id="eReporter"></div>
-  <div class="form-item"><label>Category *</label><select id="eCat"><option value="">Select...</option><option>Instrument Issue/Downtime</option><option>QC Flag/Failure</option><option>Staffing Note</option><option>Pending/Follow-Up</option><option>General Announcement</option></select></div>
+  <div class="form-item"><label>Category *</label><select id="eCat"><option value="">Select...</option><option>Instrument Issue</option><option>Instrument Downtime</option><option>QC Flag / Failure</option><option>QC Corrective Action</option><option>Calibration</option><option>Maintenance — Scheduled</option><option>Maintenance — Unscheduled</option><option>Reagent / Supply Issue</option><option>Specimen / Pre-analytical</option><option>Critical Value / Result Review</option><option>Staffing Note</option><option>Training / Competency</option><option>Pending — Action Required</option><option>Follow-Up Item</option><option>Safety / Incident</option><option>Process / Workflow Issue</option><option>IT / LIS Issue</option><option>General Announcement</option></select></div>
   <div class="form-item"><label>Priority *</label><select id="ePri"><option value="">Select...</option><option>High</option><option>Medium</option><option>Low</option></select></div>
   <div class="form-item full"><label>Description *</label><textarea id="eDesc"></textarea></div>
   <div class="form-item full"><label>Action Taken</label><textarea id="eAction"></textarea></div>
@@ -604,13 +617,17 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 
 <!-- EXPORT MODAL -->
 <div class="modal-bg" id="exportModalBg" onclick="if(event.target===this)closeExportModal()">
-<div class="modal" style="width:480px;">
+<div class="modal" style="width:520px;">
   <div class="modal-hdr"><h3><span class="mi mi-sm" style="color:var(--teal)">download</span> Export Report</h3><button class="modal-close" onclick="closeExportModal()"><span class="mi mi-sm">close</span></button></div>
   <div class="modal-body">
     <div class="form-grid">
-      <div class="form-item"><label>From Date</label><input type="date" id="expFrom"></div>
-      <div class="form-item"><label>To Date</label><input type="date" id="expTo"></div>
-      <div class="form-item"><label>Department</label><select id="expDept"><option value="">All Departments</option><option>Hematology</option><option>Coagulation</option><option>Chemistry</option><option>Urinalysis</option><option>General</option></select></div>
+      <div class="form-item"><label>From Date</label><input type="date" id="expFrom" onchange="updateExportPreview()"></div>
+      <div class="form-item"><label>To Date</label><input type="date" id="expTo" onchange="updateExportPreview()"></div>
+      <div class="form-item"><label>Department</label><select id="expDept" onchange="updateExportPreview()"><option value="">All Departments</option><option>Hematology</option><option>Coagulation</option><option>Chemistry</option><option>Urinalysis</option><option>General</option></select></div>
+      <div class="form-item"><label>Shift</label><select id="expShift" onchange="updateExportPreview()"><option value="">All Shifts</option><option>Day</option><option>Evening</option><option>Night</option></select></div>
+      <div class="form-item"><label>Category</label><select id="expCat" onchange="updateExportPreview()"><option value="">All Categories</option><option>Instrument Issue</option><option>Instrument Downtime</option><option>QC Flag / Failure</option><option>QC Corrective Action</option><option>Calibration</option><option>Maintenance — Scheduled</option><option>Maintenance — Unscheduled</option><option>Reagent / Supply Issue</option><option>Specimen / Pre-analytical</option><option>Critical Value / Result Review</option><option>Staffing Note</option><option>Training / Competency</option><option>Pending — Action Required</option><option>Follow-Up Item</option><option>Safety / Incident</option><option>Process / Workflow Issue</option><option>IT / LIS Issue</option><option>General Announcement</option></select></div>
+      <div class="form-item"><label>Priority</label><select id="expPri" onchange="updateExportPreview()"><option value="">All Priorities</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+      <div class="form-item"><label>Status</label><select id="expStatus" onchange="updateExportPreview()"><option value="">All Statuses</option><option>Open</option><option>In Progress</option><option>Resolved</option><option>Escalated</option></select></div>
       <div class="form-item"><label>Format</label><select id="expFormat"><option value="csv">CSV Spreadsheet</option><option value="json">JSON Data</option><option value="pdf">PDF Report</option></select></div>
       <div class="form-item full" style="margin-top:4px;">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="expAnalytics" checked style="width:16px;height:16px;accent-color:var(--teal)"> Include analytics summary</label>
@@ -650,6 +667,27 @@ var msalInstance = null;
 var SP_SITE = 'https://uwnetid.sharepoint.com/sites/og_uw_renton_central_laboratory_-_core_lab';
 var SP_API = SP_SITE + '/_api/web/lists';
 var SP_USER = null;
+
+var CATEGORIES = [
+  'Instrument Issue',
+  'Instrument Downtime',
+  'QC Flag / Failure',
+  'QC Corrective Action',
+  'Calibration',
+  'Maintenance — Scheduled',
+  'Maintenance — Unscheduled',
+  'Reagent / Supply Issue',
+  'Specimen / Pre-analytical',
+  'Critical Value / Result Review',
+  'Staffing Note',
+  'Training / Competency',
+  'Pending — Action Required',
+  'Follow-Up Item',
+  'Safety / Incident',
+  'Process / Workflow Issue',
+  'IT / LIS Issue',
+  'General Announcement'
+];
 
 async function initMSAL() {
   msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
@@ -1037,7 +1075,33 @@ function avH(i,sz){var u=users[(i||'').toUpperCase()];if(!u)return'<div class="a
 function uHA(){if(!me)return;var u=users[me.initials];if(!u)return;var el=$('hdrAvatar'),p=u.picture||'',n=u.nickname||'',fn=u.fullName;el.setAttribute('data-tip',fn);if(p){el.innerHTML='<img src="'+p+'">';el.style.width='32px';el.style.borderRadius='50%';el.style.padding='0';el.style.fontSize='0';}else if(n){el.innerHTML=esc(n);el.style.width='auto';el.style.minWidth='32px';el.style.borderRadius='16px';el.style.padding='0 8px';el.style.fontSize='11px';}else{el.innerHTML=esc(me.initials);el.style.width='32px';el.style.borderRadius='50%';el.style.padding='0';el.style.fontSize='11px';}}
 
 // === BADGES ===
-function catB(c){if(c.startsWith('Instrument'))return'badge b-cat-inst';if(c.startsWith('QC'))return'badge b-cat-qc';if(c.startsWith('Staffing'))return'badge b-cat-staff';if(c.startsWith('Pending'))return'badge b-cat-pend';return'badge b-cat-ann';}
+function catB(c){
+  if(!c)return'badge b-cat-ann';
+  if(c==='Instrument Issue')return'badge b-cat-inst';
+  if(c==='Instrument Downtime')return'badge b-cat-downtime';
+  if(c==='QC Flag / Failure')return'badge b-cat-qc';
+  if(c==='QC Corrective Action')return'badge b-cat-qcca';
+  if(c==='Calibration')return'badge b-cat-cal';
+  if(c==='Maintenance — Scheduled')return'badge b-cat-maint';
+  if(c==='Maintenance — Unscheduled')return'badge b-cat-maint2';
+  if(c==='Reagent / Supply Issue')return'badge b-cat-reagent';
+  if(c==='Specimen / Pre-analytical')return'badge b-cat-spec';
+  if(c==='Critical Value / Result Review')return'badge b-cat-crit';
+  if(c==='Staffing Note')return'badge b-cat-staff';
+  if(c==='Training / Competency')return'badge b-cat-train';
+  if(c==='Pending — Action Required')return'badge b-cat-pend';
+  if(c==='Follow-Up Item')return'badge b-cat-fu';
+  if(c==='Safety / Incident')return'badge b-cat-safety';
+  if(c==='Process / Workflow Issue')return'badge b-cat-process';
+  if(c==='IT / LIS Issue')return'badge b-cat-it';
+  if(c==='General Announcement')return'badge b-cat-ann';
+  // Legacy fallbacks
+  if(c.startsWith('Instrument'))return'badge b-cat-inst';
+  if(c.startsWith('QC'))return'badge b-cat-qc';
+  if(c.startsWith('Staffing'))return'badge b-cat-staff';
+  if(c.startsWith('Pending'))return'badge b-cat-pend';
+  return'badge b-cat-ann';
+}
 function priB(p){return'badge b-'+p.toLowerCase();}
 function stB(s){return'badge b-'+s.toLowerCase().replace(/\s/g,'');}
 function shB(s){return'badge b-'+s.toLowerCase();}
@@ -1690,6 +1754,10 @@ function openExportModal(){
   var lastDay=new Date(curYear,curMonth+1,0).getDate();
   $('expTo').value=curYear+'-'+String(curMonth+1).padStart(2,'0')+'-'+String(lastDay).padStart(2,'0');
   $('expDept').value=curDept||'';
+  $('expShift').value='';
+  $('expCat').value='';
+  $('expPri').value='';
+  $('expStatus').value='';
   $('expFormat').value='csv';
   $('expAnalytics').checked=true;
   updateExportPreview();
@@ -1709,9 +1777,14 @@ function setExportPreset(p){
 
 function getExportEntries(){
   var from=$('expFrom').value,to=$('expTo').value,dept=$('expDept').value;
+  var shift=$('expShift').value,cat=$('expCat').value,pri=$('expPri').value,status=$('expStatus').value;
   return entries.filter(function(e){
     if(e.date<from||e.date>to)return false;
     if(dept&&(e.department||'General')!==dept)return false;
+    if(shift&&e.shift!==shift)return false;
+    if(cat&&e.category!==cat)return false;
+    if(pri&&e.priority!==pri)return false;
+    if(status&&e.status!==status)return false;
     return true;
   }).sort(function(a,b){return(a.date+a.time).localeCompare(b.date+b.time);});
 }
