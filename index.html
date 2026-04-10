@@ -479,7 +479,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
       <div class="ctrl-group"><label>Category</label><select id="fCat"><option value="">All</option><option>Instrument Issue/Downtime</option><option>QC Flag/Failure</option><option>Staffing Note</option><option>Pending/Follow-Up</option><option>General Announcement</option></select></div>
       <div class="ctrl-group"><label>Priority</label><select id="fPri"><option value="">All</option><option>High</option><option>Medium</option><option>Low</option></select></div>
       <div class="spacer"></div>
-      <div class="exp-wrap"><button class="btn btn-s" onclick="toggleExpMenu()"><span class="mi mi-xs">download</span> Export</button><div class="exp-menu" id="expMenu"><button onclick="exportCSV()">CSV (This Month)</button><button onclick="exportCSVYear()">CSV (Full Year)</button><button onclick="exportJSON()">JSON (This Month)</button><button onclick="exportJSONAll()">JSON (All Data)</button><button onclick="exportPDF()">PDF (This Month)</button><button onclick="window.print()">Print</button></div></div>
+      <button class="btn btn-s" onclick="openExportModal()"><span class="mi mi-xs">download</span> Export</button>
       <button class="btn btn-p" onclick="openEntryModal()"><span class="mi mi-xs">add</span> New Entry</button>
     </div>
     <div id="activeZone"></div>
@@ -601,6 +601,35 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 <div class="mand-body"><div class="mb-text" id="mandText"></div><div class="mb-meta" id="mandMeta"></div>
 <div class="mb-ack"><div class="mb-ack-label">Type your initials to acknowledge:</div><div class="mb-ack-row"><input type="text" id="mandAckInput" maxlength="4" style="text-transform:uppercase;" onkeydown="if(event.key==='Enter')ackMandatory()"><button onclick="ackMandatory()">Acknowledge</button></div><div class="mb-ack-list" id="mandAckList"></div></div>
 </div></div></div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-bg" id="exportModalBg" onclick="if(event.target===this)closeExportModal()">
+<div class="modal" style="width:480px;">
+  <div class="modal-hdr"><h3><span class="mi mi-sm" style="color:var(--teal)">download</span> Export Report</h3><button class="modal-close" onclick="closeExportModal()"><span class="mi mi-sm">close</span></button></div>
+  <div class="modal-body">
+    <div class="form-grid">
+      <div class="form-item"><label>From Date</label><input type="date" id="expFrom"></div>
+      <div class="form-item"><label>To Date</label><input type="date" id="expTo"></div>
+      <div class="form-item"><label>Department</label><select id="expDept"><option value="">All Departments</option><option>Hematology</option><option>Coagulation</option><option>Chemistry</option><option>Urinalysis</option><option>General</option></select></div>
+      <div class="form-item"><label>Format</label><select id="expFormat"><option value="csv">CSV Spreadsheet</option><option value="json">JSON Data</option><option value="pdf">PDF Report</option></select></div>
+      <div class="form-item full" style="margin-top:4px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="expAnalytics" checked style="width:16px;height:16px;accent-color:var(--teal)"> Include analytics summary</label>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px 12px;background:var(--g50);border-radius:var(--r);font-size:11px;color:var(--g500);">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-weight:700;color:var(--g600)"><span class="mi mi-xs">info</span> Quick Presets</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+        <button class="btn btn-s" style="padding:3px 10px;font-size:10px" onclick="setExportPreset('month')">This Month</button>
+        <button class="btn btn-s" style="padding:3px 10px;font-size:10px" onclick="setExportPreset('lastmonth')">Last Month</button>
+        <button class="btn btn-s" style="padding:3px 10px;font-size:10px" onclick="setExportPreset('quarter')">This Quarter</button>
+        <button class="btn btn-s" style="padding:3px 10px;font-size:10px" onclick="setExportPreset('year')">This Year</button>
+        <button class="btn btn-s" style="padding:3px 10px;font-size:10px" onclick="setExportPreset('all')">All Time</button>
+      </div>
+    </div>
+    <div id="expPreview" style="margin-top:10px;font-size:11px;color:var(--teal);font-weight:600;display:none"></div>
+  </div>
+  <div class="modal-ftr"><button class="btn btn-s" onclick="closeExportModal()">Cancel</button><button class="btn btn-p" onclick="runExport()"><span class="mi mi-xs">download</span> Export</button></div>
+</div></div>
 
 <div class="img-viewer-overlay" id="imgViewer" onclick="this.classList.remove('show')"><img id="imgViewerImg" src=""></div>
 <canvas id="confettiCanvas"></canvas>
@@ -1527,7 +1556,7 @@ function getDashMetrics(){
 }
 
 function toggleDashExp(){$('dashExpMenu').classList.toggle('show');}
-document.addEventListener('click',function(e){if(!e.target.closest('.exp-wrap')){$('dashExpMenu').classList.remove('show');$('expMenu').classList.remove('show');}});
+document.addEventListener('click',function(e){if(!e.target.closest('.exp-wrap')){$('dashExpMenu').classList.remove('show');}});
 
 function exportDashPDF(){
   try{var m=getDashMetrics(),{jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'letter'});
@@ -1606,12 +1635,118 @@ function exportDashTxt(){
   dlF(lines.join('\n'),'Dashboard_'+MONTHS[curMonth]+'_'+curYear+'.txt','text/plain');
   toast('Text summary exported');
 }
-function toggleExpMenu(){$('expMenu').classList.toggle('show');}
-function exportCSV(){var d=gF(),h=['Date','Shift','Time','Department','By','Category','Priority','Description','Action','Status','F/U','Assigned','Resolved By','Res Date','Notes'];var r=d.map(e=>[e.date,e.shift,e.time,e.department||'',e.reportedBy,e.category,e.priority,'"'+(e.description||'').replace(/"/g,'""')+'"','"'+(e.action||'').replace(/"/g,'""')+'"',e.status,e.followUp,e.followUpAssign?ln(e.followUpAssign):'',e.resolvedBy?ln(e.resolvedBy):'',e.resDate||'','"'+(e.notes||'').replace(/"/g,'""')+'"']);dlF([h.join(','),...r.map(x=>x.join(','))].join('\n'),'shift_log_'+MONTHS[curMonth]+'_'+curYear+'.csv','text/csv');toast('CSV exported ('+d.length+' entries)');}
-function exportCSVYear(){var d=entries.filter(function(e){var dt=new Date(e.date+'T00:00:00');return dt.getFullYear()===curYear;});if(curDept)d=d.filter(function(e){return(e.department||'General')===curDept;});var h=['Date','Shift','Time','Department','By','Category','Priority','Description','Action','Status','F/U','Assigned','Resolved By','Res Date','Notes'];var r=d.map(e=>[e.date,e.shift,e.time,e.department||'',e.reportedBy,e.category,e.priority,'"'+(e.description||'').replace(/"/g,'""')+'"','"'+(e.action||'').replace(/"/g,'""')+'"',e.status,e.followUp,e.followUpAssign?ln(e.followUpAssign):'',e.resolvedBy?ln(e.resolvedBy):'',e.resDate||'','"'+(e.notes||'').replace(/"/g,'""')+'"']);dlF([h.join(','),...r.map(x=>x.join(','))].join('\n'),'shift_log_'+curYear+(curDept?'_'+curDept:'')+'.csv','text/csv');toast('Yearly CSV exported ('+d.length+' entries)');}
-function exportJSON(){dlF(JSON.stringify(gF(),null,2),'shift_log_'+MONTHS[curMonth]+'_'+curYear+'.json','application/json');toast('JSON exported');}
-function exportJSONAll(){var data={entries:entries,announcements:announcements,users:users,exportDate:new Date().toISOString(),exportedBy:me?me.fullName:'',year:curYear};dlF(JSON.stringify(data,null,2),'shift_log_all_data_'+curYear+'.json','application/json');toast('Full JSON exported ('+entries.length+' entries)');}
-function exportPDF(){try{var{jsPDF}=window.jspdf,doc=new jsPDF({orientation:'landscape',unit:'mm',format:'letter'});doc.setFontSize(14);doc.text('Core Lab Shift Hub - '+MONTHS[curMonth]+' '+curYear,14,14);doc.setFontSize(9);doc.text('Renton Central Lab | '+new Date().toLocaleString()+' | '+(me?me.fullName:'')+(curDept?' | Dept: '+curDept:''),14,20);var d=gF();doc.autoTable({head:[['Date','Shift','Time','Dept','By','Cat','Pri','Desc','Action','Status','F/U']],body:d.map(e=>[fd(e.date),e.shift,e.time,e.department||'',e.reportedBy,e.category,e.priority,e.description.slice(0,50),(e.action||'').slice(0,50),e.status,e.followUp]),startY:24,styles:{fontSize:7,cellPadding:2},headStyles:{fillColor:[0,121,107]},margin:{left:14,right:14}});doc.save('Shift_Log_'+MONTHS[curMonth]+'_'+curYear+'.pdf');toast('PDF exported');}catch(e){toast('PDF failed');}}
+function toggleExpMenu(){openExportModal();}
+// === EXPORT MODAL ===
+function openExportModal(){
+  var now=new Date();
+  $('expFrom').value=curYear+'-'+String(curMonth+1).padStart(2,'0')+'-01';
+  var lastDay=new Date(curYear,curMonth+1,0).getDate();
+  $('expTo').value=curYear+'-'+String(curMonth+1).padStart(2,'0')+'-'+String(lastDay).padStart(2,'0');
+  $('expDept').value=curDept||'';
+  $('expFormat').value='csv';
+  $('expAnalytics').checked=true;
+  updateExportPreview();
+  $('exportModalBg').classList.add('open');
+}
+function closeExportModal(){$('exportModalBg').classList.remove('open');}
+
+function setExportPreset(p){
+  var now=new Date(),y=now.getFullYear(),m=now.getMonth();
+  if(p==='month'){$('expFrom').value=y+'-'+String(m+1).padStart(2,'0')+'-01';$('expTo').value=y+'-'+String(m+1).padStart(2,'0')+'-'+new Date(y,m+1,0).getDate();}
+  else if(p==='lastmonth'){var lm=m===0?11:m-1,ly=m===0?y-1:y;$('expFrom').value=ly+'-'+String(lm+1).padStart(2,'0')+'-01';$('expTo').value=ly+'-'+String(lm+1).padStart(2,'0')+'-'+new Date(ly,lm+1,0).getDate();}
+  else if(p==='quarter'){var qm=Math.floor(m/3)*3;$('expFrom').value=y+'-'+String(qm+1).padStart(2,'0')+'-01';var qEnd=qm+2;$('expTo').value=y+'-'+String(qEnd+1).padStart(2,'0')+'-'+new Date(y,qEnd+1,0).getDate();}
+  else if(p==='year'){$('expFrom').value=y+'-01-01';$('expTo').value=y+'-12-31';}
+  else if(p==='all'){$('expFrom').value='2020-01-01';$('expTo').value=now.toISOString().slice(0,10);}
+  updateExportPreview();
+}
+
+function getExportEntries(){
+  var from=$('expFrom').value,to=$('expTo').value,dept=$('expDept').value;
+  return entries.filter(function(e){
+    if(e.date<from||e.date>to)return false;
+    if(dept&&(e.department||'General')!==dept)return false;
+    return true;
+  }).sort(function(a,b){return(a.date+a.time).localeCompare(b.date+b.time);});
+}
+
+function updateExportPreview(){
+  var d=getExportEntries();
+  var el=$('expPreview');
+  if(el){el.style.display='block';el.textContent=d.length+' entries in selected range';}
+}
+
+function buildAnalytics(data){
+  var total=data.length;
+  var byStatus={Open:0,'In Progress':0,Resolved:0,Escalated:0};
+  var byPriority={High:0,Medium:0,Low:0};
+  var byDept={};var byCat={};var byShift={Day:0,Evening:0,Night:0};
+  var resolutionDays=[];
+  data.forEach(function(e){
+    byStatus[e.status]=(byStatus[e.status]||0)+1;
+    byPriority[e.priority]=(byPriority[e.priority]||0)+1;
+    var dept=e.department||'General';byDept[dept]=(byDept[dept]||0)+1;
+    byCat[e.category]=(byCat[e.category]||0)+1;
+    byShift[e.shift]=(byShift[e.shift]||0)+1;
+    if(e.status==='Resolved'&&e.resDate&&e.date){
+      var d1=new Date(e.date+'T00:00:00'),d2=new Date(e.resDate+'T00:00:00');
+      resolutionDays.push(Math.round((d2-d1)/86400000));
+    }
+  });
+  var avgRes=resolutionDays.length>0?Math.round(resolutionDays.reduce(function(a,b){return a+b;},0)/resolutionDays.length*10)/10:0;
+  var resRate=total>0?Math.round(byStatus.Resolved/total*100):0;
+  return{total:total,byStatus:byStatus,byPriority:byPriority,byDept:byDept,byCat:byCat,byShift:byShift,avgResolutionDays:avgRes,resolutionRate:resRate+'%',pendingFollowUps:data.filter(function(e){return e.followUp==='Yes'&&e.status!=='Resolved';}).length};
+}
+
+function runExport(){
+  var data=getExportEntries();
+  var format=$('expFormat').value;
+  var includeAnalytics=$('expAnalytics').checked;
+  var from=$('expFrom').value,to=$('expTo').value;
+  var dept=$('expDept').value;
+  var label=from+'_to_'+to+(dept?'_'+dept:'');
+
+  if(format==='csv'){
+    var h=['Date','Shift','Time','Department','Reported By','Category','Priority','Description','Action Taken','Status','Follow-Up','Assigned To','Resolved By','Resolution Date','Notes'];
+    var rows=data.map(function(e){return[e.date,e.shift,e.time,e.department||'',e.reportedBy,e.category,e.priority,'"'+(e.description||'').replace(/"/g,'""')+'"','"'+(e.action||'').replace(/"/g,'""')+'"',e.status,e.followUp,e.followUpAssign?ln(e.followUpAssign):'',e.resolvedBy?ln(e.resolvedBy):'',e.resDate||'','"'+(e.notes||'').replace(/"/g,'""')+'"'];});
+    var csv=[h.join(',')].concat(rows.map(function(r){return r.join(',');}));
+    if(includeAnalytics){
+      var a=buildAnalytics(data);
+      csv.push('');csv.push('ANALYTICS SUMMARY');
+      csv.push('Period,'+from+' to '+to);
+      csv.push('Total Entries,'+a.total);csv.push('Resolution Rate,'+a.resolutionRate);csv.push('Avg Resolution Days,'+a.avgResolutionDays);csv.push('Pending Follow-Ups,'+a.pendingFollowUps);
+      csv.push('');csv.push('BY STATUS');for(var k in a.byStatus)csv.push(k+','+a.byStatus[k]);
+      csv.push('');csv.push('BY PRIORITY');for(var k in a.byPriority)csv.push(k+','+a.byPriority[k]);
+      csv.push('');csv.push('BY DEPARTMENT');for(var k in a.byDept)csv.push(k+','+a.byDept[k]);
+      csv.push('');csv.push('BY CATEGORY');for(var k in a.byCat)csv.push(k+','+a.byCat[k]);
+      csv.push('');csv.push('BY SHIFT');for(var k in a.byShift)csv.push(k+','+a.byShift[k]);
+    }
+    dlF(csv.join('\n'),'shift_log_'+label+'.csv','text/csv');
+  }else if(format==='json'){
+    var obj={exportDate:new Date().toISOString(),exportedBy:me?me.fullName:'',period:{from:from,to:to},department:dept||'All',entries:data};
+    if(includeAnalytics)obj.analytics=buildAnalytics(data);
+    dlF(JSON.stringify(obj,null,2),'shift_log_'+label+'.json','application/json');
+  }else if(format==='pdf'){
+    try{
+      var{jsPDF}=window.jspdf,doc=new jsPDF({orientation:'landscape',unit:'mm',format:'letter'});
+      doc.setFontSize(14);doc.text('Core Lab Shift Hub Report',14,14);
+      doc.setFontSize(9);doc.text('Period: '+from+' to '+to+(dept?' | Dept: '+dept:' | All Departments')+' | Generated: '+new Date().toLocaleString()+' | By: '+(me?me.fullName:''),14,20);
+      doc.autoTable({head:[['Date','Shift','Time','Dept','By','Cat','Pri','Description','Action','Status']],body:data.map(function(e){return[fd(e.date),e.shift,e.time,e.department||'',e.reportedBy,e.category,e.priority,(e.description||'').slice(0,45),(e.action||'').slice(0,40),e.status];}),startY:24,styles:{fontSize:6.5,cellPadding:2},headStyles:{fillColor:[0,121,107]},margin:{left:14,right:14}});
+      if(includeAnalytics){
+        var a=buildAnalytics(data);var fy=doc.lastAutoTable.finalY+10;
+        doc.setFontSize(12);doc.text('Analytics Summary',14,fy);
+        doc.setFontSize(9);
+        doc.text('Total: '+a.total+' | Resolution Rate: '+a.resolutionRate+' | Avg Resolution: '+a.avgResolutionDays+' days | Pending F/U: '+a.pendingFollowUps,14,fy+6);
+        var statsRows=[];for(var k in a.byDept)statsRows.push([k,a.byDept[k]]);
+        doc.autoTable({head:[['Department','Count']],body:statsRows,startY:fy+10,styles:{fontSize:8},headStyles:{fillColor:[0,121,107]},margin:{left:14},tableWidth:60});
+        var statsRows2=[];for(var k in a.byCat)statsRows2.push([k,a.byCat[k]]);
+        doc.autoTable({head:[['Category','Count']],body:statsRows2,startY:fy+10,styles:{fontSize:8},headStyles:{fillColor:[0,121,107]},margin:{left:90},tableWidth:80});
+      }
+      doc.save('Shift_Report_'+label+'.pdf');
+    }catch(e){toast('PDF export failed');console.error(e);}
+  }
+  toast('Exported '+data.length+' entries');
+  closeExportModal();
+}
 function dlF(c,n,t){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=n;a.click();}
 
 // === AUTO-BACKUP ===

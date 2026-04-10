@@ -66,13 +66,13 @@ html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);
 .screen.active{display:flex}
 
 @media(min-width:768px){
-  body{display:flex;flex-direction:row}
+  body{display:flex;flex-direction:row;height:100vh;overflow:hidden}
   #desktop-nav{display:none}
   #desktop-nav.authed{display:flex}
   #desktop-panel{display:none!important}
   #desktop-panel.authed{display:flex!important}
-  #scanner-main{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center}
-  .screen{width:100%;max-width:580px}
+  #scanner-main{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;min-height:0}
+  .screen{width:100%;max-width:580px;height:auto;min-height:100%;overflow:visible}
   .body{padding:28px 32px}
   .scan-bottom{padding:0 32px 28px}
   .hdr{padding:16px 24px}
@@ -524,7 +524,7 @@ async function initAuth(){
     var dn=document.getElementById('desktop-nav');if(dn)dn.classList.add('authed');
     var dp=document.getElementById('desktop-panel');if(dp)dp.classList.add('authed');
     hideLoad();goScreen('screen-scan');
-    testSP().catch(e=>console.warn('SP test:',e));
+    testSP().then(function(){loadTodayLog();loadPanelData();}).catch(function(e){console.warn('SP test:',e);loadTodayLog();loadPanelData();});
   }catch(e){hideLoad();console.error('Auth error:',e);goScreen('screen-auth');}
 }
 async function triggerLogin(){if(!msalInstance)msalInstance=new msal.PublicClientApplication(MSAL_CONFIG);await msalInstance.loginRedirect({scopes:['https://uwnetid.sharepoint.com/AllSites.Write','User.Read']});}
@@ -1068,10 +1068,6 @@ async function spFetchAll(ln,sel,filter){
 
 window.addEventListener('load',function(){
   initAuth();
-  // Load panel data after auth settles
-  setTimeout(function(){
-    if(spToken){loadTodayLog();loadPanelData();}
-  },2500);
 });
 </script>
 </body>
