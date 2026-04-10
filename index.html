@@ -1561,15 +1561,31 @@ document.addEventListener('click',function(e){if(!e.target.closest('.exp-wrap'))
 function exportDashPDF(){
   try{var m=getDashMetrics(),{jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'letter'});
   var pw=215.9,ph=279.4,lm=16,rm=16,cw=pw-lm-rm;
+
+  // Helper: add a canvas chart to the doc. Returns new y after placement.
+  function addChart(canvasId,label,startY,imgW,imgH){
+    var canvas=document.getElementById(canvasId);
+    if(!canvas||!canvas.getContext)return startY;
+    try{
+      var imgData=canvas.toDataURL('image/png',1.0);
+      if(imgData==='data:,')return startY;
+      if(startY+imgH>ph-20){doc.addPage();startY=16;}
+      if(label){doc.setFontSize(8);doc.setTextColor(90,90,100);doc.setFont(undefined,'bold');doc.text(label,lm,startY);startY+=4;}
+      doc.addImage(imgData,'PNG',lm,startY,imgW,imgH);
+      return startY+imgH+6;
+    }catch(err){console.warn('Chart capture failed for',canvasId,err);return startY;}
+  }
+
   // Header banner
-  doc.setFillColor(26,39,68);doc.rect(0,0,pw,30,'F');
+  doc.setFillColor(26,58,58);doc.rect(0,0,pw,30,'F');
   doc.setFontSize(16);doc.setTextColor(255,255,255);doc.text('Core Lab Shift Hub',lm,13);
-  doc.setFontSize(9);doc.setTextColor(180,195,220);doc.text('Dashboard Metrics Report',lm,19);
+  doc.setFontSize(9);doc.setTextColor(180,215,210);doc.text('Dashboard Metrics Report',lm,19);
   doc.text(MONTHS[curMonth]+' '+curYear+'  |  '+new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})+'  |  '+(me?me.fullName:''),lm,25);
   var y=38;
   function checkPage(need){if(y+need>ph-20){doc.addPage();y=16;return true;}return false;}
-  function secTitle(txt){checkPage(14);doc.setFontSize(11);doc.setTextColor(26,39,68);doc.setFont(undefined,'bold');doc.text(txt,lm,y);doc.setFont(undefined,'normal');y+=6;}
-  // Summary
+  function secTitle(txt){checkPage(14);doc.setFontSize(11);doc.setTextColor(26,58,58);doc.setFont(undefined,'bold');doc.text(txt,lm,y);doc.setFont(undefined,'normal');y+=6;}
+
+  // Summary table
   secTitle('Summary');
   doc.autoTable({startY:y,head:[['Metric','Value']],body:[
     ['This Month Entries',''+m.mE.length],['All Time Entries',''+m.all.length],
@@ -1580,33 +1596,64 @@ function exportDashPDF(){
   ],styles:{fontSize:9,cellPadding:3,font:'helvetica'},headStyles:{fillColor:[0,121,107],textColor:255,fontStyle:'bold'},
   columnStyles:{0:{fontStyle:'bold',cellWidth:65}},alternateRowStyles:{fillColor:[247,244,239]},margin:{left:lm,right:rm}});
   y=doc.lastAutoTable.finalY+12;
-  // Status
+
+  // Charts page — 2 columns of small charts
+  checkPage(60);
+  doc.addPage();y=16;
+  doc.setFontSize(13);doc.setTextColor(26,58,58);doc.setFont(undefined,'bold');doc.text('Analytics Charts',lm,y);doc.setFont(undefined,'normal');y+=8;
+
+  var halfW=(cw-6)/2;var chartH=52;
+  // Row 1: Category + Shift side by side
+  var y1=y;
+  var canvasCat=document.getElementById('chartCat');
+  var canvasShift=document.getElementById('chartShift');
+  if(canvasCat&&canvasCat.getContext){try{var d1=canvasCat.toDataURL('image/png',1.0);if(d1!=='data:,'){doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('By Category',lm,y1);doc.setFont(undefined,'normal');doc.addImage(d1,'PNG',lm,y1+3,halfW,chartH);}}catch(e){}}
+  if(canvasShift&&canvasShift.getContext){try{var d2=canvasShift.toDataURL('image/png',1.0);if(d2!=='data:,'){var x2=lm+halfW+6;doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('By Shift',x2,y1);doc.setFont(undefined,'normal');doc.addImage(d2,'PNG',x2,y1+3,halfW,chartH);}}catch(e){}}
+  y=y1+chartH+12;
+
+  // Row 2: Priority + Status side by side
+  var y2=y;
+  var canvasPri=document.getElementById('chartPri');
+  var canvasStat=document.getElementById('chartStatus');
+  if(canvasPri&&canvasPri.getContext){try{var d3=canvasPri.toDataURL('image/png',1.0);if(d3!=='data:,'){doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('Priority Distribution',lm,y2);doc.setFont(undefined,'normal');doc.addImage(d3,'PNG',lm,y2+3,halfW,chartH);}}catch(e){}}
+  if(canvasStat&&canvasStat.getContext){try{var d4=canvasStat.toDataURL('image/png',1.0);if(d4!=='data:,'){var x4=lm+halfW+6;doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('Open vs Resolved',x4,y2);doc.setFont(undefined,'normal');doc.addImage(d4,'PNG',x4,y2+3,halfW,chartH);}}catch(e){}}
+  y=y2+chartH+12;
+
+  // Row 3: Trend full width
+  checkPage(55);
+  var canvasTrend=document.getElementById('chartTrend');
+  if(canvasTrend&&canvasTrend.getContext){try{var d5=canvasTrend.toDataURL('image/png',1.0);if(d5!=='data:,'){doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('Daily Trend (This Month)',lm,y);doc.setFont(undefined,'normal');doc.addImage(d5,'PNG',lm,y+3,cw,48);y+=56;}}catch(e){}}
+
+  // Row 4: Follow-Up half width
+  checkPage(55);
+  var canvasFU=document.getElementById('chartFU');
+  if(canvasFU&&canvasFU.getContext){try{var d6=canvasFU.toDataURL('image/png',1.0);if(d6!=='data:,'){doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('Follow-Up Completion',lm,y);doc.setFont(undefined,'normal');doc.addImage(d6,'PNG',lm,y+3,halfW,chartH);y+=chartH+10;}}catch(e){}}
+
+  // Data tables page
+  doc.addPage();y=16;
   secTitle('Status Breakdown');
   doc.autoTable({startY:y,head:[['Status','Count','Percentage']],body:Object.entries(m.sts).map(function(x){return[x[0],''+x[1],m.mE.length?Math.round(x[1]/m.mE.length*100)+'%':'0%'];}),
   styles:{fontSize:9,cellPadding:3},headStyles:{fillColor:[0,121,107],textColor:255},columnStyles:{0:{cellWidth:50}},alternateRowStyles:{fillColor:[247,244,239]},margin:{left:lm,right:rm}});
   y=doc.lastAutoTable.finalY+12;
-  // Priority
   checkPage(40);secTitle('Priority Distribution');
   doc.autoTable({startY:y,head:[['Priority','Count','Percentage']],body:Object.entries(m.pris).map(function(x){return[x[0],''+x[1],m.mE.length?Math.round(x[1]/m.mE.length*100)+'%':'0%'];}),
   styles:{fontSize:9,cellPadding:3},headStyles:{fillColor:[198,40,40],textColor:255},columnStyles:{0:{cellWidth:50}},alternateRowStyles:{fillColor:[252,232,232]},margin:{left:lm,right:rm}});
   y=doc.lastAutoTable.finalY+12;
-  // Category
   checkPage(50);secTitle('Entries by Category');
   doc.autoTable({startY:y,head:[['Category','Count']],body:Object.entries(m.cats).map(function(x){return[x[0],''+x[1]];}),
   styles:{fontSize:9,cellPadding:3},headStyles:{fillColor:[106,27,154],textColor:255},alternateRowStyles:{fillColor:[243,229,245]},margin:{left:lm,right:rm}});
   y=doc.lastAutoTable.finalY+12;
-  // Shift
   checkPage(40);secTitle('Entries by Shift');
   doc.autoTable({startY:y,head:[['Shift','Count','Percentage']],body:Object.entries(m.shifts).map(function(x){return[x[0],''+x[1],m.mE.length?Math.round(x[1]/m.mE.length*100)+'%':'0%'];}),
   styles:{fontSize:9,cellPadding:3},headStyles:{fillColor:[0,121,107],textColor:255},columnStyles:{0:{cellWidth:50}},alternateRowStyles:{fillColor:[247,244,239]},margin:{left:lm,right:rm}});
   y=doc.lastAutoTable.finalY+12;
-  // Follow-ups
   checkPage(40);secTitle('Follow-Up Status');
   doc.autoTable({startY:y,head:[['Metric','Value']],body:[['Total Follow-Ups',''+m.fuAll.length],['Completed',''+m.fuDone.length],['Pending',''+m.fuPend],['Completion Rate',m.fuAll.length?Math.round(m.fuDone.length/m.fuAll.length*100)+'%':'N/A']],
   styles:{fontSize:9,cellPadding:3},headStyles:{fillColor:[46,125,50],textColor:255},columnStyles:{0:{fontStyle:'bold',cellWidth:65}},alternateRowStyles:{fillColor:[232,245,233]},margin:{left:lm,right:rm}});
+
   // Footer on each page
   var pages=doc.internal.getNumberOfPages();for(var i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(158,164,176);doc.text('Core Lab Shift Hub  |  Renton Central Lab  |  UW Medicine DLMP',lm,ph-8);doc.text('Page '+i+' of '+pages,pw-rm-18,ph-8);}
-  doc.save('Dashboard_'+MONTHS[curMonth]+'_'+curYear+'.pdf');toast('PDF exported');}catch(e){toast('PDF failed');console.error(e);}
+  doc.save('Dashboard_'+MONTHS[curMonth]+'_'+curYear+'.pdf');toast('PDF exported with charts');}catch(e){toast('PDF failed: '+e.message);console.error(e);}
 }
 
 function exportDashCSV(){
@@ -1773,6 +1820,7 @@ function uClk(){$('clockChip').textContent=new Date().toLocaleString('en-US',{we
 function startApp(){
   if(typeof msal==='undefined'){setTimeout(startApp,200);return;}
   initAuth();rMT();uClk();setInterval(uClk,60000);
+var BK_MINS=120;// auto-backup interval in minutes
 runAutoBackup();setInterval(runAutoBackup,BK_MINS*60000);setInterval(uBD,30000);
 setInterval(async function(){try{await loadAllData();lastSyncTime=new Date();uBD();renderAll();}catch(e){}},60000);
 ['searchBox','fShift','fCat','fPri','fMonth','fYear'].forEach(id=>{$(id).addEventListener(id==='searchBox'?'input':'change',renderLog);});

@@ -1065,19 +1065,22 @@ async function loadTodayLog(){
   }
 }
 
-// SP fetch helper for panel — uses __next token pagination (SP does not support $skip on list items)
+// SP fetch helper for panel — uses _req (same auth path as scanner) with __next token pagination
 async function spFetchAll(ln,sel,filter){
   var all=[];
   var url=SP_API+"/getbytitle('"+ln+"')/items?$top=1000&$select="+sel;
   if(filter)url+='&$filter='+encodeURIComponent(filter);
   while(url){
-    var token=await getToken();
-    var res=await fetch(url,{headers:{'Authorization':'Bearer '+token,'Accept':'application/json;odata=verbose'}});
-    if(!res.ok){var errText=await res.text();console.warn('spFetchAll error',res.status,errText);break;}
-    var d=await res.json();
-    var batch=d.d&&d.d.results?d.d.results:[];
-    all=all.concat(batch);
-    url=(d.d&&d.d.__next)||null;
+    try{
+      var res=await _req(url);
+      var d=await res.json();
+      var batch=d.d&&d.d.results?d.d.results:[];
+      all=all.concat(batch);
+      url=(d.d&&d.d.__next)||null;
+    }catch(e){
+      console.warn('spFetchAll error:',e.message);
+      throw e;
+    }
   }
   return all;
 }

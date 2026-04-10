@@ -182,6 +182,8 @@ select.filter-select{padding:6px 32px 6px 14px;border-radius:var(--radius-full);
 .sri-check{width:18px;height:18px;accent-color:var(--primary);cursor:pointer;margin-right:4px;flex-shrink:0}
 
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:var(--outline-variant);border-radius:3px}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
 </style>
 </head>
 <body>
@@ -225,11 +227,6 @@ select.filter-select{padding:6px 32px 6px 14px;border-radius:var(--radius-full);
   <div class="main">
     <div class="top-bar">
       <h2 id="view-title">Stock Overview</h2>
-      <div class="filters">
-        <select class="filter-select" id="filter-dept" onchange="applyFilters()">
-          <option value="">All Departments</option><option value="Chemistry">Chemistry</option><option value="Hematology">Hematology</option><option value="Coagulation">Coagulation</option><option value="Urinalysis">Urinalysis</option><option value="Laboratory Supplies">Laboratory Supplies</option><option value="Office Supplies">Office Supplies</option>
-        </select>
-      </div>
     </div>
     <div class="content" id="content">
       <div class="view active" id="view-stock">
@@ -361,7 +358,7 @@ async function loadAllData(){showLoad('Loading inventory...');allInventory=await
 var currentView='stock';var viewTitles={stock:'Stock Overview',trends:'Usage Trends',expiry:'Expiry & Waste Risk',forecast:'Forecasting',log:'Transaction Log',backup:'Backup & Restore'};
 function showView(id){currentView=id;document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});document.getElementById('view-'+id).classList.add('active');document.getElementById('view-title').textContent=viewTitles[id]||id;document.querySelectorAll('.nav-btn').forEach(function(b,i){b.classList.toggle('active',['stock','trends','expiry','forecast','log','backup'][i]===id);});document.querySelectorAll('.mob-btn').forEach(function(b,i){b.classList.toggle('active',['stock','trends','expiry','forecast','log'][i]===id);});var sn=document.getElementById('stock-subnav');if(sn)sn.className=id==='stock'?'sub-nav show':'sub-nav';if(id==='trends')renderTrends();if(id==='forecast')renderForecast();if(id==='backup')renderBackupView();}
 function subFilter(kind,val){
-  if(kind==='dept'){subDept=val;document.getElementById('filter-dept').value=val;}
+  if(kind==='dept')subDept=val;
   else if(kind==='type')subType=val;
   // Update active states
   var sn=document.getElementById('stock-subnav');
@@ -372,8 +369,8 @@ function subFilter(kind,val){
   });}
   stockPage=1;renderAll();
 }
-function applyFilters(){subDept=document.getElementById('filter-dept').value;stockPage=1;renderAll();}
-function getFiltered(){var d=subDept||document.getElementById('filter-dept').value;return allInventory.filter(function(r){if(d&&iv(r,'Instrument')!==d)return false;if(subType&&iv(r,'ItemType')!==subType)return false;return true;});}
+function applyFilters(){stockPage=1;renderAll();}
+function getFiltered(){return allInventory.filter(function(r){if(subDept&&iv(r,'Instrument')!==subDept)return false;if(subType&&iv(r,'ItemType')!==subType)return false;return true;});}
 function renderAll(){renderStock();renderExpiry();renderLogTable();}
 
 // STATUS
