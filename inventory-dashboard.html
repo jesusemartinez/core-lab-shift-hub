@@ -75,6 +75,8 @@ select.filter-select{padding:6px 32px 6px 14px;border-radius:var(--radius-full);
 .page-btn:disabled{opacity:.25;cursor:not-allowed}
 .page-input{width:44px;height:34px;text-align:center;border:1.5px solid var(--outline-variant);border-radius:8px;font-family:var(--font);font-size:13px;font-weight:700;color:var(--on-surface);background:var(--surface-lowest);outline:none}
 .page-input:focus{border-color:var(--primary);box-shadow:0 0 0 2px rgba(0,105,110,.1)}
+.page-input::-webkit-inner-spin-button,.page-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.page-input{-moz-appearance:textfield}
 .page-of{font-family:var(--font);font-size:13px;color:var(--on-surface-variant);font-weight:500}
 @media(max-width:899px){.page-controls .page-nav{display:none}.page-info{font-size:12px;width:100%;text-align:center}.stock-grid{grid-template-columns:1fr}}
 
@@ -164,7 +166,7 @@ select.filter-select{padding:6px 32px 6px 14px;border-radius:var(--radius-full);
       <button class="nav-btn" onclick="showView('forecast')"><span class="material-icons-outlined">auto_graph</span>Forecasting</button>
       <button class="nav-btn" onclick="showView('log')"><span class="material-icons-outlined">receipt_long</span>Transaction Log</button>
     </nav>
-    <div class="sidebar-footer"><div class="name" id="side-user"></div><div id="side-sp">Connecting...</div><div style="margin-top:8px;font-size:9px;color:var(--outline);line-height:1.4">&copy; 2026 Jesus Martinez<br>All rights reserved.</div></div>
+    <div class="sidebar-footer"><div class="name" id="side-user"></div><div id="side-sp">Connecting...</div><div style="margin-top:10px;font-size:8px;color:var(--outline-variant);letter-spacing:.02em;opacity:.5">&copy; 2026 Jesus Martinez. All rights reserved.</div></div>
   </aside>
   <div class="main">
     <div class="top-bar">

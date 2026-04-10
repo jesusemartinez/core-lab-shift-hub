@@ -68,7 +68,8 @@ html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);
 @media(min-width:768px){
   body{display:flex;flex-direction:row}
   #desktop-nav{display:flex}
-  .screen{flex:1}
+  #desktop-panel{display:flex}
+  .screen{flex:1;max-width:560px;margin:0 auto}
   .body{padding:28px 32px}
   .scan-bottom{padding:0 32px 28px}
   .hdr{padding:16px 24px}
@@ -79,11 +80,38 @@ html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);
 }
 @media(max-width:767px){
   #desktop-nav{display:none}
+  #desktop-panel{display:none}
   html,body{overflow:auto}
   .screen{height:auto;min-height:100vh;min-height:100dvh;overflow:visible}
   .scan-bottom{padding:0 20px calc(24px + env(safe-area-inset-bottom))}
   .footer{padding:16px 20px calc(16px + env(safe-area-inset-bottom))}
 }
+
+/* Desktop Activity Panel */
+#desktop-panel{
+  display:none;width:280px;background:var(--md-surface-container);
+  border-left:1px solid var(--md-outline-variant);flex-direction:column;
+  overflow-y:auto;flex-shrink:0;
+}
+.panel-section{padding:16px;border-bottom:1px solid var(--md-outline-variant)}
+.panel-title{font-family:var(--font);font-size:12px;font-weight:700;color:var(--md-on-surface-variant);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.recent-list{display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto}
+.recent-list::-webkit-scrollbar{width:3px}.recent-list::-webkit-scrollbar-thumb{background:var(--md-outline-variant);border-radius:2px}
+.recent-empty{font-size:12px;color:var(--md-outline);font-style:italic;padding:8px 0}
+.recent-item{background:var(--md-surface-container-lowest);border:1px solid var(--md-outline-variant);border-radius:var(--radius-sm);padding:10px 12px;cursor:default}
+.recent-item .ri-name{font-family:var(--font);font-size:13px;font-weight:700;color:var(--md-on-surface);margin-bottom:2px;line-height:1.3}
+.recent-item .ri-meta{font-size:11px;color:var(--md-on-surface-variant)}
+.recent-item .ri-action{font-size:11px;font-weight:700;margin-top:3px}
+.ri-receive{color:var(--receive)}.ri-remove{color:var(--remove)}.ri-adjust{color:var(--adjust)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-box{background:var(--md-surface-container-lowest);border:1px solid var(--md-outline-variant);border-radius:var(--radius-sm);padding:10px;text-align:center}
+.stat-val{font-family:var(--font);font-size:22px;font-weight:700;color:var(--md-on-surface);line-height:1}
+.stat-lbl{font-size:10px;color:var(--md-on-surface-variant);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-top:2px}
+.log-item{font-size:12px;color:var(--md-on-surface-variant);padding:6px 0;border-bottom:1px solid var(--md-outline-variant);display:flex;justify-content:space-between;gap:8px}
+.log-item:last-child{border-bottom:none}
+.log-item .li-name{font-weight:600;color:var(--md-on-surface);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log-item .li-action{font-weight:700;flex-shrink:0}
+.log-item .li-time{font-size:10px;color:var(--md-outline);flex-shrink:0}
 
 /* NAV */
 #desktop-nav{display:none;width:220px;background:var(--md-surface-container);flex-direction:column;padding:0;flex-shrink:0;border-right:1px solid var(--md-outline-variant)}
@@ -241,8 +269,31 @@ html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);
   <div class="nav-section">Scanner</div>
   <div class="nav-item active" onclick="goScan()"><span class="material-icons-outlined">qr_code_scanner</span>Scan Item</div>
   <div class="nav-item" onclick="resetManual();goScreen('screen-manual')"><span class="material-icons-outlined">edit</span>Manual Entry</div>
-  <div class="nav-footer"><div class="nav-footer-name" id="nav-user-name"></div><div id="nav-sp-status">Connecting...</div><div style="margin-top:8px;font-size:9px;color:var(--md-outline);line-height:1.4">&copy; 2026 Jesus Martinez<br>All rights reserved.</div></div>
+  <div class="nav-section" style="margin-top:12px">Quick Links</div>
+  <div class="nav-item" onclick="window.open('inventory-dashboard.html','_blank')"><span class="material-icons-outlined">analytics</span>Dashboard</div>
+  <div class="nav-footer"><div class="nav-footer-name" id="nav-user-name"></div><div id="nav-sp-status">Connecting...</div><div style="margin-top:10px;font-size:8px;color:var(--md-outline-variant);letter-spacing:.02em;opacity:.5">&copy; 2026 Jesus Martinez. All rights reserved.</div></div>
 </nav>
+
+<!-- Desktop Activity Panel (right side) -->
+<aside id="desktop-panel">
+  <div class="panel-section">
+    <div class="panel-title"><span class="material-icons-outlined" style="font-size:18px">schedule</span>Recent Scans</div>
+    <div id="recent-scans" class="recent-list"><div class="recent-empty">No scans yet this session</div></div>
+  </div>
+  <div class="panel-section">
+    <div class="panel-title"><span class="material-icons-outlined" style="font-size:18px">bar_chart</span>Session Stats</div>
+    <div class="stat-grid" id="session-stats">
+      <div class="stat-box"><div class="stat-val" id="stat-scans">0</div><div class="stat-lbl">Scanned</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-received">0</div><div class="stat-lbl">Received</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-removed">0</div><div class="stat-lbl">Removed</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-new">0</div><div class="stat-lbl">New Items</div></div>
+    </div>
+  </div>
+  <div class="panel-section">
+    <div class="panel-title"><span class="material-icons-outlined" style="font-size:18px">history</span>Today's Log</div>
+    <div id="today-log" class="recent-list"><div class="recent-empty">No transactions today</div></div>
+  </div>
+</aside>
 
 <div class="screen active" id="screen-auth">
   <div class="hdr"><div class="hdr-title">Inventory Scanner</div></div>
@@ -705,7 +756,12 @@ async function submitManual(addToCatalog){
   }catch(e){hideLoad();showToast('Failed: '+(e.message||'').slice(0,50),true);}
 }
 
-function showSuccess(){var log=document.getElementById('success-log');if(log)log.innerHTML=[['Item',lastEntry.item],['Action',lastEntry.action],['Change',lastEntry.delta],['New Stock',lastEntry.newStock],['Lot',lastEntry.lot],['Scanned By',lastEntry.scannedBy||'—'],['Time',lastEntry.time]].map(function(r){return'<div class="log-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>';}).join('');goScreen('screen-success');}
+function showSuccess(){
+  var log=document.getElementById('success-log');
+  if(log)log.innerHTML=[['Item',lastEntry.item],['Action',lastEntry.action],['Change',lastEntry.delta],['New Stock',lastEntry.newStock],['Lot',lastEntry.lot],['Scanned By',lastEntry.scannedBy||'—'],['Time',lastEntry.time]].map(function(r){return'<div class="log-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>';}).join('');
+  trackScan(lastEntry.item,lastEntry.action,parseFloat(lastEntry.delta)||0,lastEntry.newStock);
+  goScreen('screen-success');
+}
 
 var camStream=null,bdDetector=null,camFrame=null;
 async function startCamera(){if(!('BarcodeDetector'in window)){document.getElementById('cam-file').click();return;}try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});var vid=document.getElementById('camera-video');vid.srcObject=camStream;document.getElementById('camera-view').style.display='block';var cb=document.getElementById('cam-btn');if(cb){cb.innerHTML='<span class="material-icons-outlined">stop_circle</span>';cb.onclick=stopCamera;}bdDetector=new BarcodeDetector({formats:['code_128','code_39','data_matrix','ean_13','ean_8','qr_code','upc_a','upc_e']});scanFrame(vid);}catch(e){console.error('Camera:',e);document.getElementById('cam-file').click();}}
@@ -766,7 +822,78 @@ var si=document.getElementById('scan-input');
 si.addEventListener('keydown',function(e){if(e.key==='Enter')lookupBarcode();});
 var _scanTmr;
 si.addEventListener('input',function(){clearTimeout(_scanTmr);var v=si.value.trim();if(v.length>=8){_scanTmr=setTimeout(function(){if(/^\d{12,13}$/.test(v)||v.length>=20)lookupBarcode();},300);}});
-window.addEventListener('load',initAuth);
+
+// ── Session activity tracking for desktop panel ──
+var sessionScans=[],sessionStats={scans:0,received:0,removed:0,newItems:0};
+
+function trackScan(itemName,action,delta,newStock){
+  sessionScans.unshift({name:itemName,action:action,delta:delta,newStock:newStock,time:new Date()});
+  if(sessionScans.length>20)sessionScans.pop();
+  sessionStats.scans++;
+  var al=action.toLowerCase();
+  if(al.indexOf('receive')>=0)sessionStats.received++;
+  else if(al.indexOf('remove')>=0)sessionStats.removed++;
+  if(al.indexOf('new')>=0)sessionStats.newItems++;
+  renderPanel();
+}
+
+function renderPanel(){
+  // Recent scans
+  var rs=document.getElementById('recent-scans');
+  if(rs){
+    if(sessionScans.length===0){rs.innerHTML='<div class="recent-empty">No scans yet this session</div>';}
+    else{rs.innerHTML=sessionScans.slice(0,8).map(function(s){
+      var acl=s.action.toLowerCase();var cls=acl.indexOf('receive')>=0?'ri-receive':acl.indexOf('remove')>=0?'ri-remove':'ri-adjust';
+      var t=s.time.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+      return'<div class="recent-item"><div class="ri-name">'+esc(s.name)+'</div><div class="ri-meta">'+t+' · Stock: '+s.newStock+'</div><div class="ri-action '+cls+'">'+esc(s.action)+' ('+(s.delta>=0?'+':'')+s.delta+')</div></div>';
+    }).join('');}
+  }
+  // Session stats
+  var ss=document.getElementById('stat-scans');if(ss)ss.textContent=sessionStats.scans;
+  var sr=document.getElementById('stat-received');if(sr)sr.textContent=sessionStats.received;
+  var sm=document.getElementById('stat-removed');if(sm)sm.textContent=sessionStats.removed;
+  var sn=document.getElementById('stat-new');if(sn)sn.textContent=sessionStats.newItems;
+}
+
+async function loadTodayLog(){
+  try{
+    var today=new Date().toISOString().slice(0,10);
+    var logFields=Object.values(LOG).filter(function(v,i,a){return a.indexOf(v)===i;});
+    var logs=await spFetchAll(SP.lists.log,'Title,'+logFields.join(','),"field_6 ge '"+today+"T00:00:00'");
+    logs.sort(function(a,b){return(b[LOG.Timestamp]||'').localeCompare(a[LOG.Timestamp]||'');});
+    var tl=document.getElementById('today-log');
+    if(tl){
+      if(logs.length===0){tl.innerHTML='<div class="recent-empty">No transactions today</div>';}
+      else{tl.innerHTML=logs.slice(0,15).map(function(l){
+        var ac=(l[LOG.Action]||'').toLowerCase();var cls=ac.indexOf('receive')>=0?'ri-receive':ac.indexOf('remove')>=0?'ri-remove':'ri-adjust';
+        var t=l[LOG.Timestamp]?new Date(l[LOG.Timestamp]).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):'';
+        var d=parseFloat(l[LOG.QuantityDelta])||0;
+        return'<div class="log-item"><span class="li-name">'+esc(l.Title||'')+'</span><span class="li-action '+cls+'">'+(d>=0?'+':'')+d+'</span><span class="li-time">'+t+'</span></div>';
+      }).join('');}
+    }
+  }catch(e){console.warn('Today log:',e);}
+}
+
+// SP fetch helper for panel (reuse existing)
+async function spFetchAll(ln,sel,filter){
+  var all=[],skip=0;
+  while(true){
+    var q='?$top=1000&$skip='+skip+'&$select='+sel;
+    if(filter)q+='&$filter='+encodeURIComponent(filter);
+    var token=await getToken();
+    var res=await fetch(SP_API+"/getbytitle('"+ln+"')/items"+q,{headers:{'Authorization':'Bearer '+token,'Accept':'application/json;odata=verbose'}});
+    if(!res.ok)break;
+    var d=await res.json();var batch=d.d&&d.d.results?d.d.results:[];
+    all=all.concat(batch);if(batch.length<1000)break;skip+=1000;
+  }
+  return all;
+}
+
+window.addEventListener('load',function(){
+  initAuth();
+  // Load today's log for desktop panel after auth
+  setTimeout(function(){if(spToken)loadTodayLog();},2000);
+});
 </script>
 </body>
 </html>
