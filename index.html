@@ -818,7 +818,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   <p class="auth-sub" id="authStatus" style="font-weight:600;color:var(--g600);">Authenticating with Microsoft 365...</p>
   <p class="auth-sub" style="margin-top:6px;font-size:10px;">This may take a few seconds on first load.</p>
   <!-- Debug info -->
-  <div id="authDebug" style="margin-top:12px;padding:8px;background:var(--g50);border-radius:var(--r);font-size:9px;font-family:monospace;color:var(--g600);text-align:left;display:none;word-break:break-all;"></div>
+  <div id="authDebug" style="margin-top:12px;padding:8px;background:var(--g50);border-radius:var(--r);font-size:9px;font-family:monospace;color:var(--g600);text-align:left;display:block;word-break:break-all;max-height:120px;overflow-y:auto;"></div>
   <div class="auth-err" id="loginErr" style="margin-top:12px;"></div>
   <button id="authRetryBtn" onclick="window.location.reload()" style="display:none;margin-top:12px;padding:8px 20px;background:var(--teal);color:white;border:none;border-radius:20px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">Reload &amp; Retry</button>
 </div>
@@ -1131,19 +1131,46 @@ async function loginMSAL() {
 
 async function getToken() {
   var account = msalInstance.getActiveAccount();
-  if (!account) throw new Error('No active account');
+  if (!account) {
+    // Try to get account from cache
+    var accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) {
+      account = accounts[0];
+      msalInstance.setActiveAccount(account);
+    } else {
+      throw new Error('No active account');
+    }
+  }
   try {
     var result = await msalInstance.acquireTokenSilent({
       scopes: ['https://uwnetid.sharepoint.com/AllSites.Write'],
-      account: account
+      account: account,
+      forceRefresh: false
     });
     return result.accessToken;
   } catch(e) {
-    // Silent failed — redirect to re-authenticate (no popup needed)
-    await msalInstance.acquireTokenRedirect({
-      scopes: ['https://uwnetid.sharepoint.com/AllSites.Write']
-    });
-    throw e; // redirect takes over
+    console.warn('Silent token failed, trying with forceRefresh:', e.message);
+    try {
+      var result2 = await msalInstance.acquireTokenSilent({
+        scopes: ['https://uwnetid.sharepoint.com/AllSites.Write'],
+        account: account,
+        forceRefresh: true
+      });
+      return result2.accessToken;
+    } catch(e2) {
+      console.warn('ForceRefresh failed, redirecting:', e2.message);
+      // Only redirect if we haven't already tried (prevent loop)
+      var lastRedirect = sessionStorage.getItem('sp-token-redirect');
+      var now = Date.now();
+      if (lastRedirect && (now - parseInt(lastRedirect)) < 30000) {
+        throw new Error('Token acquisition failed after redirect. Please clear site data and try again.');
+      }
+      sessionStorage.setItem('sp-token-redirect', String(now));
+      await msalInstance.acquireTokenRedirect({
+        scopes: ['https://uwnetid.sharepoint.com/AllSites.Write']
+      });
+      throw e2;
+    }
   }
 }
 
@@ -1647,7 +1674,10 @@ async function initAuth(){
         if(users[ADMIN_INI]&&!users[ADMIN_INI].fullName)users[ADMIN_INI].fullName=_msalName||'Jesus Martinez';
         var freshIni=matchUser(spUser,users)||cachedIni;
         if(applyUser(freshIni)){lastSyncTime=new Date();uBD();refreshUI();renderAll();}
-      }).catch(function(e){console.warn('BG sync failed:',e);});
+      }).catch(function(e){
+        console.warn('BG sync failed:',e);
+        toast('SharePoint data failed to load: '+(e.message||'').slice(0,60)+'. Try reloading.');
+      });
       return;
     }
 
