@@ -252,7 +252,7 @@ select:focus,input[type="text"]:focus,input[type="date"]:focus,input[type="time"
 .wc-row input{flex:1;font-family:inherit;font-size:11px;padding:5px 8px;border:1px solid #f9a8d4;border-radius:var(--r);outline:none;background:rgba(255,255,255,.7);}
 .wc-row input:focus{border-color:#ec4899;}
 .wc-row button{font-family:inherit;font-size:10px;padding:5px 10px;background:#ec4899;color:var(--white);border:none;border-radius:var(--r);cursor:pointer;font-weight:600;}
-.mandatory-bg{display:none;position:fixed;inset:0;z-index:350;background:rgba(28,26,22,.75);backdrop-filter:blur(8px);justify-content:center;align-items:center;padding:20px;}
+.mandatory-bg{display:none;position:fixed;top:0;right:0;bottom:0;left:0;z-index:350;background:rgba(28,26,22,.75);backdrop-filter:blur(8px);justify-content:center;align-items:center;padding:20px;}
 .mandatory-bg.show{display:flex;}
 .mand-card{background:var(--white);border-radius:var(--rr);box-shadow:var(--shadow-3);width:520px;max-width:95vw;animation:mSlide .3s ease;overflow:hidden;border-top:4px solid var(--red);}
 .mand-hdr{background:linear-gradient(135deg,var(--red-bg),#fbe2e2);padding:16px 20px;display:flex;align-items:center;gap:12px;}
@@ -313,7 +313,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 .attach-thumb{width:48px;height:48px;border-radius:4px;overflow:hidden;border:1px solid var(--g200);cursor:pointer;transition:transform .1s;}
 .attach-thumb:hover{transform:scale(1.08);box-shadow:var(--shadow-2);}
 .attach-thumb img{width:100%;height:100%;object-fit:cover;}
-.img-viewer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:400;justify-content:center;align-items:center;cursor:zoom-out;padding:20px;}
+.img-viewer-overlay{display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.9);z-index:400;justify-content:center;align-items:center;cursor:zoom-out;padding:20px;}
 .img-viewer-overlay.show{display:flex;}
 .img-viewer-overlay img{max-width:95vw;max-height:95vh;object-fit:contain;border-radius:var(--r);box-shadow:var(--shadow-3);}
 
@@ -347,7 +347,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 .b-cat-it{background:#f0f9ff;color:#0369a1;border:1px solid #7dd3fc;}
 
 /* Modal */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(28,26,22,.45);z-index:200;justify-content:center;align-items:flex-start;padding-top:32px;overflow-y:auto;backdrop-filter:blur(4px);}
+.modal-bg{display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(28,26,22,.45);z-index:200;justify-content:center;align-items:flex-start;padding-top:32px;overflow-y:auto;backdrop-filter:blur(4px);}
 .modal-bg.open{display:flex;}
 .modal{background:var(--white);border-radius:var(--rr);box-shadow:var(--shadow-3);width:640px;max-width:95vw;animation:mSlide .25s ease;margin-bottom:32px;}
 @keyframes mSlide{from{opacity:0;transform:translateY(-16px);}to{opacity:1;transform:translateY(0);}}
@@ -369,7 +369,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 .attach-area .attach-preview .ap-item{width:72px;height:72px;border-radius:var(--r);overflow:hidden;border:1px solid var(--g200);position:relative;}
 .attach-area .attach-preview .ap-item img{width:100%;height:100%;object-fit:cover;}
 .attach-area .attach-preview .ap-item .ap-remove{position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(0,0,0,.6);color:var(--white);border:none;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.nd-bg{display:none;position:fixed;inset:0;background:rgba(28,26,22,.5);z-index:250;justify-content:center;align-items:center;}
+.nd-bg{display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(28,26,22,.5);z-index:250;justify-content:center;align-items:center;}
 .nd-bg.open{display:flex;}
 .nd-card{background:var(--white);border-radius:var(--rr);box-shadow:var(--shadow-3);width:440px;max-width:95vw;animation:mSlide .2s ease;overflow:hidden;}
 .nd-header{padding:14px 18px;display:flex;align-items:center;gap:12px;}
@@ -437,7 +437,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 .exp-menu button:hover{background:var(--g50);}
 
 /* Auth */
-.auth-bg{position:fixed;inset:0;background:linear-gradient(135deg,#004D40 0%,#00695C 40%,#00796B 100%);z-index:500;display:flex;justify-content:center;align-items:center;}
+.auth-bg{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:100%;min-height:100vh;background:linear-gradient(135deg,#004D40 0%,#00695C 40%,#00796B 100%);z-index:9999;display:flex;justify-content:center;align-items:center;}
 .auth-card{background:var(--white);border-radius:var(--rr);box-shadow:var(--shadow-3);width:360px;max-width:95vw;padding:32px;animation:mSlide .3s ease;}
 .auth-card h2{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:2px;}
 .auth-card .auth-sub{font-size:11px;color:var(--g500);margin-bottom:16px;}
@@ -790,11 +790,15 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 <!-- AUTH / LOADING -->
 <div class="auth-bg" id="authBg">
 <div class="auth-card" style="text-align:center;">
-  <h2>Core Lab Shift Hub</h2>
-  <p class="auth-sub">Connecting to SharePoint...</p>
-  <div style="margin:20px 0;"><span class="mi" style="font-size:40px;color:var(--teal);animation:spin 1s linear infinite;">sync</span></div>
-  <p class="auth-sub" id="authStatus">Authenticating with Microsoft 365...</p>
-  <div class="auth-err" id="loginErr" style="margin-top:10px;"></div>
+  <div style="width:52px;height:52px;background:var(--teal);border-radius:14px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+    <span class="mi" style="font-size:28px;color:var(--white);">science</span>
+  </div>
+  <h2 style="font-size:18px;margin-bottom:6px;">Core Lab Shift Hub</h2>
+  <p class="auth-sub" style="margin-bottom:20px;">UW Medicine DLMP · Renton Central Lab</p>
+  <div style="margin:0 0 16px;"><span class="mi" style="font-size:36px;color:var(--teal);animation:spin 1s linear infinite;display:block;">sync</span></div>
+  <p class="auth-sub" id="authStatus" style="font-weight:600;color:var(--g600);">Authenticating with Microsoft 365...</p>
+  <p class="auth-sub" style="margin-top:6px;font-size:10px;">This may take a few seconds on first load.</p>
+  <div class="auth-err" id="loginErr" style="margin-top:12px;"></div>
 </div>
 </div>
 <style>@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}</style>
@@ -1046,7 +1050,7 @@ var MSAL_CONFIG = {
     authority: 'https://login.microsoftonline.com/f6b6dd5b-f02f-441a-99a0-162ac5060bd2',
     redirectUri: window.location.origin + window.location.pathname
   },
-  cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
+  cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
 };
 
 var msalInstance = null;
@@ -1612,7 +1616,7 @@ setTimeout(function(){checkMandatoryReads();},300);}
 
 // === PROFILE ===
 function openProfile(){
-  if(!me){toast('Not signed in yet — please wait');return;}
+  if(!me){toast('Still loading — try again in a moment');return;}
   var u=users[me.initials];
   if(!u){
     // Fallback: create local user entry so profile still opens
