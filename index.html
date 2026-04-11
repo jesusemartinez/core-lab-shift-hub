@@ -457,7 +457,247 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 @keyframes tOut{from{opacity:1;}to{opacity:0;}}
 @media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr);}.form-grid{grid-template-columns:1fr;}.container{padding:14px;}.nav{padding:0 14px;overflow-x:auto;}.dash-grid{grid-template-columns:1fr;gap:14px;}}
 
-</style>
+/* ═══════════════════════════════════════════════
+   SHIFT HUB — MOBILE (≤600px)
+   Material Expressive — spring motion, bottom nav,
+   card-first layouts, safe-area aware
+═══════════════════════════════════════════════ */
+@media(max-width:600px){
+
+  /* ── Tokens ── */
+  :root{
+    --mob-nav-h:64px;
+    --mob-header-h:56px;
+  }
+
+  /* ── Body ── */
+  body{overflow-x:hidden;}
+
+  /* ── Header ── */
+  .header{
+    height:var(--mob-header-h);padding:0 16px;
+    position:sticky;top:0;z-index:100;
+  }
+  .hdr-logo{width:30px;height:30px;}
+  .hdr-title{font-size:14px;}
+  .hdr-sub{display:none;}
+  /* Hide clock chip on mobile — space is precious */
+  #clockChip{display:none;}
+  /* Collapse sync chip to icon only */
+  #backupChip #backupTime{display:none;}
+  #backupChip{padding:6px 8px;}
+
+  /* ── Desktop nav tabs → hide, replaced by bottom nav ── */
+  .nav{display:none!important;}
+
+  /* ── Bottom navigation bar ── */
+  .mob-bottom-nav{
+    display:flex!important;
+    position:fixed;bottom:0;left:0;right:0;
+    height:var(--mob-nav-h);
+    padding-bottom:env(safe-area-inset-bottom);
+    background:var(--white);
+    border-top:1px solid var(--g200);
+    box-shadow:0 -2px 16px rgba(28,26,22,.08);
+    z-index:90;
+  }
+  .mob-nav-btn{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;border:none;background:transparent;
+    color:var(--g400);font-size:9px;font-weight:700;
+    font-family:inherit;cursor:pointer;
+    padding:8px 4px;position:relative;
+    transition:color var(--dur-short) var(--me-standard);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mob-nav-btn .mi{font-size:22px;transition:transform var(--dur-short) var(--me-spring);}
+  .mob-nav-btn.active{color:var(--teal);}
+  .mob-nav-btn.active .mi{transform:scale(1.1);}
+  /* Active pill indicator */
+  .mob-nav-btn::before{
+    content:'';position:absolute;top:6px;
+    width:0;height:32px;border-radius:16px;
+    background:var(--teal-bg);
+    transition:width var(--dur-med) var(--me-spring),opacity var(--dur-short) var(--me-standard);
+    opacity:0;
+  }
+  .mob-nav-btn.active::before{width:56px;opacity:1;}
+
+  /* ── Container ── */
+  .container{
+    padding:12px 14px;
+    padding-bottom:calc(var(--mob-nav-h) + env(safe-area-inset-bottom) + 8px);
+    max-width:100%;
+  }
+
+  /* ── Page transitions ── */
+  .page.active{
+    animation:mobPageIn var(--dur-med) var(--me-decelerate) both;
+  }
+  @keyframes mobPageIn{
+    from{opacity:0;transform:translateY(10px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  /* ── Dashboard stats: 2-col on mobile ── */
+  .stats{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;}
+  .stat-card{padding:14px 16px;}
+  .stat-val{font-size:24px;}
+  .stat-label{font-size:9px;}
+
+  /* ── Dash grid: single col ── */
+  .dash-grid{grid-template-columns:1fr;gap:12px;}
+  .dash-card{padding:14px;}
+
+  /* ── Log table → card list ── */
+  table.log-table{display:none;}
+  .mob-log-cards{display:flex!important;flex-direction:column;gap:8px;}
+  .mob-log-card{
+    background:var(--white);border-radius:var(--rl);
+    padding:12px 14px;border:1px solid var(--g200);
+    box-shadow:var(--shadow-1);
+    display:flex;gap:12px;align-items:flex-start;
+    animation:fadeUp var(--dur-med) var(--me-decelerate) calc(var(--i,0)*40ms) both;
+  }
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .mob-log-card-body{flex:1;min-width:0;}
+  .mob-log-card-title{font-size:12px;font-weight:700;color:var(--g900);line-height:1.3;margin-bottom:3px;}
+  .mob-log-card-meta{font-size:10px;color:var(--g500);display:flex;flex-wrap:wrap;gap:6px;}
+  .mob-log-card-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+
+  /* ── Shift log filters: horizontal scroll chips ── */
+  .log-filters-row{
+    display:flex;gap:6px;overflow-x:auto;
+    padding-bottom:6px;margin-bottom:12px;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .log-filters-row::-webkit-scrollbar{display:none;}
+  .log-filter-chip{
+    flex-shrink:0;padding:6px 14px;border-radius:999px;
+    font-size:11px;font-weight:600;font-family:inherit;
+    border:1.5px solid var(--g200);background:var(--white);
+    color:var(--g500);cursor:pointer;white-space:nowrap;
+    transition:background var(--dur-short) var(--me-standard),
+               color var(--dur-short) var(--me-standard),
+               border-color var(--dur-short) var(--me-standard);
+  }
+  .log-filter-chip.active{background:var(--teal-bg);color:var(--teal);border-color:var(--teal);}
+
+  /* ── Announcement bars: full card ── */
+  .ann-bar{border-radius:var(--r);margin-bottom:10px;}
+  .ann-bar-hdr{padding:10px 12px;}
+  .ann-bar-hdr h3{font-size:12px;}
+
+  /* ── Section collapse headers ── */
+  .sec-hdr{padding:10px 12px;}
+  .sec-hdr h3{font-size:12px;}
+
+  /* ── Entry rows in table → stacked cards ── */
+  tbody tr{display:none;}
+
+  /* ── FAB — New Entry button ── */
+  .mob-fab{
+    display:flex!important;
+    position:fixed;
+    bottom:calc(var(--mob-nav-h) + env(safe-area-inset-bottom) + 16px);
+    right:16px;
+    width:56px;height:56px;border-radius:50%;
+    background:var(--teal);color:var(--white);
+    border:none;cursor:pointer;
+    box-shadow:0 4px 16px rgba(0,121,107,.35);
+    align-items:center;justify-content:center;
+    z-index:80;
+    transition:transform var(--dur-short) var(--me-spring),box-shadow var(--dur-short) var(--me-standard);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mob-fab:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(0,121,107,.4);}
+  .mob-fab:active{transform:scale(.92);}
+  .mob-fab .mi{font-size:26px;}
+
+  /* ── Modals: bottom sheet on mobile ── */
+  .modal-bg{align-items:flex-end!important;padding:0!important;}
+  .modal{
+    width:100%!important;max-width:100%!important;
+    border-radius:var(--rr) var(--rr) 0 0!important;
+    margin:0!important;
+    max-height:92dvh;overflow-y:auto;
+    animation:sheetUp var(--dur-long) var(--me-spring) both!important;
+    /* Drag handle */
+    padding-top:20px;
+  }
+  .modal::before{
+    content:'';display:block;
+    width:36px;height:4px;border-radius:2px;
+    background:var(--g300);
+    position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  }
+  @keyframes sheetUp{
+    from{transform:translateY(100%);}
+    to{transform:translateY(0);}
+  }
+  .modal-hdr{padding:14px 18px 10px;position:sticky;top:0;background:var(--white);z-index:1;border-radius:inherit;}
+  .modal-body{padding:14px 18px;}
+  .modal-ftr{padding:12px 18px;padding-bottom:calc(12px + env(safe-area-inset-bottom));position:sticky;bottom:0;background:var(--white);}
+  .mand-card,.nd-card{
+    width:100%!important;border-radius:var(--rr) var(--rr) 0 0!important;
+    animation:sheetUp var(--dur-long) var(--me-spring) both!important;
+  }
+
+  /* ── Form fields: larger touch targets ── */
+  select,input[type="text"],input[type="date"],input[type="time"]{
+    padding:10px 12px;font-size:14px;
+  }
+  .form-item{margin-bottom:12px;}
+  .form-item label{font-size:11px;margin-bottom:4px;display:block;}
+
+  /* ── Entry type options: 2-col grid ── */
+  .ato-row{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;}
+  .ato{padding:12px 8px;}
+
+  /* ── Department tabs: horizontal scroll ── */
+  .dept-tabs-row{
+    display:flex;gap:6px;overflow-x:auto;
+    padding-bottom:6px;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  }
+  .dept-tabs-row::-webkit-scrollbar{display:none;}
+  .dept-tab{flex-shrink:0;padding:7px 14px;font-size:11px;}
+
+  /* ── Admin page ── */
+  .admin-row{flex-wrap:wrap;gap:8px;}
+  .backup-box{padding:12px;}
+
+  /* ── Audit: compact entries ── */
+  .aud-entry{padding:6px 10px;font-size:10px;}
+
+  /* ── Announcement zone: full width ── */
+  .ann-welcome{padding:12px;}
+
+  /* ── Toast: bottom center on mobile ── */
+  .toast-msg{
+    left:50%;right:auto;transform:translateX(-50%);
+    bottom:calc(var(--mob-nav-h) + env(safe-area-inset-bottom) + 12px);
+    white-space:nowrap;
+  }
+
+}
+/* Tablet intermediate (601–900px) */
+@media(min-width:601px) and (max-width:900px){
+  .stats{grid-template-columns:repeat(3,1fr);}
+  .dash-grid{grid-template-columns:1fr;}
+  .container{padding:16px 20px;}
+  .nav{padding:0 20px;overflow-x:auto;}
+  /* Hide bottom nav on tablet */
+  .mob-bottom-nav{display:none!important;}
+  .mob-fab{display:none!important;}
+}
+/* Hide mobile-only elements on desktop */
+@media(min-width:601px){
+  .mob-bottom-nav{display:none;}
+  .mob-fab{display:none;}
+  .mob-log-cards{display:none;}
+}
 </head>
 <body>
 
@@ -1245,7 +1485,21 @@ async function initAuth(){
   }
 }
 function doLogout(){if(!confirm('Sign out?'))return;if(msalInstance){msalInstance.logoutPopup().catch(function(){});}me=null;localStorage.clear();window.location.reload();}
-function refreshUI(){if(!me)return;uHA();uBell();$('navAdmin').style.display=isAdm()?'flex':'none';$('clearHistBtn').style.display=isAdm()?'inline-flex':'none';$('annBtn').style.display=isLead()?'inline-flex':'none';renderAll();
+function refreshUI(){
+  if(!me)return;
+  uHA();uBell();
+  $('navAdmin').style.display=isAdm()?'flex':'none';
+  $('clearHistBtn').style.display=isAdm()?'inline-flex':'none';
+  $('annBtn').style.display=isLead()?'inline-flex':'none';
+  // Mobile nav
+  var mobNav=$('mobBottomNav');
+  if(mobNav)mobNav.style.display='flex';
+  var mobAdm=$('mobAdmin');
+  if(mobAdm)mobAdm.style.display=isAdm()?'flex':'none';
+  var mobFab=$('mobFab');
+  if(mobFab)mobFab.style.display='flex';
+  renderAll();
+
 // Restore last tab, but reset to announcements on new day
 var today=new Date().toISOString().split('T')[0];
 var lastTab='ann',lastDate='';
@@ -1520,14 +1774,24 @@ async function downloadHubBackup(fileName){
 }
 
 // === PAGE NAV ===
-function switchPage(p){document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));$('page'+p.charAt(0).toUpperCase()+p.slice(1)).classList.add('active');
-if(p==='dash'){$('navDash').classList.add('active');renderDash();}
-else if(p==='ann'){$('navAnn').classList.add('active');renderAnn();}
-else if(p==='log'){$('navLog').classList.add('active');renderLog();}
-else if(p==='audit'){$('navAudit').classList.add('active');renderAudit();}
-else if(p==='admin'){$('navAdmin').classList.add('active');renderAdmin();loadHubBackupHistory();}
-// Persist last tab
-try{localStorage.setItem('rcl7_lastTab',p);localStorage.setItem('rcl7_lastTabDate',new Date().toISOString().split('T')[0]);}catch(e){}}
+function switchPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
+  $('page'+p.charAt(0).toUpperCase()+p.slice(1)).classList.add('active');
+  if(p==='dash'){$('navDash').classList.add('active');renderDash();}
+  else if(p==='ann'){$('navAnn').classList.add('active');renderAnn();}
+  else if(p==='log'){$('navLog').classList.add('active');renderLog();}
+  else if(p==='audit'){$('navAudit').classList.add('active');renderAudit();}
+  else if(p==='admin'){$('navAdmin').classList.add('active');renderAdmin();loadHubBackupHistory();}
+  // Sync mobile bottom nav
+  ['Ann','Dash','Log','Audit','Admin'].forEach(function(n){
+    var el=$('mob'+n);if(el)el.classList.toggle('active',p===n.toLowerCase());
+  });
+  // Show/hide FAB (only on log and ann pages)
+  var fab=$('mobFab');
+  if(fab)fab.style.display=(p==='log'||p==='ann')?'flex':'none';
+  try{localStorage.setItem('rcl7_lastTab',p);localStorage.setItem('rcl7_lastTabDate',new Date().toISOString().split('T')[0]);}catch(e){}
+}
 
 function renderAll(){renderDash();renderAnn();renderLog();}
 
@@ -1977,5 +2241,29 @@ setInterval(async function(){try{await loadAllData();lastSyncTime=new Date();uBD
 startApp();
 
 </script>
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mob-bottom-nav" id="mobBottomNav" style="display:none">
+  <button class="mob-nav-btn active" id="mobAnn" onclick="switchPage('ann')">
+    <span class="mi">campaign</span>Feed
+  </button>
+  <button class="mob-nav-btn" id="mobDash" onclick="switchPage('dash')">
+    <span class="mi">dashboard</span>Dash
+  </button>
+  <button class="mob-nav-btn" id="mobLog" onclick="switchPage('log')">
+    <span class="mi">assignment</span>Log
+  </button>
+  <button class="mob-nav-btn" id="mobAudit" onclick="switchPage('audit')">
+    <span class="mi">history</span>Audit
+  </button>
+  <button class="mob-nav-btn" id="mobAdmin" onclick="switchPage('admin')" style="display:none">
+    <span class="mi">admin_panel_settings</span>Admin
+  </button>
+</nav>
+
+<!-- MOBILE FAB — New Entry -->
+<button class="mob-fab" id="mobFab" style="display:none" onclick="openEntryModal()" title="New shift entry">
+  <span class="mi">add</span>
+</button>
+
 </body>
 </html>
