@@ -289,7 +289,7 @@ select:focus,input[type="text"]:focus,input[type="date"]:focus,input[type="time"
 .wc-row button{font-family:inherit;font-size:10px;padding:5px 10px;background:#ec4899;color:var(--white);border:none;border-radius:var(--r);cursor:pointer;font-weight:600;}
 .mandatory-bg{display:none;position:fixed;top:0;right:0;bottom:0;left:0;z-index:350;background:rgba(28,26,22,.75);backdrop-filter:blur(8px);justify-content:center;align-items:center;padding:20px;}
 .mandatory-bg.show{display:flex;}
-.mand-card{background:var(--white);border-radius:var(--rr);box-shadow:var(--shadow-3);width:520px;max-width:95vw;animation:mSlide .3s ease;overflow:hidden;border-top:4px solid var(--red);}
+/* .mand-card base defined above with Material Expressive spring animation */
 .mand-hdr{background:linear-gradient(135deg,var(--red-bg),#fbe2e2);padding:16px 20px;display:flex;align-items:center;gap:12px;}
 .mand-hdr .mh-icon{width:40px;height:40px;border-radius:50%;background:rgba(224,62,62,.12);display:flex;align-items:center;justify-content:center;color:var(--red);}
 .mand-hdr .mh-title{font-size:15px;font-weight:800;color:var(--red);}
@@ -385,8 +385,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 /* Modal */
 .modal-bg{display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(28,26,22,.45);z-index:200;justify-content:center;align-items:flex-start;padding-top:32px;overflow-y:auto;backdrop-filter:blur(4px);}
 .modal-bg.open{display:flex;}
-.modal{background:var(--white);border-radius:var(--rr);box-shadow:var(--shadow-3);width:640px;max-width:95vw;animation:mSlide .25s ease;margin-bottom:32px;}
-@keyframes mSlide{from{opacity:0;transform:translateY(-16px);}to{opacity:1;transform:translateY(0);}}
+/* .modal base defined above with Material Expressive spring animation */
 .modal-hdr{padding:16px 20px;border-bottom:1px solid var(--g200);display:flex;align-items:center;justify-content:space-between;}
 .modal-hdr h3{font-size:14px;font-weight:700;color:var(--navy);}
 .modal-close{width:28px;height:28px;border:none;background:var(--g100);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--g500);}
@@ -407,7 +406,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 .attach-area .attach-preview .ap-item .ap-remove{position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(0,0,0,.6);color:var(--white);border:none;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .nd-bg{display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(28,26,22,.5);z-index:250;justify-content:center;align-items:center;}
 .nd-bg.open{display:flex;}
-.nd-card{background:var(--white);border-radius:var(--rr);box-shadow:var(--shadow-3);width:440px;max-width:95vw;animation:mSlide .2s ease;overflow:hidden;}
+/* .nd-card base defined above with Material Expressive spring animation */
 .nd-header{padding:14px 18px;display:flex;align-items:center;gap:12px;}
 .nd-header.escalation{background:linear-gradient(135deg,var(--red-bg),#fbe2e2);border-bottom:2px solid var(--red);}
 .nd-header.followup{background:linear-gradient(135deg,var(--amber-bg),#fdf0c8);border-bottom:2px solid var(--amber);}
@@ -499,7 +498,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 
 /* Auth */
 .auth-bg{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:100%;min-height:100vh;background:linear-gradient(135deg,#004D40 0%,#00695C 40%,#00796B 100%);z-index:9999;display:flex;justify-content:center;align-items:center;}
-.auth-card{background:var(--white);border-radius:var(--rr);box-shadow:var(--shadow-3);width:360px;max-width:95vw;padding:32px;animation:mSlide .3s ease;}
+/* .auth-card base defined above with Material Expressive spring animation */
 .auth-card h2{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:2px;}
 .auth-card .auth-sub{font-size:11px;color:var(--g500);margin-bottom:16px;}
 .auth-card .form-item{margin-bottom:10px;}
@@ -549,9 +548,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 .empty{text-align:center;padding:40px 20px;color:var(--g400);}
 .empty .mi{font-size:40px;margin-bottom:8px;display:block;}
 .empty h3{font-size:14px;color:var(--g500);margin-bottom:2px;}.empty p{font-size:11px;}
-.toast-msg{position:fixed;bottom:20px;right:20px;background:var(--teal);color:var(--white);padding:12px 18px;border-radius:var(--rl);font-size:11px;font-weight:600;box-shadow:var(--shadow-3);z-index:300;animation:tIn .3s ease,tOut .3s ease 2.7s;opacity:0;animation-fill-mode:forwards;}
-@keyframes tIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-@keyframes tOut{from{opacity:1;}to{opacity:0;}}
+/* .toast-msg base defined above with Material Expressive spring animation */
 /* ═══════════════════════════════════════════════════════════════
    SHIFT HUB — COMPREHENSIVE MOBILE
    Full-feature parity with desktop. Material Expressive motion.
@@ -1079,6 +1076,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
         </select>
         <select id="audMonth" onchange="renderAudit()" style="font-size:10px;padding:4px 8px;border-radius:20px;border:1px solid var(--g300);"></select>
         <span style="font-size:10px;color:var(--g500);">Records: <strong id="audCount">0</strong></span>
+        <div class="exp-wrap"><button class="btn btn-s" style="padding:4px 10px;font-size:9px;" onclick="toggleAudExpMenu()"><span class="mi mi-xs">download</span> Export</button><div class="exp-menu" id="audExpMenu"><button onclick="exportAuditCSV()"><span class="mi mi-xs">table_chart</span> CSV Spreadsheet</button><button onclick="exportAuditPDF()"><span class="mi mi-xs">picture_as_pdf</span> PDF Report</button><button onclick="exportAuditJSON()"><span class="mi mi-xs">code</span> JSON Data</button></div></div>
         <button class="btn btn-d" id="clearHistBtn" onclick="clearAuditHistory()" style="font-size:9px;padding:4px 8px;display:none;"><span class="mi mi-xs">lock</span> Clear</button>
       </div>
     </div>
@@ -3145,6 +3143,125 @@ function eAE(i){
 }
 function clearAuditHistory(){if(!isAdm())return;if(!confirm('Delete ALL audit history?'))return;if(!confirm('FINAL confirmation?'))return;toast('Clearing from SharePoint...');spGet('AuditLog').then(function(items){var deletes=items.map(function(item){return spDelete('AuditLog',item.Id);});return Promise.all(deletes);}).then(function(){hist=[];renderAudit();toast('Audit history cleared');}).catch(function(e){console.error('Clear audit failed:',e);toast('Failed to clear');});}
 
+// === AUDIT EXPORT ===
+function toggleAudExpMenu(){var m=$('audExpMenu');if(m)m.classList.toggle('show');document.addEventListener('click',function handler(e){if(!e.target.closest('#audExpMenu')&&!e.target.closest('.exp-wrap')){if(m)m.classList.remove('show');document.removeEventListener('click',handler);}},{once:false});}
+
+function getFilteredAudit(){
+  var mi=parseInt(($('audMonth')?$('audMonth').value:'-1'));
+  var typeFilter=($('audType')?$('audType').value:'')||'';
+  var searchQ=($('audSearch')?$('audSearch').value:'')||'';
+  var f=hist.slice();
+  if(mi>=0)f=f.filter(function(h){var d=new Date(h.timestamp);return d.getMonth()===mi&&d.getFullYear()===curYear;});
+  if(typeFilter)f=f.filter(function(h){return h.type===typeFilter;});
+  if(searchQ){var q=searchQ.toLowerCase();f=f.filter(function(h){return((h.text||'')+' '+(h.detail||'')+' '+(h.user||'')+' '+(h.userName||'')+' '+(h.entryId||'')+' '+(h.entryCategory||'')).toLowerCase().indexOf(q)>=0;});}
+  return f;
+}
+
+function exportAuditCSV(){
+  var data=getFilteredAudit();
+  var mi=parseInt(($('audMonth')?$('audMonth').value:'-1'));
+  var period=mi>=0?MONTHS[mi]+'_'+curYear:'All_Time';
+  var rows=[['Core Lab Shift Hub - Audit Trail Export'],['Period',period],['Generated',new Date().toLocaleString()],['Exported By',me?me.fullName:''],['Records',data.length],[''],['AUDIT RECORDS'],['Timestamp','Type','User Initials','User Name','User Role','Entry ID','Category','Description','Detail','Changed Fields (From -> To)']];
+  data.forEach(function(h){
+    var ts=h.timestamp?new Date(h.timestamp).toLocaleString('en-US',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
+    var changes=(h.changedFields||[]).map(function(c){return c.field+': "'+c.from+'" -> "'+c.to+'"';}).join('; ');
+    rows.push([ts,h.type||'',h.user||'',h.userName||'',h.userRole||'',h.entryId||'',h.entryCategory||'','"'+(h.text||'').replace(/"/g,'""')+'"','"'+(h.detail||'').replace(/"/g,'""')+'"','"'+changes.replace(/"/g,'""')+'"']);
+  });
+  // Summary stats
+  var adds=data.filter(function(h){return h.type==='add';}).length;
+  var edits=data.filter(function(h){return h.type==='edit';}).length;
+  var deletes=data.filter(function(h){return h.type==='delete';}).length;
+  rows.push([''],['SUMMARY'],['Total Records',data.length],['Additions',adds],['Edits',edits],['Deletions',deletes]);
+  // Unique users
+  var userSet={};data.forEach(function(h){if(h.user)userSet[h.user]=(h.userName||h.user);});
+  rows.push([''],['USERS INVOLVED']);
+  Object.entries(userSet).forEach(function(u){rows.push([u[0],u[1]]);});
+  dlF(rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n'),'Audit_Trail_'+period+'.csv','text/csv');
+  toast('Audit CSV exported ('+data.length+' records)');
+  $('audExpMenu').classList.remove('show');
+}
+
+function exportAuditJSON(){
+  var data=getFilteredAudit();
+  var mi=parseInt(($('audMonth')?$('audMonth').value:'-1'));
+  var period=mi>=0?MONTHS[mi]+' '+curYear:'All Time';
+  var obj={title:'Core Lab Shift Hub - Audit Trail',period:period,exportDate:new Date().toISOString(),exportedBy:me?me.fullName:'',recordCount:data.length,records:data.map(function(h){return{timestamp:h.timestamp,type:h.type,userInitials:h.user,userName:h.userName,userRole:h.userRole,entryId:h.entryId,entryCategory:h.entryCategory,text:h.text,detail:h.detail,changedFields:h.changedFields||[]};})};
+  dlF(JSON.stringify(obj,null,2),'Audit_Trail_'+period.replace(/\s/g,'_')+'.json','application/json');
+  toast('Audit JSON exported ('+data.length+' records)');
+  $('audExpMenu').classList.remove('show');
+}
+
+function exportAuditPDF(){
+  try{
+    var data=getFilteredAudit();
+    var mi=parseInt(($('audMonth')?$('audMonth').value:'-1'));
+    var period=mi>=0?MONTHS[mi]+' '+curYear:'All Time';
+    var{jsPDF}=window.jspdf;
+    var doc=new jsPDF({orientation:'landscape',unit:'mm',format:'letter'});
+    var pw=doc.internal.pageSize.getWidth(),ph=doc.internal.pageSize.getHeight();
+    var lm=14,rm=14,y=14;
+
+    // Header
+    doc.setFillColor(0,77,64);doc.rect(0,0,pw,28,'F');
+    doc.setFontSize(16);doc.setTextColor(255,255,255);doc.text('Audit Trail Report',lm,12);
+    doc.setFontSize(9);doc.text('Core Lab Shift Hub  |  Renton Central Lab  |  UW Medicine DLMP',lm,18);
+    doc.text('Period: '+period+'  |  Generated: '+new Date().toLocaleString()+'  |  By: '+(me?me.fullName:''),lm,23);
+    doc.text('Records: '+data.length,pw-rm-30,18);
+    y=34;
+
+    // Summary stats
+    var adds=data.filter(function(h){return h.type==='add';}).length;
+    var edits=data.filter(function(h){return h.type==='edit';}).length;
+    var deletes=data.filter(function(h){return h.type==='delete';}).length;
+    doc.setTextColor(0,0,0);doc.setFontSize(11);doc.setFont(undefined,'bold');
+    doc.text('Summary',lm,y);y+=6;
+    doc.autoTable({startY:y,head:[['Metric','Count']],body:[['Total Records',''+data.length],['Additions (New Entries)',''+adds],['Edits (Modifications)',''+edits],['Deletions',''+deletes]],styles:{fontSize:9,cellPadding:3},headStyles:{fillColor:[0,121,107],textColor:255},columnStyles:{0:{fontStyle:'bold',cellWidth:60}},alternateRowStyles:{fillColor:[224,242,241]},margin:{left:lm,right:pw-lm-100}});
+    y=doc.lastAutoTable.finalY+10;
+
+    // Main audit table
+    doc.setFontSize(11);doc.setFont(undefined,'bold');
+    doc.text('Audit Records',lm,y);y+=4;
+    var tableData=data.map(function(h){
+      var ts=h.timestamp?new Date(h.timestamp).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',second:'2-digit'}):'';
+      var changes=(h.changedFields||[]).map(function(c){return c.field+': '+c.from+' -> '+c.to;}).join('\n');
+      return[ts,h.type?h.type.toUpperCase():'',h.userName||(h.user?ln(h.user):''),h.userRole||'',h.entryCategory||'',(h.text||'').slice(0,60),changes?changes.slice(0,120):''];
+    });
+    doc.autoTable({startY:y,head:[['Time','Type','User','Role','Category','Description','Field Changes']],body:tableData,styles:{fontSize:7,cellPadding:2,overflow:'linebreak'},headStyles:{fillColor:[0,121,107],textColor:255,fontSize:8},columnStyles:{0:{cellWidth:32},1:{cellWidth:14,fontStyle:'bold'},2:{cellWidth:28},3:{cellWidth:18},4:{cellWidth:28},5:{cellWidth:50},6:{cellWidth:65,fontSize:6}},alternateRowStyles:{fillColor:[250,248,244]},margin:{left:lm,right:rm},didDrawCell:function(data){if(data.column.index===1&&data.cell.raw){var t=data.cell.raw;var c=t==='ADD'?[0,121,107]:t==='EDIT'?[230,160,0]:[198,40,40];doc.setTextColor(c[0],c[1],c[2]);}}});
+    y=doc.lastAutoTable.finalY+10;
+
+    // Entries with field-level changes detail
+    var editsWithChanges=data.filter(function(h){return h.changedFields&&h.changedFields.length>0;});
+    if(editsWithChanges.length>0){
+      if(y>ph-40){doc.addPage();y=14;}
+      doc.setTextColor(0,0,0);doc.setFontSize(11);doc.setFont(undefined,'bold');
+      doc.text('Detailed Change Log (GEN.20450 Record Corrections)',lm,y);y+=2;
+      doc.setFontSize(7);doc.setFont(undefined,'normal');doc.setTextColor(100,100,100);
+      doc.text('Original values preserved per CAP requirements. Each row shows the field, previous value, and corrected value.',lm,y+4);y+=8;
+
+      var changeRows=[];
+      editsWithChanges.forEach(function(h){
+        var ts=h.timestamp?new Date(h.timestamp).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
+        var user=h.userName||ln(h.user)||'';
+        (h.changedFields||[]).forEach(function(c){
+          changeRows.push([ts,user,h.entryId||'',c.field,c.from||'(empty)',c.to||'(empty)']);
+        });
+      });
+      doc.autoTable({startY:y,head:[['Time','Changed By','Entry ID','Field','Original Value','New Value']],body:changeRows,styles:{fontSize:7,cellPadding:2,overflow:'linebreak'},headStyles:{fillColor:[198,40,40],textColor:255,fontSize:8},columnStyles:{0:{cellWidth:28},1:{cellWidth:25},2:{cellWidth:22},3:{cellWidth:24},4:{cellWidth:55,textColor:[198,40,40]},5:{cellWidth:55,textColor:[46,125,50],fontStyle:'bold'}},alternateRowStyles:{fillColor:[252,232,232]},margin:{left:lm,right:rm}});
+    }
+
+    // Footer on each page
+    var pages=doc.internal.getNumberOfPages();
+    for(var i=1;i<=pages;i++){
+      doc.setPage(i);doc.setFontSize(7);doc.setTextColor(158,164,176);
+      doc.text('Core Lab Shift Hub  |  Audit Trail  |  Renton Central Lab  |  UW Medicine DLMP',lm,ph-8);
+      doc.text('Page '+i+' of '+pages+'  |  CAP GEN.20450 Compliant',pw-rm-50,ph-8);
+    }
+    doc.save('Audit_Trail_'+period.replace(/\s/g,'_')+'.pdf');
+    toast('Audit PDF exported ('+data.length+' records)');
+  }catch(e){toast('PDF export failed: '+e.message);console.error(e);}
+  $('audExpMenu').classList.remove('show');
+}
+
 // === DASHBOARD ===
 function renderDash(){var all=entries,today=new Date().toISOString().split('T')[0],mE=gME();
 $('dashMonthLabel').textContent=MONTHS[curMonth]+' '+curYear;
@@ -3251,7 +3368,10 @@ function exportDashPDF(){
     ['Resolution Rate',m.resRate+'%'],['Avg Resolution Time',m.avgRes+' days'],
     ['Pending Follow-Ups',''+m.fuPend],['Instrument Issues',''+m.instIssues],
     ['QC Flags',''+m.qcFlags],['Active Users',''+Object.keys(users).length],
-    ['Resolved Today',''+m.all.filter(function(e){return e.status==='Resolved'&&e.resDate===m.today;}).length]
+    ['Resolved Today',''+m.all.filter(function(e){return e.status==='Resolved'&&e.resDate===m.today;}).length],
+    ['CAPA Documented',''+m.all.filter(function(e){return e.actionType&&e.actionType!=='None Required';}).length],
+    ['Effectiveness Reviews Due',''+m.all.filter(function(e){return e.effReviewDate&&(!e.effVerified||e.effVerified==='Not Yet Reviewed'||e.effVerified==='');}).length],
+    ['Monthly Supervisory Review',getReviewForMonth(curMonth,curYear).length>0?'Completed':'Pending']
   ],styles:{fontSize:9,cellPadding:3,font:'helvetica'},headStyles:{fillColor:[0,121,107],textColor:255,fontStyle:'bold'},
   columnStyles:{0:{fontStyle:'bold',cellWidth:65}},alternateRowStyles:{fillColor:[247,244,239]},margin:{left:lm,right:rm}});
   y=doc.lastAutoTable.finalY+12;
@@ -3317,7 +3437,7 @@ function exportDashPDF(){
 
 function exportDashCSV(){
   var m=getDashMetrics();
-  var rows=[['Core Lab Shift Hub - Dashboard Metrics'],['Period',MONTHS[curMonth]+' '+curYear],['Generated',new Date().toLocaleString()],['Exported By',me?me.fullName:''],[''],['SUMMARY'],['Metric','Value'],['This Month',m.mE.length],['All Time',m.all.length],['Avg Resolution (days)',m.avgRes],['Resolution Rate',m.resRate+'%'],['Pending Follow-Ups',m.fuPend],['Instrument Issues',m.instIssues],['QC Flags',m.qcFlags],['Active Users',Object.keys(users).length],[''],['STATUS'],['Status','Count']];
+  var rows=[['Core Lab Shift Hub - Dashboard Metrics'],['Period',MONTHS[curMonth]+' '+curYear],['Generated',new Date().toLocaleString()],['Exported By',me?me.fullName:''],[''],['SUMMARY'],['Metric','Value'],['This Month',m.mE.length],['All Time',m.all.length],['Avg Resolution (days)',m.avgRes],['Resolution Rate',m.resRate+'%'],['Pending Follow-Ups',m.fuPend],['Instrument Issues',m.instIssues],['QC Flags',m.qcFlags],['Active Users',Object.keys(users).length],['CAPA Documented',m.all.filter(function(e){return e.actionType&&e.actionType!=='None Required';}).length],['Effectiveness Reviews Due',m.all.filter(function(e){return e.effReviewDate&&(!e.effVerified||e.effVerified==='Not Yet Reviewed'||e.effVerified==='');}).length],['Monthly Review Status',getReviewForMonth(curMonth,curYear).length>0?'Completed':'Pending'],[''],['STATUS'],['Status','Count']];
   Object.entries(m.sts).forEach(function(x){rows.push(x);});
   rows.push([''],['PRIORITY'],['Priority','Count']);
   Object.entries(m.pris).forEach(function(x){rows.push(x);});
@@ -3332,7 +3452,7 @@ function exportDashCSV(){
 
 function exportDashTxt(){
   var m=getDashMetrics();
-  var lines=['Core Lab Shift Hub - Dashboard Metrics','='.repeat(45),'Period: '+MONTHS[curMonth]+' '+curYear,'Generated: '+new Date().toLocaleString(),'By: '+(me?me.fullName:''),'','--- SUMMARY ---','This Month: '+m.mE.length,'All Time: '+m.all.length,'Avg Resolution: '+m.avgRes+' days','Resolution Rate: '+m.resRate+'%','Instrument Issues: '+m.instIssues,'QC Flags: '+m.qcFlags,'Pending Follow-Ups: '+m.fuPend,'Active Users: '+Object.keys(users).length,'','--- STATUS ---'];
+  var lines=['Core Lab Shift Hub - Dashboard Metrics','='.repeat(45),'Period: '+MONTHS[curMonth]+' '+curYear,'Generated: '+new Date().toLocaleString(),'By: '+(me?me.fullName:''),'','--- SUMMARY ---','This Month: '+m.mE.length,'All Time: '+m.all.length,'Avg Resolution: '+m.avgRes+' days','Resolution Rate: '+m.resRate+'%','Instrument Issues: '+m.instIssues,'QC Flags: '+m.qcFlags,'Pending Follow-Ups: '+m.fuPend,'Active Users: '+Object.keys(users).length,'CAPA Documented: '+m.all.filter(function(e){return e.actionType&&e.actionType!=='None Required';}).length,'Eff. Reviews Due: '+m.all.filter(function(e){return e.effReviewDate&&(!e.effVerified||e.effVerified==='Not Yet Reviewed'||e.effVerified==='');}).length,'Monthly Review: '+(getReviewForMonth(curMonth,curYear).length>0?'Completed':'Pending'),'','--- STATUS ---'];
   Object.entries(m.sts).forEach(function(x){lines.push(x[0]+': '+x[1]);});
   lines.push('','--- PRIORITY ---');Object.entries(m.pris).forEach(function(x){lines.push(x[0]+': '+x[1]);});
   lines.push('','--- CATEGORY ---');Object.entries(m.cats).forEach(function(x){lines.push(x[0]+': '+x[1]);});
@@ -3443,19 +3563,45 @@ function runExport(){
   }else if(format==='pdf'){
     try{
       var{jsPDF}=window.jspdf,doc=new jsPDF({orientation:'landscape',unit:'mm',format:'letter'});
-      doc.setFontSize(14);doc.text('Core Lab Shift Hub Report',14,14);
-      doc.setFontSize(9);doc.text('Period: '+from+' to '+to+(dept?' | Dept: '+dept:' | All Departments')+' | Generated: '+new Date().toLocaleString()+' | By: '+(me?me.fullName:''),14,20);
-      doc.autoTable({head:[['Date','Shift','Time','Dept','By','Cat','Pri','Description','Action','Root Cause','Status']],body:data.map(function(e){return[fd(e.date),e.shift,e.time,e.department||'',e.reportedBy,e.category,e.priority,(e.description||'').slice(0,45),(e.action||'').slice(0,40),(e.rootCause||'').slice(0,35),e.status];}),startY:24,styles:{fontSize:6.5,cellPadding:2},headStyles:{fillColor:[0,121,107]},margin:{left:14,right:14}});
-      if(includeAnalytics){
-        var a=buildAnalytics(data);var fy=doc.lastAutoTable.finalY+10;
-        doc.setFontSize(12);doc.text('Analytics Summary',14,fy);
-        doc.setFontSize(9);
-        doc.text('Total: '+a.total+' | Resolution Rate: '+a.resolutionRate+' | Avg Resolution: '+a.avgResolutionDays+' days | Pending F/U: '+a.pendingFollowUps,14,fy+6);
-        var statsRows=[];for(var k in a.byDept)statsRows.push([k,a.byDept[k]]);
-        doc.autoTable({head:[['Department','Count']],body:statsRows,startY:fy+10,styles:{fontSize:8},headStyles:{fillColor:[0,121,107]},margin:{left:14},tableWidth:60});
-        var statsRows2=[];for(var k in a.byCat)statsRows2.push([k,a.byCat[k]]);
-        doc.autoTable({head:[['Category','Count']],body:statsRows2,startY:fy+10,styles:{fontSize:8},headStyles:{fillColor:[0,121,107]},margin:{left:90},tableWidth:80});
+      var pw=doc.internal.pageSize.getWidth(),ph=doc.internal.pageSize.getHeight();
+      var lm=14,rm=14;
+      // Header
+      doc.setFillColor(0,77,64);doc.rect(0,0,pw,26,'F');
+      doc.setFontSize(14);doc.setTextColor(255,255,255);doc.text('Shift Communication Log Report',lm,12);
+      doc.setFontSize(8);doc.text('Core Lab Shift Hub  |  Renton Central Lab  |  UW Medicine DLMP',lm,18);
+      doc.text('Period: '+from+' to '+to+(dept?' | Dept: '+dept:' | All')+' | Generated: '+new Date().toLocaleString()+' | By: '+(me?me.fullName:''),lm,23);
+      // Main entries table
+      doc.autoTable({head:[['Date','Shift','Time','Dept','By','Cat','Pri','Description','Action','Status','F/U']],body:data.map(function(e){return[fd(e.date),e.shift,e.time,e.department||'',e.reportedBy,e.category,e.priority,(e.description||'').slice(0,50),(e.action||'').slice(0,40),e.status,e.followUp==='Yes'?(e.followUpAssign?ln(e.followUpAssign):'Yes'):''];}),startY:30,styles:{fontSize:6.5,cellPadding:2},headStyles:{fillColor:[0,121,107]},margin:{left:lm,right:rm}});
+      var y=doc.lastAutoTable.finalY+8;
+      // CAP Compliance Details table (only entries with CAP data)
+      var capEntries=data.filter(function(e){return e.actionType||e.instrument||e.rootCause||e.reagentLot;});
+      if(capEntries.length>0){
+        if(y>ph-30){doc.addPage();y=14;}
+        doc.setFontSize(11);doc.setTextColor(0,0,0);doc.setFont(undefined,'bold');doc.text('CAP Compliance Details (GEN.20318 / GEN.20450)',lm,y);y+=4;
+        doc.autoTable({startY:y,head:[['Date','Category','Action Type','Instrument','Lot #','Test System','Root Cause','Eff. Due','Eff. Status']],body:capEntries.map(function(e){return[fd(e.date),e.category,(e.actionType||''),e.instrument||'',e.reagentLot||'',e.testSystem||'',(e.rootCause||'').slice(0,40),e.effReviewDate?fd(e.effReviewDate):'',e.effVerified||''];}),styles:{fontSize:6.5,cellPadding:2,overflow:'linebreak'},headStyles:{fillColor:[198,40,40],textColor:255,fontSize:7},alternateRowStyles:{fillColor:[252,232,232]},margin:{left:lm,right:rm}});
+        y=doc.lastAutoTable.finalY+8;
       }
+      // Resolution details table
+      var resolved=data.filter(function(e){return e.status==='Resolved';});
+      if(resolved.length>0){
+        if(y>ph-30){doc.addPage();y=14;}
+        doc.setFontSize(11);doc.setFont(undefined,'bold');doc.text('Resolution Summary',lm,y);y+=4;
+        doc.autoTable({startY:y,head:[['Date','Category','Description','Resolved By','Resolution Date','Notes']],body:resolved.map(function(e){return[fd(e.date),e.category,(e.description||'').slice(0,50),e.resolvedBy?ln(e.resolvedBy):'',fd(e.resDate),(e.notes||'').slice(0,40)];}),styles:{fontSize:7,cellPadding:2},headStyles:{fillColor:[46,125,50],textColor:255},alternateRowStyles:{fillColor:[232,245,233]},margin:{left:lm,right:rm}});
+        y=doc.lastAutoTable.finalY+8;
+      }
+      if(includeAnalytics){
+        var a=buildAnalytics(data);
+        if(y>ph-40){doc.addPage();y=14;}
+        doc.setFontSize(11);doc.setFont(undefined,'bold');doc.text('Analytics Summary',lm,y);y+=4;
+        doc.setFont(undefined,'normal');
+        doc.autoTable({startY:y,head:[['Metric','Value']],body:[['Total Entries',''+a.total],['Resolution Rate',a.resolutionRate],['Avg Resolution Days',''+a.avgResolutionDays],['Pending Follow-Ups',''+a.pendingFollowUps],['CAPA Documented',''+data.filter(function(e){return e.actionType&&e.actionType!=='None Required';}).length],['Eff. Reviews Due',''+data.filter(function(e){return e.effReviewDate&&(!e.effVerified||e.effVerified==='Not Yet Reviewed'||e.effVerified==='');}).length]],styles:{fontSize:9,cellPadding:3},headStyles:{fillColor:[0,121,107],textColor:255},columnStyles:{0:{fontStyle:'bold',cellWidth:55}},alternateRowStyles:{fillColor:[224,242,241]},margin:{left:lm,right:pw/2}});
+        // Side tables
+        var sideY=y;
+        doc.autoTable({startY:sideY,head:[['Department','Count']],body:Object.entries(a.byDept).map(function(x){return x;}),styles:{fontSize:8,cellPadding:2},headStyles:{fillColor:[0,121,107],textColor:255},margin:{left:pw/2+5,right:rm},tableWidth:60});
+        doc.autoTable({startY:doc.lastAutoTable.finalY+4,head:[['Category','Count']],body:Object.entries(a.byCat).map(function(x){return x;}),styles:{fontSize:7,cellPadding:2},headStyles:{fillColor:[106,27,154],textColor:255},margin:{left:pw/2+5,right:rm},tableWidth:80});
+      }
+      // Footer
+      var pages=doc.internal.getNumberOfPages();for(var i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(158,164,176);doc.text('Core Lab Shift Hub  |  Renton Central Lab  |  UW Medicine DLMP',lm,ph-8);doc.text('Page '+i+' of '+pages,pw-rm-18,ph-8);}
       doc.save('Shift_Report_'+label+'.pdf');
     }catch(e){toast('PDF export failed');console.error(e);}
   }
