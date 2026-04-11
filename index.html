@@ -1581,20 +1581,28 @@ function openSheet(bgId,cls){
   var bg=$(bgId);
   if(!bg)return;
   bg.classList.add(cls);
-  // Always force reflow + add sheet-open
-  // Desktop: mobile CSS doesn't apply so sheet-open is a no-op
-  // Mobile: triggers the translateY(100%)→(0) transition
-  void bg.offsetWidth;
-  var modal=bg.querySelector('.modal,.mand-card,.nd-card');
-  if(modal)modal.classList.add('sheet-open');
+  // Double rAF: ensures modal is painted at translateY(100%) BEFORE
+  // sheet-open fires the transition. void offsetWidth forces layout
+  // but not paint — rAF ensures two separate render frames.
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      var modal=bg.querySelector('.modal,.mand-card,.nd-card');
+      if(modal)modal.classList.add('sheet-open');
+    });
+  });
 }
 function closeSheet(bgId,cls){
   cls=cls||'open';
   var bg=$(bgId);
   if(!bg)return;
   var modal=bg.querySelector('.modal,.mand-card,.nd-card');
-  if(modal)modal.classList.remove('sheet-open');
-  bg.classList.remove(cls);
+  if(modal&&modal.classList.contains('sheet-open')){
+    // Animate out first, then hide
+    modal.classList.remove('sheet-open');
+    setTimeout(function(){bg.classList.remove(cls);},300);
+  }else{
+    bg.classList.remove(cls);
+  }
 }
 function matchUser(spUser,usersObj){
   var ini=null;
