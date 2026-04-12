@@ -949,6 +949,17 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   .tut-btn{padding:8px 14px;font-size:11px;}
   .tut-btn.skip{font-size:10px;padding:8px 6px;}
 
+  /* When tutorial elevates a modal, cap modal height so tooltip fits below */
+  .tut-elevated .modal{
+    max-height:55dvh!important;
+    overflow-y:auto!important;
+    margin-top:auto!important;
+  }
+  .tut-elevated.modal-bg.open{
+    align-items:flex-start!important;
+    padding-top:8px!important;
+  }
+
 } /* end @media 600px */
 
 /* ══════════════════════════════════
@@ -1073,7 +1084,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 
   <!-- ANNOUNCEMENTS -->
   <div class="page active" id="pageAnn">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div id="annHeader" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
       <h2 style="font-size:16px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:6px;"><span class="mi">campaign</span> Announcements</h2>
       <button class="btn btn-p" id="annBtn" onclick="openAnnModal()" style="display:none"><span class="mi mi-xs">add</span> Post Announcement</button>
     </div>
@@ -3706,76 +3717,131 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 var _tutStep=0,_tutSteps=[],_tutActive=false;
 
 // ═══════════════════════════════════════════
-// GUIDED TUTORIAL SYSTEM v2
-// Opens actual panels, navigates to pages, highlights content within
+// ═══════════════════════════════════════════
+// GUIDED TUTORIAL SYSTEM v3
 // ═══════════════════════════════════════════
 var _tutStep=0,_tutSteps=[],_tutActive=false;
 function isMobile(){return window.innerWidth<=600;}
 
+// === STEP DEFINITIONS ===
+// target: CSS selector, function returning selector, or 'center'
+// page: which page to navigate to (null = stay on current, don't navigate)
+// action: function to run before showing step (opens modals, sets values)
+// cleanup: function to run when leaving step (closes modals, resets values)
+// vis: function returning boolean, skip step if false
+// modal: true if step has an elevated modal open (tooltip goes to bottom on mobile)
+
 var STEPS_ALL=[
-  // WELCOME
-  {target:'center',page:'ann',title:'Welcome to the Shift Hub',text:'This tutorial walks through every part of the app step by step. It takes about 3 minutes. Tap <strong>Next</strong> to begin.'},
+  // 1. WELCOME
+  {target:'center',page:'ann',
+    title:'Welcome to the Shift Hub',
+    text:'This quick tutorial walks through every part of the app. Tap <strong>Next</strong> to continue, or <strong>Skip tutorial</strong> to close.'},
 
-  // PROFILE - actually opens it
-  {target:'center',page:'ann',title:'Your profile',text:'This is your <strong>profile panel</strong>. It shows your name, initials, and role. Your role determines what you can do in the app. You can also add a profile picture, set a nickname, or <strong>restart this tutorial</strong> from here. Tap Next to close it and continue.',
-    action:function(){openProfile();$('profModalBg').classList.add('tut-elevated');},cleanup:function(){$('profModalBg').classList.remove('tut-elevated');closeProfile();}},
+  // 2. PROFILE - open actual profile, cap height on mobile
+  {target:'center',page:'ann',modal:true,
+    title:'Your profile',
+    text:'This is your <strong>profile panel</strong>. It shows your name, initials, and role. Your role determines what you can do. You can add a profile picture, set a nickname, or <strong>restart this tutorial</strong> from here.',
+    action:function(){openProfile();$('profModalBg').classList.add('tut-elevated');},
+    cleanup:function(){$('profModalBg').classList.remove('tut-elevated');closeProfile();}},
 
-  // PUSH NOTIFICATIONS
-  {target:function(){return '.push-toggle';},page:'ann',title:'Push notifications',text:'Tap this icon to turn on push notifications. Your browser will ask "Allow notifications?" and you should <strong>tap Allow</strong>. A green pulsing dot appears when active. You will get alerts for escalations, follow-ups, and mandatory announcements even when this tab is in the background.'},
+  // 3. PUSH NOTIFICATIONS
+  {target:function(){return '.push-toggle';},page:'ann',
+    title:'Push notifications',
+    text:'Tap this icon to enable push notifications. Your browser will ask to allow. <strong>Tap Allow.</strong> A green pulsing dot confirms it is active. You will receive alerts for escalations, follow-ups, and mandatory announcements.'},
 
-  // BELL
-  {target:function(){return '.bell-btn';},page:'ann',title:'Notification bell',text:'When something needs your attention, a <strong>red number badge</strong> appears on this bell. Tap it to see escalations, follow-up assignments, and status changes. Tap any notification to jump directly to that entry.'},
+  // 4. BELL
+  {target:function(){return '.bell-btn';},page:'ann',
+    title:'Notification bell',
+    text:'A <strong>red badge</strong> appears here when something needs attention. Tap it to see escalations, follow-up assignments, and status changes. Tap any notification to jump to that entry.'},
 
-  // ANNOUNCEMENTS CONTENT
-  {target:function(){return '#pageAnn';},page:'ann',title:'Announcements page',text:'This is the <strong>Announcements</strong> page. Everyone sees it first on login. Three types exist: <strong>Standard</strong> (general info), <strong>Mandatory</strong> (blocks the screen until acknowledged), and <strong>Welcome</strong> (new team member intros). <strong>Check this at the start of every shift.</strong>'},
+  // 5. ANNOUNCEMENTS - target the heading bar, not the whole page
+  {target:function(){return '#annHeader';},page:'ann',
+    title:'Announcements',
+    text:'This is the <strong>Announcements</strong> page, the first thing visible on login. Three types: <strong>Standard</strong> (general info), <strong>Mandatory</strong> (blocks screen until acknowledged), and <strong>Welcome</strong> (new team member intros). <strong>Check this every shift.</strong>'},
 
-  // POST ANNOUNCEMENTS (leads only)
-  {target:function(){return '#annBtn';},page:'ann',vis:function(){return isLead();},title:'Post announcements',text:'As a lead, tap this button to post announcements. Choose <strong>Standard</strong> (general info), <strong>Mandatory</strong> (forces acknowledgment), or <strong>Welcome</strong> (new team member). Mandatory announcements block the entire app until staff acknowledge them.'},
+  // 6. POST (leads only)
+  {target:function(){return '#annBtn';},page:'ann',vis:function(){return isLead();},
+    title:'Post announcements',
+    text:'As a lead, tap this button to post. Choose <strong>Standard</strong>, <strong>Mandatory</strong> (forces acknowledgment), or <strong>Welcome</strong> (new team member). Mandatory announcements block the app until staff acknowledge.'},
 
-  // SHIFT LOG - navigate there, show dept tabs
-  {target:function(){return '.dept-tabs';},page:'log',title:'Shift Log: Department filters',text:'Welcome to the <strong>Shift Log</strong>. This is where all shift events are documented. These tabs at the top filter by department: <strong>Hematology</strong>, <strong>Coagulation</strong>, <strong>Chemistry</strong>, <strong>Urinalysis</strong>, or <strong>All</strong>.'},
+  // 7. SHIFT LOG - dept tabs
+  {target:function(){return '#deptTabs';},page:'log',
+    title:'Shift Log',
+    text:'Welcome to the <strong>Shift Log</strong>. All shift events are documented here. These tabs filter by department: <strong>Hematology</strong>, <strong>Coagulation</strong>, <strong>Chemistry</strong>, <strong>Urinalysis</strong>, or <strong>All</strong>.'},
 
-  // SHIFT LOG - search/filters
-  {target:function(){return '.controls';},page:'log',title:'Shift Log: Filters',text:'Use the <strong>search bar</strong> to find entries by keyword. The <strong>month</strong>, <strong>shift</strong>, <strong>category</strong>, and <strong>priority</strong> dropdowns narrow down what is shown. These filters also affect what gets exported.'},
+  // 8. SEARCH - target just the search box
+  {target:function(){return '#searchBox';},page:'log',
+    title:'Search and filters',
+    text:'Type here to search entries by keyword. Below this are dropdowns for <strong>month</strong>, <strong>shift</strong>, <strong>category</strong>, and <strong>priority</strong> to narrow results. These filters also affect what gets exported.'},
 
-  // NEW ENTRY - actually opens the form
-  {target:'center',page:'log',title:'The entry form',text:'This is the <strong>New Entry</strong> form. The top fields (date, time, shift, department, your name) <strong>fill in automatically</strong>. You just need to pick a <strong>Category</strong>, set the <strong>Priority</strong>, and write a <strong>Description</strong> of what happened. Scroll down to see more fields.',
-    action:function(){openEntryModal();$('entryModalBg').classList.add('tut-elevated');},cleanup:function(){$('entryModalBg').classList.remove('tut-elevated');closeEntryModal();}},
+  // 9. NEW ENTRY - open the form
+  {target:'center',page:'log',modal:true,
+    title:'The entry form',
+    text:'This is the <strong>New Entry</strong> form. The top fields (date, time, shift, your name) <strong>fill in automatically</strong>. You just need to pick a <strong>Category</strong>, set the <strong>Priority</strong>, and write a <strong>Description</strong>. Scroll the form above to explore.',
+    action:function(){openEntryModal();$('entryModalBg').classList.add('tut-elevated');},
+    cleanup:function(){}},
 
-  // ENTRY FORM - categories
-  {target:function(){return '#eCat';},page:null,title:'Entry categories',text:'The <strong>Category</strong> dropdown has 18 options: Instrument Issue, QC Flag, Calibration, Maintenance, Reagent Issue, Safety Incident, Staffing Note, and more. The category you select determines which additional CAP compliance fields appear below.',
-    action:function(){if(!$('entryModalBg').classList.contains('open'))openEntryModal();$('entryModalBg').classList.add('tut-elevated');var m=$('entryModalBg').querySelector('.modal-body');if(m)m.scrollTop=0;}},
+  // 10. CATEGORY - keep form open, scroll to category
+  {target:'center',page:null,modal:true,
+    title:'Entry categories',
+    text:'The <strong>Category</strong> dropdown (visible in the form above) has 18 options: Instrument Issue, QC Flag, Calibration, Maintenance, Reagent Issue, Safety Incident, Staffing Note, and more. The category you pick determines which <strong>CAP compliance fields</strong> appear below.',
+    action:function(){
+      if(!$('entryModalBg').classList.contains('open'))openEntryModal();
+      $('entryModalBg').classList.add('tut-elevated');
+      var cat=$('eCat');if(cat){cat.scrollIntoView({behavior:'smooth',block:'center'});}
+    }},
 
-  // ENTRY FORM - show CAP fields by selecting a category
-  {target:function(){return '#capDivider';},page:null,title:'CAP compliance fields',text:'When you select a technical category like <strong>QC Flag</strong> or <strong>Instrument Issue</strong>, these additional fields appear: <strong>Action Type</strong>, <strong>Instrument</strong>, <strong>Reagent Lot</strong>, <strong>Test System</strong>, and <strong>Root Cause</strong>. Fields marked with a red asterisk (*) are required. For simple categories like Staffing Note, these fields stay hidden.',
-    action:function(){if(!$('entryModalBg').classList.contains('open'))openEntryModal();$('entryModalBg').classList.add('tut-elevated');$('eCat').value='QC Flag / Failure';updateCapRequired();setTimeout(function(){var cd=$('capDivider');if(cd)cd.scrollIntoView({behavior:'smooth',block:'center'});},400);},
+  // 11. CAP FIELDS - set QC Flag to show them
+  {target:'center',page:null,modal:true,
+    title:'CAP compliance fields',
+    text:'The form above now shows <strong>QC Flag / Failure</strong> selected. Scroll up in the form to see the additional fields that appeared: <strong>Action Type</strong>, <strong>Instrument</strong>, <strong>Reagent Lot</strong>, <strong>Test System</strong>, and <strong>Root Cause</strong>. Fields with a red * are required. For simple categories like Staffing Note, these stay hidden.',
+    action:function(){
+      if(!$('entryModalBg').classList.contains('open'))openEntryModal();
+      $('entryModalBg').classList.add('tut-elevated');
+      $('eCat').value='QC Flag / Failure';updateCapRequired();
+      setTimeout(function(){var cd=$('capDivider');if(cd)cd.scrollIntoView({behavior:'smooth',block:'start'});},300);
+    },
     cleanup:function(){$('eCat').value='';updateCapRequired();$('entryModalBg').classList.remove('tut-elevated');closeEntryModal();}},
 
-  // ENTRY SECTIONS
-  {target:function(){return '#activeZone';},page:'log',title:'Entry sections',text:'Entries appear in three sections. <strong>Escalated</strong> (red) needs leadership attention. <strong>Active</strong> has open and in-progress items. <strong>Resolved</strong> (green, collapsed by default) has completed items. Tap a section header to expand or collapse it. Tap the <strong>pencil icon</strong> on any entry to edit it.'},
+  // 12. ENTRY SECTIONS
+  {target:function(){return '#activeZone';},page:'log',
+    title:'Entry sections',
+    text:'Entries appear in three sections: <strong>Escalated</strong> (red, needs leadership), <strong>Active</strong> (open and in-progress), and <strong>Resolved</strong> (green, collapsed by default). Tap a section header to expand/collapse. Tap the <strong>pencil icon</strong> on any entry to edit it.'},
 
-  // MONTHLY REVIEW
-  {target:function(){return '#monthlyReviewZone';},page:'log',title:'Monthly Supervisory Review',text:'At the bottom of the Shift Log is the <strong>Monthly Supervisory Review</strong> section. This is where leads sign off that they reviewed all entries for the month. The sign-off form appears when entries exist. <strong>Deadline: 15th of the following month.</strong>'},
+  // 13. MONTHLY REVIEW
+  {target:function(){return '#monthlyReviewZone';},page:'log',
+    title:'Monthly Supervisory Review',
+    text:'At the bottom of the Shift Log, leads sign off that they reviewed all entries. The sign-off form appears when entries exist. <strong>Deadline: 15th of the following month.</strong> If overdue, a red banner appears and push notifications fire on every login.'},
 ];
 
 var STEPS_LEAD=[
-  // DASHBOARD - navigate there, show stats
-  {target:function(){return '#dashStats';},page:'dash',title:'Dashboard: Metrics',text:'This is the <strong>Dashboard</strong>. These stat cards show the current month: total entries, open items, escalated, resolution rate, CAPA documented, effectiveness reviews due, and monthly review status. <strong>Red or amber numbers need attention.</strong>'},
+  // 14. DASHBOARD - stat cards
+  {target:function(){return '#dashStats';},page:'dash',
+    title:'Dashboard: Metrics',
+    text:'The <strong>Dashboard</strong> stat cards show the current month: total entries, open items, escalated, resolution rate, CAPA documented, effectiveness reviews due, and monthly review status. <strong>Red or amber = needs attention.</strong>'},
 
-  // DASHBOARD - charts
-  {target:function(){return '.dash-grid';},page:'dash',title:'Dashboard: Charts and export',text:'Charts break down entries by <strong>category</strong>, <strong>shift</strong>, <strong>priority</strong>, and show a <strong>daily trend</strong>. Tap <strong>Export Metrics</strong> at the top to download as PDF (with charts), CSV, or text.'},
+  // 15. DASHBOARD - export/charts info (target export button, small element)
+  {target:function(){return '.exp-wrap';},page:'dash',
+    title:'Dashboard: Charts and export',
+    text:'Below the stats are charts by <strong>category</strong>, <strong>shift</strong>, <strong>priority</strong>, and <strong>daily trend</strong>. Tap this <strong>Export Metrics</strong> button to download as PDF (with charts), CSV, or text summary.'},
 
-  // AUDIT TRAIL - navigate there, show content
-  {target:function(){return '#audContent';},page:'audit',title:'Audit Trail',text:'This is the <strong>Audit Trail</strong>. Every addition, edit, and deletion is recorded with the user\'s full name, role, and timestamp. For edits, tap the <strong>"changes" button</strong> to see which fields were modified, with original values in <strong style="color:#c62828">red strikethrough</strong> and new values in <strong style="color:#2e7d32">green</strong>. This is what <strong>CAP inspectors review</strong>.'},
+  // 16. AUDIT - header
+  {target:function(){return '.aud-header';},page:'audit',
+    title:'Audit Trail',
+    text:'Every addition, edit, and deletion is recorded here with the user\'s full name, role, and timestamp. For edits, tap <strong>"changes"</strong> to see original values in <strong style="color:#c62828">red</strong> and new values in <strong style="color:#2e7d32">green</strong>. <strong>CAP inspectors review this.</strong>'},
 
-  // AUDIT TRAIL - export
-  {target:function(){return '.aud-filters';},page:'audit',title:'Audit Trail: Search and export',text:'Use the <strong>search bar</strong> to find records. Filter by <strong>type</strong> (Added, Edited, Deleted) and <strong>month</strong>. Tap <strong>Export</strong> to download as CSV, JSON, or <strong>PDF</strong>. The PDF is formatted specifically for CAP inspectors with original and corrected values.'},
+  // 17. AUDIT - filters
+  {target:function(){return '.aud-filters';},page:'audit',
+    title:'Audit Trail: Search and export',
+    text:'Search records by keyword, user, or entry ID. Filter by <strong>type</strong> (Added, Edited, Deleted) and <strong>month</strong>. Tap <strong>Export</strong> for CSV, JSON, or <strong>PDF</strong> formatted for CAP inspectors.'},
 ];
 
 function getTutSteps(){
   var steps=STEPS_ALL.slice();
   if(isLead())steps=steps.concat(STEPS_LEAD);
-  steps.push({target:'center',page:null,title:'You are all set!',text:'That covers every part of the Shift Hub. All data saves automatically. To revisit this tutorial, tap your <strong>profile circle</strong> in the top-right and tap <strong>Restart Tutorial</strong>. Welcome to the team!'});
+  steps.push({target:'center',page:null,
+    title:'You are all set!',
+    text:'That covers every part of the Shift Hub. All data saves automatically. To revisit this tutorial, tap your <strong>profile circle</strong> in the top-right and tap <strong>Restart Tutorial</strong>. Welcome to the team!'});
   return steps;
 }
 
@@ -3783,7 +3849,6 @@ function shouldShowTutorial(){
   if(!me)return false;
   return !localStorage.getItem('rcl7_tut_done_'+me.initials);
 }
-
 function markTutorialDone(){
   if(me)localStorage.setItem('rcl7_tut_done_'+me.initials,'1');
 }
@@ -3797,7 +3862,6 @@ function startTutorial(){
 }
 
 function tutNextStep(){
-  // Cleanup previous step
   var prev=_tutSteps[_tutStep];
   if(prev&&prev.cleanup){try{prev.cleanup();}catch(e){}}
   _tutStep++;
@@ -3808,22 +3872,18 @@ function tutNextStep(){
 function showTutStep(){
   var s=_tutSteps[_tutStep];
   if(!s)return;
-  // Skip steps with visibility conditions that fail
   if(s.vis&&!s.vis()){_tutStep++;if(_tutStep<_tutSteps.length)showTutStep();else tutFinish();return;}
 
-  // Run action first (opens modals, sets form values, etc.)
-  if(s.action){try{s.action();}catch(e){console.warn('Tutorial action failed:',e);}}
+  // Run action (opens modals, sets form values)
+  if(s.action){try{s.action();}catch(e){console.warn('Tutorial action error:',e);}}
 
-  // Navigate to correct page if needed (skip if action opened a modal)
+  // Navigate to page if needed
   if(s.page){
     var pageId='page'+s.page.charAt(0).toUpperCase()+s.page.slice(1);
     var activePage=document.querySelector('.page.active');
-    if(!activePage||activePage.id!==pageId){
-      switchPage(s.page);
-    }
+    if(!activePage||activePage.id!==pageId){switchPage(s.page);}
   }
 
-  // Delay to let page transitions and modal animations complete
   setTimeout(function(){positionTutStep(s);},500);
 }
 
@@ -3833,39 +3893,59 @@ function positionTutStep(s){
 
   var targetSel=typeof s.target==='function'?s.target():s.target;
   var textContent=typeof s.text==='function'?s.text():s.text;
+  var isModalStep=!!s.modal;
 
   $('tutNum').textContent=_tutStep+1;
   $('tutBadge').textContent='Step '+(_tutStep+1)+' of '+_tutSteps.length;
   $('tutTitle').textContent=s.title;
   $('tutText').innerHTML=textContent;
   $('tutNext').textContent=_tutStep===_tutSteps.length-1?'Finish':'Next';
-  $('tutDots').innerHTML=_tutSteps.map(function(_,i){return '<div class="tut-dot '+(i<_tutStep?'done':'')+' '+(i===_tutStep?'active':'')+'"></div>';}).join('');
+  $('tutDots').innerHTML=_tutSteps.map(function(_,i){
+    return '<div class="tut-dot '+(i<_tutStep?'done':'')+' '+(i===_tutStep?'active':'')+'"></div>';
+  }).join('');
 
+  // Find target element
   var el=targetSel&&targetSel!=='center'?document.querySelector(targetSel):null;
-  // Check element is visible and not too large
   if(el){
     var r=el.getBoundingClientRect();
     if(r.width===0&&r.height===0)el=null;
-    // If target is bigger than 70% of viewport, skip spotlight (would cover everything)
-    if(el&&(r.height>window.innerHeight*0.7||r.width>window.innerWidth*0.7))el=null;
+    // Skip spotlight for oversized targets
+    if(el&&r.height>window.innerHeight*0.6)el=null;
   }
 
-  // If a modal is elevated (action opened a modal), always center the tooltip
-  var hasElevated=document.querySelector('.tut-elevated');
-  if(hasElevated)el=null;
+  // Modal steps: always center tooltip (modal is visible above/behind)
+  if(isModalStep)el=null;
+
+  // Reset all positioning
+  tip.style.top='auto';tip.style.bottom='auto';tip.style.left='auto';
+  tip.style.right='auto';tip.style.transform='none';
+  spot.style.display='none';
 
   if(!el){
-    spot.style.display='none';
-    tip.style.bottom='auto';tip.style.top='auto';tip.style.left='50%';tip.style.transform='translate(-50%,0)';
-    // Position at bottom of screen for mobile (above bottom nav), center for desktop
+    // === CENTERED / BOTTOM TOOLTIP (no spotlight) ===
     if(isMobile()){
-      tip.style.bottom='90px';tip.style.top='auto';
+      // Mobile: pin to bottom so modal content is visible above
+      tip.style.position='fixed';
+      tip.style.bottom=(isModalStep?'10px':'80px');
+      tip.style.left='12px';tip.style.right='12px';
+      tip.style.top='auto';tip.style.transform='none';
     }else{
-      tip.style.top='50%';tip.style.transform='translate(-50%,-50%)';
+      // Desktop: center vertically, offset right if modal is open
+      tip.style.position='fixed';
+      if(isModalStep){
+        // Place tooltip to the right of the modal on desktop
+        tip.style.top='50%';tip.style.right='24px';tip.style.left='auto';
+        tip.style.transform='translateY(-50%)';
+        tip.style.maxWidth='320px';
+      }else{
+        tip.style.top='50%';tip.style.left='50%';
+        tip.style.transform='translate(-50%,-50%)';
+      }
     }
     tip.style.animation='none';
     requestAnimationFrame(function(){tip.style.animation='tutTipIn var(--dur-long) var(--me-spring) both';});
   }else{
+    // === SPOTLIGHT + POSITIONED TOOLTIP ===
     el.scrollIntoView({behavior:'smooth',block:'nearest'});
     setTimeout(function(){
       var rect=el.getBoundingClientRect();
@@ -3876,22 +3956,25 @@ function positionTutStep(s){
       spot.style.width=(rect.width+pad*2)+'px';
       spot.style.height=(rect.height+pad*2)+'px';
 
-      var tipH=240;
+      tip.style.position='fixed';
+      tip.style.maxWidth='340px';
+      var tipH=220;
       var spaceBelow=window.innerHeight-rect.bottom;
       var spaceAbove=rect.top;
-      tip.style.transform='none';tip.style.top='auto';tip.style.bottom='auto';
       var tipLeft=isMobile()?'12px':Math.max(12,Math.min(rect.left,window.innerWidth-356))+'px';
 
-      if(spaceBelow>tipH+20){
-        tip.style.top=(rect.bottom+14)+'px';tip.style.left=tipLeft;
-      }else if(spaceAbove>tipH+20){
-        tip.style.bottom=(window.innerHeight-rect.top+14)+'px';tip.style.left=tipLeft;
+      if(spaceBelow>tipH+16){
+        tip.style.top=(rect.bottom+12)+'px';tip.style.left=tipLeft;
+      }else if(spaceAbove>tipH+16){
+        tip.style.bottom=(window.innerHeight-rect.top+12)+'px';tip.style.left=tipLeft;
       }else{
-        // Not enough space, position at bottom on mobile, center on desktop
+        // Not enough space: hide spotlight, pin tooltip
         spot.style.display='none';
-        tip.style.left='50%';
-        if(isMobile()){tip.style.bottom='90px';tip.style.top='auto';tip.style.transform='translateX(-50%)';}
-        else{tip.style.top='50%';tip.style.transform='translate(-50%,-50%)';}
+        if(isMobile()){
+          tip.style.bottom='80px';tip.style.left='12px';tip.style.right='12px';
+        }else{
+          tip.style.top='50%';tip.style.left='50%';tip.style.transform='translate(-50%,-50%)';
+        }
       }
       tip.style.animation='none';
       requestAnimationFrame(function(){tip.style.animation='tutTipIn var(--dur-long) var(--me-spring) both';});
@@ -3900,8 +3983,7 @@ function positionTutStep(s){
 }
 
 function tutSkip(){
-  if(!confirm('Skip the tutorial? You can restart it from your profile anytime.'))return;
-  // Cleanup current step
+  if(!confirm('Skip the tutorial? Restart it anytime from your profile.'))return;
   var cur=_tutSteps[_tutStep];
   if(cur&&cur.cleanup){try{cur.cleanup();}catch(e){}}
   tutFinish();
@@ -3910,9 +3992,7 @@ function tutSkip(){
 function tutFinish(){
   _tutActive=false;
   $('tutOverlay').classList.remove('active');
-  // Remove any elevated modals
   document.querySelectorAll('.tut-elevated').forEach(function(el){el.classList.remove('tut-elevated');});
-  // Close any modals left open by tutorial
   try{closeProfile();}catch(e){}
   try{closeEntryModal();}catch(e){}
   markTutorialDone();
