@@ -3812,7 +3812,12 @@ var STEPS_ALL=[
   // 13. MONTHLY REVIEW
   {target:function(){return '#monthlyReviewZone';},page:'log',
     title:'Monthly Supervisory Review',
-    text:'At the bottom of the Shift Log, leads sign off that they reviewed all entries. The sign-off form appears when entries exist. <strong>Deadline: 15th of the following month.</strong> If overdue, a red banner appears and push notifications fire on every login.'},
+    text:'At the bottom of the Shift Log, leads sign off that they reviewed all entries. The sign-off form appears when entries exist. <strong>Deadline: 15th of the following month.</strong> If overdue, a red banner appears and push notifications fire on every login.',
+    action:function(){
+      // Force scroll to the MSR zone before spotlight positioning
+      var z=$('monthlyReviewZone');
+      if(z)z.scrollIntoView({behavior:'smooth',block:'center'});
+    }},
 ];
 
 var STEPS_LEAD=[
@@ -3821,10 +3826,11 @@ var STEPS_LEAD=[
     title:'Dashboard: Metrics',
     text:'The <strong>Dashboard</strong> stat cards show the current month: total entries, open items, escalated, resolution rate, CAPA documented, effectiveness reviews due, and monthly review status. <strong>Red or amber = needs attention.</strong>'},
 
-  // 15. DASHBOARD - export/charts info (target export button, small element)
-  {target:function(){return '.exp-wrap';},page:'dash',
+  // 15. DASHBOARD - export/charts info
+  {target:function(){return '#pageDash .exp-wrap';},page:'dash',
     title:'Dashboard: Charts and export',
-    text:'Below the stats are charts by <strong>category</strong>, <strong>shift</strong>, <strong>priority</strong>, and <strong>daily trend</strong>. Tap this <strong>Export Metrics</strong> button to download as PDF (with charts), CSV, or text summary.'},
+    text:'Below the stats are charts by <strong>category</strong>, <strong>shift</strong>, <strong>priority</strong>, and <strong>daily trend</strong>. Tap this <strong>Export Metrics</strong> button to download as PDF (with charts), CSV, or text summary.',
+    action:function(){window.scrollTo(0,0);}},
 
   // 16. AUDIT - header
   {target:function(){return '.aud-header';},page:'audit',
@@ -3953,8 +3959,9 @@ function positionTutStep(s){
     requestAnimationFrame(function(){tip.style.animation='tutTipIn var(--dur-long) var(--me-spring) both';});
   }else{
     // === SPOTLIGHT + POSITIONED TOOLTIP ===
-    el.scrollIntoView({behavior:'smooth',block:'nearest'});
+    el.scrollIntoView({behavior:'smooth',block:'center'});
     setTimeout(function(){
+      // Re-query element after scroll settled (rect may have changed)
       var rect=el.getBoundingClientRect();
       var pad=6;
       spot.style.display='block';
@@ -3985,7 +3992,7 @@ function positionTutStep(s){
       }
       tip.style.animation='none';
       requestAnimationFrame(function(){tip.style.animation='tutTipIn var(--dur-long) var(--me-spring) both';});
-    },250);
+    },600);
   }
 }
 
@@ -4000,9 +4007,20 @@ function tutFinish(){
   _tutActive=false;
   $('tutOverlay').classList.remove('active');
   $('tutTip').classList.remove('tut-visible');
+  // Remove elevated classes
   document.querySelectorAll('.tut-elevated').forEach(function(el){el.classList.remove('tut-elevated');});
+  // Force-close any modals that may be open
   try{closeProfile();}catch(e){}
-  try{closeEntryModal();}catch(e){}
+  try{
+    $('eCat').value='';updateCapRequired();
+    closeEntryModal();
+  }catch(e){}
+  // Force-hide modal backgrounds in case closeSheet animation hasn't completed
+  setTimeout(function(){
+    ['profModalBg','entryModalBg'].forEach(function(id){
+      var bg=$(id);if(bg){bg.classList.remove('open');var m=bg.querySelector('.modal');if(m)m.classList.remove('sheet-open');}
+    });
+  },400);
   markTutorialDone();
   switchPage('ann');
 }
