@@ -971,6 +971,9 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 .tut-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9000;pointer-events:auto;}
 .tut-overlay.active{display:block;}
 .tut-backdrop{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(28,26,22,.7);transition:opacity var(--dur-med) var(--me-decelerate);}
+/* When tutorial opens a modal, elevate it above the backdrop */
+.tut-elevated{z-index:9001!important;}
+.tut-elevated .modal{z-index:9001!important;}
 .tut-spotlight{position:absolute;border-radius:16px;box-shadow:0 0 0 9999px rgba(28,26,22,.7);transition:top var(--dur-long) var(--me-emphasized),left var(--dur-long) var(--me-emphasized),width var(--dur-long) var(--me-emphasized),height var(--dur-long) var(--me-emphasized);pointer-events:none;z-index:9001;}
 .tut-spot-ring{position:absolute;top:-4px;left:-4px;right:-4px;bottom:-4px;border:2px solid rgba(0,121,107,.6);border-radius:20px;animation:tutRing 2s var(--me-standard) infinite;}
 @keyframes tutRing{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.03)}}
@@ -3715,7 +3718,7 @@ var STEPS_ALL=[
 
   // PROFILE - actually opens it
   {target:'center',page:'ann',title:'Your profile',text:'This is your <strong>profile panel</strong>. It shows your name, initials, and role. Your role determines what you can do in the app. You can also add a profile picture, set a nickname, or <strong>restart this tutorial</strong> from here. Tap Next to close it and continue.',
-    action:function(){openProfile();},cleanup:function(){closeProfile();}},
+    action:function(){openProfile();$('profModalBg').classList.add('tut-elevated');},cleanup:function(){$('profModalBg').classList.remove('tut-elevated');closeProfile();}},
 
   // PUSH NOTIFICATIONS
   {target:function(){return '.push-toggle';},page:'ann',title:'Push notifications',text:'Tap this icon to turn on push notifications. Your browser will ask "Allow notifications?" and you should <strong>tap Allow</strong>. A green pulsing dot appears when active. You will get alerts for escalations, follow-ups, and mandatory announcements even when this tab is in the background.'},
@@ -3724,7 +3727,7 @@ var STEPS_ALL=[
   {target:function(){return '.bell-btn';},page:'ann',title:'Notification bell',text:'When something needs your attention, a <strong>red number badge</strong> appears on this bell. Tap it to see escalations, follow-up assignments, and status changes. Tap any notification to jump directly to that entry.'},
 
   // ANNOUNCEMENTS CONTENT
-  {target:function(){return $('annZone')?'#annZone':($('annEmptyState')?'#annEmptyState':'center');},page:'ann',title:'Announcements page',text:'This is the <strong>Announcements</strong> page. Everyone sees it first on login. Three types exist: <strong>Standard</strong> (general info), <strong>Mandatory</strong> (blocks the screen until acknowledged), and <strong>Welcome</strong> (new team member intros). <strong>Check this at the start of every shift.</strong>'},
+  {target:function(){return '#pageAnn';},page:'ann',title:'Announcements page',text:'This is the <strong>Announcements</strong> page. Everyone sees it first on login. Three types exist: <strong>Standard</strong> (general info), <strong>Mandatory</strong> (blocks the screen until acknowledged), and <strong>Welcome</strong> (new team member intros). <strong>Check this at the start of every shift.</strong>'},
 
   // POST ANNOUNCEMENTS (leads only)
   {target:function(){return '#annBtn';},page:'ann',vis:function(){return isLead();},title:'Post announcements',text:'As a lead, tap this button to post announcements. Choose <strong>Standard</strong> (general info), <strong>Mandatory</strong> (forces acknowledgment), or <strong>Welcome</strong> (new team member). Mandatory announcements block the entire app until staff acknowledge them.'},
@@ -3737,16 +3740,16 @@ var STEPS_ALL=[
 
   // NEW ENTRY - actually opens the form
   {target:'center',page:'log',title:'The entry form',text:'This is the <strong>New Entry</strong> form. The top fields (date, time, shift, department, your name) <strong>fill in automatically</strong>. You just need to pick a <strong>Category</strong>, set the <strong>Priority</strong>, and write a <strong>Description</strong> of what happened. Scroll down to see more fields.',
-    action:function(){openEntryModal();},cleanup:function(){closeEntryModal();}},
+    action:function(){openEntryModal();$('entryModalBg').classList.add('tut-elevated');},cleanup:function(){$('entryModalBg').classList.remove('tut-elevated');closeEntryModal();}},
 
   // ENTRY FORM - categories
   {target:function(){return '#eCat';},page:null,title:'Entry categories',text:'The <strong>Category</strong> dropdown has 18 options: Instrument Issue, QC Flag, Calibration, Maintenance, Reagent Issue, Safety Incident, Staffing Note, and more. The category you select determines which additional CAP compliance fields appear below.',
-    action:function(){if(!$('entryModalBg').classList.contains('open'))openEntryModal();var m=$('entryModalBg').querySelector('.modal-body');if(m)m.scrollTop=0;}},
+    action:function(){if(!$('entryModalBg').classList.contains('open'))openEntryModal();$('entryModalBg').classList.add('tut-elevated');var m=$('entryModalBg').querySelector('.modal-body');if(m)m.scrollTop=0;}},
 
   // ENTRY FORM - show CAP fields by selecting a category
   {target:function(){return '#capDivider';},page:null,title:'CAP compliance fields',text:'When you select a technical category like <strong>QC Flag</strong> or <strong>Instrument Issue</strong>, these additional fields appear: <strong>Action Type</strong>, <strong>Instrument</strong>, <strong>Reagent Lot</strong>, <strong>Test System</strong>, and <strong>Root Cause</strong>. Fields marked with a red asterisk (*) are required. For simple categories like Staffing Note, these fields stay hidden.',
-    action:function(){if(!$('entryModalBg').classList.contains('open'))openEntryModal();$('eCat').value='QC Flag / Failure';updateCapRequired();var m=$('entryModalBg').querySelector('.modal-body');if(m)m.scrollTop=m.scrollHeight;},
-    cleanup:function(){$('eCat').value='';updateCapRequired();closeEntryModal();}},
+    action:function(){if(!$('entryModalBg').classList.contains('open'))openEntryModal();$('entryModalBg').classList.add('tut-elevated');$('eCat').value='QC Flag / Failure';updateCapRequired();setTimeout(function(){var cd=$('capDivider');if(cd)cd.scrollIntoView({behavior:'smooth',block:'center'});},400);},
+    cleanup:function(){$('eCat').value='';updateCapRequired();$('entryModalBg').classList.remove('tut-elevated');closeEntryModal();}},
 
   // ENTRY SECTIONS
   {target:function(){return '#activeZone';},page:'log',title:'Entry sections',text:'Entries appear in three sections. <strong>Escalated</strong> (red) needs leadership attention. <strong>Active</strong> has open and in-progress items. <strong>Resolved</strong> (green, collapsed by default) has completed items. Tap a section header to expand or collapse it. Tap the <strong>pencil icon</strong> on any entry to edit it.'},
@@ -3836,19 +3839,30 @@ function positionTutStep(s){
   $('tutTitle').textContent=s.title;
   $('tutText').innerHTML=textContent;
   $('tutNext').textContent=_tutStep===_tutSteps.length-1?'Finish':'Next';
-
   $('tutDots').innerHTML=_tutSteps.map(function(_,i){return '<div class="tut-dot '+(i<_tutStep?'done':'')+' '+(i===_tutStep?'active':'')+'"></div>';}).join('');
 
   var el=targetSel&&targetSel!=='center'?document.querySelector(targetSel):null;
-  // Check element is actually visible (not display:none, not zero size)
+  // Check element is visible and not too large
   if(el){
     var r=el.getBoundingClientRect();
     if(r.width===0&&r.height===0)el=null;
+    // If target is bigger than 70% of viewport, skip spotlight (would cover everything)
+    if(el&&(r.height>window.innerHeight*0.7||r.width>window.innerWidth*0.7))el=null;
   }
+
+  // If a modal is elevated (action opened a modal), always center the tooltip
+  var hasElevated=document.querySelector('.tut-elevated');
+  if(hasElevated)el=null;
 
   if(!el){
     spot.style.display='none';
-    tip.style.bottom='auto';tip.style.top='50%';tip.style.left='50%';tip.style.transform='translate(-50%,-50%)';
+    tip.style.bottom='auto';tip.style.top='auto';tip.style.left='50%';tip.style.transform='translate(-50%,0)';
+    // Position at bottom of screen for mobile (above bottom nav), center for desktop
+    if(isMobile()){
+      tip.style.bottom='90px';tip.style.top='auto';
+    }else{
+      tip.style.top='50%';tip.style.transform='translate(-50%,-50%)';
+    }
     tip.style.animation='none';
     requestAnimationFrame(function(){tip.style.animation='tutTipIn var(--dur-long) var(--me-spring) both';});
   }else{
@@ -3866,7 +3880,6 @@ function positionTutStep(s){
       var spaceBelow=window.innerHeight-rect.bottom;
       var spaceAbove=rect.top;
       tip.style.transform='none';tip.style.top='auto';tip.style.bottom='auto';
-
       var tipLeft=isMobile()?'12px':Math.max(12,Math.min(rect.left,window.innerWidth-356))+'px';
 
       if(spaceBelow>tipH+20){
@@ -3874,7 +3887,11 @@ function positionTutStep(s){
       }else if(spaceAbove>tipH+20){
         tip.style.bottom=(window.innerHeight-rect.top+14)+'px';tip.style.left=tipLeft;
       }else{
-        tip.style.top='50%';tip.style.left='50%';tip.style.transform='translate(-50%,-50%)';
+        // Not enough space, position at bottom on mobile, center on desktop
+        spot.style.display='none';
+        tip.style.left='50%';
+        if(isMobile()){tip.style.bottom='90px';tip.style.top='auto';tip.style.transform='translateX(-50%)';}
+        else{tip.style.top='50%';tip.style.transform='translate(-50%,-50%)';}
       }
       tip.style.animation='none';
       requestAnimationFrame(function(){tip.style.animation='tutTipIn var(--dur-long) var(--me-spring) both';});
@@ -3893,6 +3910,11 @@ function tutSkip(){
 function tutFinish(){
   _tutActive=false;
   $('tutOverlay').classList.remove('active');
+  // Remove any elevated modals
+  document.querySelectorAll('.tut-elevated').forEach(function(el){el.classList.remove('tut-elevated');});
+  // Close any modals left open by tutorial
+  try{closeProfile();}catch(e){}
+  try{closeEntryModal();}catch(e){}
   markTutorialDone();
   switchPage('ann');
 }
