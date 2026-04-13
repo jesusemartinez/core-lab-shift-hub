@@ -107,6 +107,19 @@ html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);
   .screen{height:auto;min-height:100vh;min-height:100dvh;overflow:visible}
   .scan-bottom{padding:0 20px calc(24px + env(safe-area-inset-bottom))}
   .footer{padding:16px 20px calc(16px + env(safe-area-inset-bottom))}
+  /* Item screen: compact single-column, no wasted space */
+  #screen-item .body{display:flex;flex-direction:column;gap:12px;padding:16px;}
+  #screen-item .item-card{padding:16px;}
+  #screen-item .item-name{font-size:17px;margin-bottom:6px;}
+  #screen-item .card{padding:14px;}
+  #screen-item .card-title{font-size:12px;margin-bottom:8px;}
+  #screen-item .metrics-grid{gap:8px;}
+  #screen-item .metric-box{padding:8px 12px;}
+  #screen-item .edit-section.show{gap:10px;padding-top:12px;}
+  #screen-item .edit-section .field{margin-bottom:0;}
+  #screen-item .edit-section .field label{font-size:11px;margin-bottom:2px;}
+  #screen-item .edit-section .qty-row button{width:36px;height:36px;}
+  #screen-item .edit-section .qty-row input{height:36px;font-size:14px;}
 }
 
 /* Desktop Activity Panel */
