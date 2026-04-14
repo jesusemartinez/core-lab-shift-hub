@@ -1210,6 +1210,8 @@ function renderWeek(){
   dates.forEach(function(d){
     if(d.isWeekend)return;
     SHIFTS.forEach(function(sh){
+      var hasStaff=STAFF.some(function(s){return s.active!==false&&s.shift===sh;});
+      if(!hasStaff)return;// skip shifts with no staff
       var cov=getCoverage(d.date,sh);
       coverageGaps+=cov.missing.length;
     });
@@ -1270,14 +1272,19 @@ function renderWeek(){
     html+='</tbody></table></div>';
 
     // Coverage bar for weekdays
+    var hasShiftStaff=shiftStaff.length>0;
     html+='<div class="coverage-bar" id="'+shId+'-cov">';
-    dates.forEach(function(d){
-      if(d.isWeekend)return;
-      var cov=getCoverage(d.date,shift);
-      var cls=cov.missing.length===0?'cov-ok':cov.missing.length===1?'cov-warn':'cov-miss';
-      var label=cov.missing.length===0?'OK':cov.missing.join(', ');
-      html+='<span class="cov-item '+cls+'" title="'+d.label+': '+(cov.missing.length?'Missing '+label:'All covered')+'"><span class="mi mi-xs">'+(cov.missing.length===0?'check_circle':'warning')+'</span> '+d.label.split(' ')[1]+'</span>';
-    });
+    if(!hasShiftStaff){
+      html+='<span class="cov-item" style="color:var(--g400);background:var(--g100);"><span class="mi mi-xs">info</span> No staff assigned to this shift yet</span>';
+    }else{
+      dates.forEach(function(d){
+        if(d.isWeekend)return;
+        var cov=getCoverage(d.date,shift);
+        var cls=cov.missing.length===0?'cov-ok':cov.missing.length===1?'cov-warn':'cov-miss';
+        var label=cov.missing.length===0?'OK':cov.missing.join(', ');
+        html+='<span class="cov-item '+cls+'" title="'+d.label+': '+(cov.missing.length?'Missing '+label:'All covered')+'"><span class="mi mi-xs">'+(cov.missing.length===0?'check_circle':'warning')+'</span> '+d.label.split(' ')[1]+'</span>';
+      });
+    }
     html+='</div></div>';
   });
   document.getElementById('weekGrid').innerHTML=html;
@@ -1426,9 +1433,11 @@ function renderMonth(){
           }
           html+='</div>';
         });
-        // Coverage summary across all displayed shifts
+        // Coverage summary across all displayed shifts (only for staffed shifts)
         var totalGaps=0;var totalStaff=0;
         shifts.forEach(function(sh){
+          var hasStaff=STAFF.some(function(s){return s.active!==false&&s.shift===sh;});
+          if(!hasStaff)return;
           var cov=getCoverage(ds,sh);
           totalGaps+=cov.missing.length;
           totalStaff+=cov.staffCount;
@@ -1891,16 +1900,37 @@ function updateExpPreview(){
 }
 
 function getExportData(from,to,scope,shiftF){
-  return schedEntries.filter(function(e){
-    if(e.date<from||e.date>to)return false;
-    if(shiftF&&e.shift!==shiftF)return false;
-    if(scope==='mine'&&me&&e.userIni!==me.initials)return false;
-    if(scope==='shift'&&me){
-      var myStaff=STAFF.find(function(s){return s.ini===me.initials;});
-      if(myStaff&&e.shift!==myStaff.shift)return false;
+  var results=[];
+  var cur=new Date(from+'T12:00:00');
+  var end=new Date(to+'T12:00:00');
+  while(cur<=end){
+    var ds=fmtDate(cur);
+    var isWE=cur.getDay()===0||cur.getDay()===6;
+    if(!isWE){
+      var shifts=shiftF?[shiftF]:SHIFTS;
+      shifts.forEach(function(shift){
+        var shiftStaff=STAFF.filter(function(s){return s.active!==false&&s.shift===shift;});
+        shiftStaff.forEach(function(staff){
+          // Apply scope filter
+          if(scope==='mine'&&me&&staff.ini!==me.initials)return;
+          if(scope==='shift'&&me){
+            var myStaff=STAFF.find(function(s){return s.ini===me.initials;});
+            if(myStaff&&staff.shift!==myStaff.shift)return;
+          }
+          var assign=getAssignment(staff.ini,ds,shift);
+          var bench='';var notes='';
+          if(assign&&assign.bench){bench=assign.bench;notes=assign.notes||'';}
+          else if(isInTraining(staff,ds)){bench='T';notes='Training (auto)';}
+          else if(ELEVATED_ROLES.some(function(r){return staff.role&&staff.role.indexOf(r)>=0;})){bench='IO';notes='In Office (auto)';}
+          if(bench){
+            results.push({id:assign?assign.id:'auto',userIni:staff.ini,userName:staff.name,date:ds,shift:shift,bench:bench,notes:notes,status:'Confirmed'});
+          }
+        });
+      });
     }
-    return true;
-  }).sort(function(a,b){return(a.date+a.shift+a.userName).localeCompare(b.date+b.shift+b.userName);});
+    cur.setDate(cur.getDate()+1);
+  }
+  return results.sort(function(a,b){return(a.date+a.shift+a.userName).localeCompare(b.date+b.shift+b.userName);});
 }
 
 function runScheduleExport(){
