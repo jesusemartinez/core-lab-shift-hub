@@ -1422,16 +1422,29 @@ function renderMonth(){
       if(!isWE&&!isOther){
         var shifts=shiftFilter?[shiftFilter]:SHIFTS;
         shifts.forEach(function(sh){
-          var assigns=getShiftAssignments(ds,sh);
-          if(!assigns.length&&!shiftFilter)return;// skip empty shifts in "All" view to save space
+          var hasStaff=STAFF.some(function(s){return s.active!==false&&s.shift===sh;});
+          if(!hasStaff&&!shiftFilter)return;
+          // Build complete assignments including auto-defaults
+          var shiftStaff=STAFF.filter(function(s){return s.active!==false&&s.shift===sh;});
+          var allAssigns=[];
+          shiftStaff.forEach(function(s){
+            var a=getAssignment(s.ini,ds,sh);
+            var bench='';
+            if(a&&a.bench){bench=a.bench;}
+            else if(isInTraining(s,ds)){bench='T';}
+            else if(ELEVATED_ROLES.some(function(r){return s.role&&s.role.indexOf(r)>=0;})){bench='IO';}
+            if(bench)allAssigns.push({userIni:s.ini,userName:s.name,bench:bench});
+          });
+          if(!allAssigns.length&&!shiftFilter)return;
           var shLabel=sh==='Morning'?'AM':sh==='Evening'?'PM':'NT';
           var shColor=sh==='Morning'?'var(--green)':sh==='Evening'?'var(--blue)':'var(--purple)';
           html+='<div style="display:flex;align-items:center;gap:2px;margin:1px 0;">';
           if(shifts.length>1)html+='<span style="font-size:7px;font-weight:800;color:'+shColor+';min-width:12px;">'+shLabel+'</span>';
-          if(assigns.length){
-            assigns.forEach(function(a){
-              var mcls=a.bench==='H/C'?'hc':a.bench==='C/U'?'cu':a.bench==='F'?'fl':a.bench==='PTO'?'pto':a.bench==='SL'?'sl':a.bench==='OT'?'ot':'tr';
-              html+='<span class="month-mini bench-chip '+mcls+'" title="'+esc(a.userName)+': '+esc(a.bench)+' ('+sh+')">'+esc(a.userIni)+'</span>';
+          if(allAssigns.length){
+            allAssigns.forEach(function(a){
+              var mcls=a.bench==='H/C'?'hc':a.bench==='C/U'?'cu':a.bench==='F'?'fl':a.bench==='PTO'?'pto':a.bench==='SL'?'sl':a.bench==='OT'?'ot':a.bench==='IO'?'io':a.bench==='T'?'t':'tr';
+              var lbl=a.bench==='IO'?'X':a.bench;
+              html+='<span class="month-mini bench-chip '+mcls+'" title="'+esc(a.userName)+': '+lbl+' ('+sh+')">'+esc(a.userIni)+'</span>';
             });
           }else{
             html+='<span style="font-size:7px;color:var(--g300);">empty</span>';
@@ -2312,32 +2325,34 @@ async function submitPTORequest(){
 async function approvePTO(id){
   var p=ptoRequests.find(function(x){return x.id===id;});
   if(!p||!confirm('Approve PTO for '+p.requestByName+'?'))return;
-  showLoad('Approving PTO and updating schedule...');
+  showLoad('Approving PTO...');
   p.status='Approved';p.approvedBy=me.fullName;p.approvedDate=fmtDate(new Date());
-  renderPTO();// immediate UI feedback
-  // Auto-create PTO entries in the schedule
+  renderPTO();
+  // Build all PTO entries first, then batch write
   var cur=new Date(p.startDate+'T12:00:00');
   var end=new Date(p.endDate+'T12:00:00');
   var staff=STAFF.find(function(s){return s.ini===p.requestBy;});
+  var promises=[];
   while(cur<=end){
     if(cur.getDay()!==0&&cur.getDay()!==6){
       var ds=fmtDate(cur);
       var shift=staff?staff.shift:'Morning';
       var existing=getAssignment(p.requestBy,ds,shift);
-      if(!existing){
+      if(!existing||!existing.bench){
         var entry={id:gid(),userIni:p.requestBy,userName:p.requestByName,date:ds,shift:shift,bench:'PTO',notes:'Approved PTO',status:'Confirmed',createdBy:'SYS'};
         schedEntries.push(entry);
-        try{await spAdd('ScheduleEntries',schedToSP(entry));}catch(er){}
+        promises.push(spAdd('ScheduleEntries',schedToSP(entry)).catch(function(e){}));
       }else if(existing.bench!=='PTO'){
         existing.bench='PTO';existing.notes='Approved PTO';
-        try{var sp=await spGet('ScheduleEntries',"Title eq '"+existing.id+"'");if(sp.length)await spUpdate('ScheduleEntries',sp[0].Id,schedToSP(existing));}catch(er){}
+        (function(ex){promises.push(spGet('ScheduleEntries',"Title eq '"+ex.id+"'").then(function(sp){if(sp.length)return spUpdate('ScheduleEntries',sp[0].Id,schedToSP(ex));}).catch(function(e){}));})(existing);
       }
     }
     cur.setDate(cur.getDate()+1);
   }
+  promises.push(spGet('PTORequests',"Title eq '"+id+"'").then(function(sp){if(sp.length)return spUpdate('PTORequests',sp[0].Id,ptoToSP(p));}).catch(function(e){}));
+  await Promise.all(promises);
   logAudit('approve','pto','Approved PTO: '+p.requestByName+' '+p.startDate+' to '+p.endDate,p.id);
   hideLoad();renderPTO();renderCurrentView();toast('PTO approved, schedule updated');
-  try{var sp=await spGet('PTORequests',"Title eq '"+id+"'");if(sp.length)await spUpdate('PTORequests',sp[0].Id,ptoToSP(p));}catch(er){}
 }
 
 async function denyPTO(id){
@@ -2398,8 +2413,9 @@ function editPTO(id){
 async function deletePTO(id){
   var p=ptoRequests.find(function(x){return x.id===id;});
   if(!p||!confirm('Delete PTO request for '+p.requestByName+' ('+p.startDate+' to '+p.endDate+')?'))return;
+  showLoad('Deleting PTO request...');
   ptoRequests=ptoRequests.filter(function(x){return x.id!==id;});
-  // Also remove any schedule PTO entries created from this approval
+  var promises=[];
   if(p.status==='Approved'){
     var cur=new Date(p.startDate+'T12:00:00');
     var end=new Date(p.endDate+'T12:00:00');
@@ -2411,15 +2427,16 @@ async function deletePTO(id){
         var assign=getAssignment(p.requestBy,ds,shift);
         if(assign&&assign.bench==='PTO'){
           assign.bench='';assign.notes='';
-          try{var sp=await spGet('ScheduleEntries',"Title eq '"+assign.id+"'");if(sp.length)await spUpdate('ScheduleEntries',sp[0].Id,schedToSP(assign));}catch(er){}
+          (function(a){promises.push(spGet('ScheduleEntries',"Title eq '"+a.id+"'").then(function(sp){if(sp.length)return spUpdate('ScheduleEntries',sp[0].Id,schedToSP(a));}).catch(function(e){}));})(assign);
         }
       }
       cur.setDate(cur.getDate()+1);
     }
   }
+  promises.push(spGet('PTORequests',"Title eq '"+id+"'").then(function(sp){if(sp.length)return spDelete('PTORequests',sp[0].Id);}).catch(function(e){}));
+  await Promise.all(promises);
   logAudit('delete','pto','Deleted PTO: '+p.requestByName+' '+p.startDate+' to '+p.endDate,p.id);
-  renderPTO();renderCurrentView();toast('PTO deleted');
-  try{var sp=await spGet('PTORequests',"Title eq '"+id+"'");if(sp.length)await spDelete('PTORequests',sp[0].Id);}catch(er){console.error('PTO delete failed:',er);}
+  hideLoad();renderPTO();renderCurrentView();toast('PTO deleted');
 }
 
 // ═══════════════════════════════════════════
