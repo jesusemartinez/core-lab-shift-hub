@@ -519,6 +519,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <span style="font-size:11px;font-weight:700;" id="adminAutoBackupStatus">Checking...</span>
     </div>
+    <div id="adminAutoBackupStatus" style="font-size:11px;font-weight:700;margin-bottom:6px;"></div>
     <p style="font-size:11px;color:var(--g500);margin-bottom:10px;">Auto-backup runs 3x daily (Night: 12-7AM, Day: 7AM-3PM, Evening: 3PM-12AM). Manual options below.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
       <button class="btn primary" onclick="exportBackup()"><span class="mi mi-xs">download</span> Export Backup</button>
@@ -976,19 +977,22 @@ function getSeniorityRank(userIni){
 
 async function loadAllData(){
   try{
-    var [fmS,fmW,fmR,fmP,fmH]=await Promise.all([
+    var [fmS,fmW,fmR,fmP,fmH,fmA]=await Promise.all([
       discoverFields('ScheduleEntries'),discoverFields('SwapRequests'),discoverFields('ScheduleRoster'),
       discoverFields('PTORequests').catch(function(){return{};}),
-      discoverFields('HolidayRotation').catch(function(){return{};})
+      discoverFields('HolidayRotation').catch(function(){return{};}),
+      discoverFields('ScheduleAudit').catch(function(){return{};})
     ]);
     if(!_firstLoadDone){
       var [spSched,spSwaps,spRoster]=await Promise.all([spGet('ScheduleEntries'),spGet('SwapRequests'),spGet('ScheduleRoster')]);
       var spPTO=[];try{spPTO=await spGet('PTORequests');}catch(e){}
       var spHol=[];try{spHol=await spGet('HolidayRotation');}catch(e){}
+      var spAudit=[];try{spAudit=await spGet('ScheduleAudit',null,null,500);}catch(e){}
       schedEntries=spSched.map(function(i){return spToSched(i,fmS);});
       swapRequests=spSwaps.map(function(i){return spToSwap(i,fmW);});
       ptoRequests=spPTO.map(function(i){return spToPTO(i,fmP);});
       holidayAssignments=spHol.map(function(i){return spToHoliday(i,fmH);});
+      auditLog=spAudit.map(function(i){return spToAuditEntry(i,fmA);});_auditLoaded=true;
       // Load roster from SP; if empty, seed with defaults
       var rosterItems=spRoster.map(function(i){return spToRoster(i,fmR);});
       console.log('Roster loaded:',rosterItems.map(function(s){return s.ini+':'+s.role+' bench='+s.benchEligible;}));
@@ -3076,15 +3080,15 @@ async function uploadScheduleBackupToSP(data){
   var json=JSON.stringify(data);
   var now=new Date();
   var fileName='schedule-backup-'+fmtDate(now)+'T'+now.toTimeString().slice(0,5).replace(':','')+'.json';
-  var folderPath='Shared%20Documents/_schedule_backups';
+  var siteRelUrl='/sites/og_uw_renton_central_laboratory_-_core_lab';
+  var folderRelUrl=siteRelUrl+'/Shared Documents/_schedule_backups';
   // Ensure folder exists
-  try{
-    var t=await getToken();
-    await fetch(SP_SITE+"/_api/web/folders",{method:'POST',headers:{'Authorization':'Bearer '+t,'Accept':'application/json;odata=verbose','Content-Type':'application/json;odata=verbose'},body:JSON.stringify({__metadata:{type:'SP.Folder'},ServerRelativeUrl:'/sites/og_uw_renton_central_laboratory_-_core_lab/Shared Documents/_schedule_backups'})});
-  }catch(e){}// folder may already exist
-  var folderUrl=SP_SITE+"/_api/web/GetFolderByServerRelativeUrl('"+folderPath+"')/Files/add(url='"+fileName+"',overwrite=true)";
-  var t=await getToken();
-  var r=await fetch(folderUrl,{method:'POST',headers:{'Authorization':'Bearer '+t,'Accept':'application/json;odata=verbose','Content-Type':'application/json'},body:json});
+  var folderCheck=await spFetch(SP_SITE+"/_api/web/GetFolderByServerRelativeUrl('"+folderRelUrl+"')");
+  if(!folderCheck.ok){
+    await spFetch(SP_SITE+"/_api/web/folders",{method:'POST',headers:{'Content-Type':'application/json;odata=verbose'},body:JSON.stringify({__metadata:{type:'SP.Folder'},ServerRelativeUrl:folderRelUrl})});
+  }
+  var uploadUrl=SP_SITE+"/_api/web/GetFolderByServerRelativeUrl('"+encodeURIComponent(folderRelUrl).replace(/%2F/g,'/')+"')/Files/add(url='"+fileName+"',overwrite=true)";
+  var r=await spFetch(uploadUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:json});
   if(!r.ok)throw new Error('SP upload failed: '+r.status);
   return fileName;
 }
@@ -3127,6 +3131,18 @@ function renderAdmin(){
 
   // Auto-backup status
   var lastAuto=localStorage.getItem('sched-last-auto-backup')||'';
+  var now=new Date();var today=now.toISOString().slice(0,10);var hr=now.getHours();
+  var curWin=hr<7?'NIGHT':hr<15?'DAY':'EVE';
+  var expectedKey=today+'-'+curWin;
+  var abEl=document.getElementById('adminAutoBackupStatus');
+  if(abEl){
+    if(lastAuto===expectedKey){abEl.innerHTML='<span style="color:var(--green);">Current ('+lastAuto+')</span>';}
+    else if(lastAuto){abEl.innerHTML='<span style="color:var(--amber);">Last: '+lastAuto+' (current window: '+curWin+' pending)</span>';}
+    else{abEl.innerHTML='<span style="color:var(--g400);">No auto-backup recorded yet</span>';}
+  }
+
+  // Auto-backup status
+  var lastAuto=localStorage.getItem('sched-last-auto-backup')||'';
   var now=new Date();var today=now.toISOString().slice(0,10);
   var hr=now.getHours();var curWin=hr<7?'NIGHT':hr<15?'DAY':'EVE';
   var curKey=today+'-'+curWin;
@@ -3139,12 +3155,14 @@ function renderAdmin(){
 
   // System info
   var lastAutoBackup=localStorage.getItem('sched-last-auto-backup')||'Never';
+  var myStaff=me?STAFF.find(function(s){return s.ini===me.initials;}):null;
+  var myRole=myStaff?myStaff.role:'Unknown';
   document.getElementById('adminSysInfo').innerHTML=
     '<div>App Version: Schedule 1.0</div>'+
     '<div>MSAL Client ID: '+CLIENT_ID.slice(0,8)+'...</div>'+
     '<div>SP Site: '+SP_SITE.split('/').pop()+'</div>'+
     '<div>Current User: '+(me?me.fullName+' ('+me.initials+')':'Not signed in')+'</div>'+
-    '<div>Role: '+(me?STAFF.find(function(s){return s.ini===me.initials;})||{}:{}).role||'Unknown'+'</div>'+
+    '<div>Role: '+myRole+'</div>'+
     '<div>Staff Count: '+STAFF.filter(function(s){return s.active!==false;}).length+' active</div>'+
     '<div>Last Sync: '+(_lastSyncISO?new Date(_lastSyncISO).toLocaleString():'Never')+'</div>'+
     '<div>Last Auto-Backup: '+lastAutoBackup+'</div>';
@@ -3192,9 +3210,9 @@ async function backupToSP(){
 
 async function loadBackupHistory(){
   try{
-    var t=await getToken();
-    var url=SP_SITE+"/_api/web/GetFolderByServerRelativeUrl('Shared%20Documents/_schedule_backups')/Files?$orderby=TimeCreated desc&$top=20&$select=Name,TimeCreated,Length";
-    var r=await fetch(url,{headers:{'Authorization':'Bearer '+t,'Accept':'application/json;odata=verbose'}});
+    var siteRelUrl='/sites/og_uw_renton_central_laboratory_-_core_lab';
+    var folderRelUrl=siteRelUrl+'/Shared Documents/_schedule_backups';
+    var r=await spFetch(SP_SITE+"/_api/web/GetFolderByServerRelativeUrl('"+encodeURIComponent(folderRelUrl).replace(/%2F/g,'/')+"')/Files?$select=Name,TimeCreated,Length&$orderby=TimeCreated desc&$top=20");
     if(!r.ok){document.getElementById('adminBackupHistory').innerHTML='<span style="color:var(--red);">Could not load history</span>';return;}
     var d=await r.json();
     var files=(d.d&&d.d.results)?d.d.results:[];
