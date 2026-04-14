@@ -6,6 +6,7 @@
 <title>Core Lab Schedule - Renton Central Lab</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
 <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
 <style>
 /* ═══ RESET & TOKENS ═══ */
@@ -101,6 +102,9 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 .sched-table th.weekend{color:var(--g300);background:var(--g50);}
 .sched-table td{padding:4px 2px;text-align:center;border-bottom:1px solid var(--g50);height:40px;vertical-align:middle;}
 .sched-table td.name-cell{text-align:left;padding-left:12px;font-size:12px;font-weight:700;color:var(--g700);white-space:nowrap;min-width:130px;position:sticky;left:0;background:var(--white);z-index:2;border-right:1px solid var(--g100);}
+.sched-table td.name-cell.role-lead{border-left:3px solid var(--teal);background:linear-gradient(90deg,rgba(0,121,107,.04),var(--white));}
+.sched-table td.name-cell.role-manager{border-left:3px solid var(--navy);background:linear-gradient(90deg,rgba(26,58,58,.04),var(--white));}
+.sched-table td.name-cell.role-tech{border-left:3px solid var(--blue);background:var(--white);}
 .sched-table td.weekend{background:var(--g50);}
 .sched-table td.today-col{background:rgba(0,121,107,.04);}
 .sched-table tr:hover td{background:rgba(0,121,107,.02);}
@@ -145,7 +149,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 /* ═══ MONTHLY VIEW ═══ */
 .month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;background:var(--white);border-radius:var(--rl);box-shadow:var(--shadow-1);border:1px solid var(--g200);overflow:hidden;padding:2px;}
 .month-hdr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--g400);text-align:center;padding:8px 0;}
-.month-cell{min-height:80px;transition:background var(--dur-short) var(--me-standard),transform var(--dur-micro) var(--me-spring);background:var(--g50);border-radius:8px;padding:4px;display:flex;flex-direction:column;transition:background var(--dur-short) var(--me-standard);}
+.month-cell{min-height:110px;transition:background var(--dur-short) var(--me-standard),transform var(--dur-micro) var(--me-spring);background:var(--g50);border-radius:8px;padding:4px;display:flex;flex-direction:column;transition:background var(--dur-short) var(--me-standard);}
 .month-cell:hover{background:var(--teal-bg);}
 .month-cell:active{transform:scale(.97);}
 .month-cell.today{background:rgba(0,121,107,.08);border:2px solid var(--teal);}
@@ -286,6 +290,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
   <div class="nav-tab" id="navSwap" onclick="switchTab('swap')"><span class="mi mi-sm">swap_horiz</span> Swap Requests</div>
   <div class="nav-tab" id="navPto" onclick="switchTab('pto')"><span class="mi mi-sm">event_busy</span> PTO</div>
   <div class="nav-tab" id="navHoliday" onclick="switchTab('holiday')"><span class="mi mi-sm">celebration</span> Holidays</div>
+  <div class="nav-tab" id="navStats" onclick="switchTab('stats')" style="display:none"><span class="mi mi-sm">analytics</span> Stats</div>
   <div class="nav-tab" id="navRoster" onclick="switchTab('roster')" style="display:none"><span class="mi mi-sm">groups</span> Staff Roster</div>
 </div>
 
@@ -303,13 +308,13 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
         <button onclick="navWeek(1)" title="Next week"><span class="mi mi-sm">chevron_right</span></button>
         <button onclick="navWeek(0)" title="This week" class="tb-btn" style="margin-left:4px"><span class="mi mi-xs">today</span> Today</button>
       </div>
-      <button class="tb-btn" onclick="openRecPanel()"><span class="mi mi-xs">auto_awesome</span> Recommend</button>
+      <button class="tb-btn" onclick="toggleRecPanel()"><span class="mi mi-xs">auto_awesome</span> Recommend</button>
       <button class="tb-btn" onclick="openExportModal()"><span class="mi mi-xs">download</span> Export</button>
     </div>
   </div>
-  <div id="recPanelWrap"></div>
   <div id="weekStats" class="stats-row"></div>
   <div class="sched-grid" id="weekGrid"></div>
+  <div id="recPanelWrap" style="margin-top:16px;"></div>
 </div>
 
 <!-- DAILY PAGE -->
@@ -343,6 +348,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
         <option value="">All Shifts</option>
         <option value="Morning">Morning</option>
         <option value="Evening">Evening</option>
+        <option value="Night">Night</option>
       </select>
       <button class="tb-btn" onclick="openExportModal()"><span class="mi mi-xs">download</span> Export</button>
     </div>
@@ -408,6 +414,29 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
   <div id="holFairness" style="margin-top:16px;"></div>
 </div>
 
+<!-- STATS PAGE (Leads only) -->
+<div class="page" id="pageStats">
+  <div class="toolbar">
+    <h2><span class="mi">analytics</span> Schedule Statistics</h2>
+    <div class="tb-controls">
+      <div class="week-nav">
+        <button onclick="navStatsPeriod(-1)"><span class="mi mi-sm">chevron_left</span></button>
+        <div class="week-label" id="statsLabel"></div>
+        <button onclick="navStatsPeriod(1)"><span class="mi mi-sm">chevron_right</span></button>
+      </div>
+      <select id="statsRange" onchange="renderStats()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
+        <option value="month">Monthly</option>
+        <option value="quarter">Quarterly</option>
+        <option value="year">Yearly</option>
+      </select>
+    </div>
+  </div>
+  <div id="statsOverview" class="stats-row"></div>
+  <div id="statsShiftBreakdown" style="margin-bottom:16px;"></div>
+  <div id="statsStaffTable" style="margin-bottom:16px;"></div>
+  <div id="statsStaffDetail"></div>
+</div>
+
 <!-- STAFF ROSTER PAGE (Leads only) -->
 <div class="page" id="pageRoster">
   <div class="toolbar">
@@ -443,7 +472,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
     <h3><span class="mi">edit_calendar</span> Edit Assignment</h3>
     <div class="form-row"><label>Staff Member</label><select id="aStaff"></select></div>
     <div class="form-row"><label>Date</label><input type="date" id="aDate"></div>
-    <div class="form-row"><label>Shift</label><select id="aShift"><option>Morning</option><option>Evening</option></select></div>
+    <div class="form-row"><label>Shift</label><select id="aShift"><option>Morning</option><option>Evening</option><option>Night</option></select></div>
     <div class="form-row"><label>Assignment</label><select id="aBench">
       <option value="">-- None --</option>
       <option value="H/C">H/C (Heme/Coag)</option>
@@ -468,7 +497,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
   <div class="modal">
     <h3><span class="mi">swap_horiz</span> Request Shift Swap</h3>
     <div class="form-row"><label>Your Current Date</label><input type="date" id="swDate"></div>
-    <div class="form-row"><label>Your Current Shift</label><select id="swShift"><option>Morning</option><option>Evening</option></select></div>
+    <div class="form-row"><label>Your Current Shift</label><select id="swShift"><option>Morning</option><option>Evening</option><option>Night</option></select></div>
     <div class="form-row"><label>Swap With</label><select id="swWith"></select></div>
     <div class="form-row"><label>Their Date</label><input type="date" id="swTargetDate"></div>
     <div class="form-row"><label>Reason</label><input type="text" id="swReason" placeholder="Reason for swap"></div>
@@ -486,9 +515,9 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
     <div class="form-row"><label>Initials (2 letters)</label><input type="text" id="rIni" maxlength="3" placeholder="JM" style="text-transform:uppercase;font-family:var(--mono);font-weight:700;"></div>
     <div class="form-row"><label>Full Name</label><input type="text" id="rName" placeholder="Jane Smith"></div>
     <div class="form-row"><label>Role</label><select id="rRole">
-      <option>MLS1</option><option>MLS2</option><option>MLS Lead</option><option>Lab Manager</option><option>Health Services Manager</option>
+      <option>MLS1</option><option>MLS2</option><option>MLS Lead</option><option>Lab Manager</option><option>Health Services Manager</option><option>Lab Director</option>
     </select></div>
-    <div class="form-row"><label>Default Shift</label><select id="rShift"><option>Morning</option><option>Evening</option></select></div>
+    <div class="form-row"><label>Default Shift</label><select id="rShift"><option>Morning</option><option>Evening</option><option>Night</option></select></div>
     <div class="form-row"><label>Bench Eligible</label><select id="rBenchElig"><option value="true">Yes</option><option value="false">No</option></select></div>
     <div class="form-row" id="rCycleRow"><label>Default Bench Cycle (comma-separated: H/C,C/U,F)</label><input type="text" id="rCycle" placeholder="C/U,H/C,F,C/U,H/C" style="font-family:var(--mono);"></div>
     <div class="form-row"><label>Start Date</label><input type="date" id="rStartDate"></div>
@@ -515,6 +544,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
       <option value="">All Shifts</option>
       <option>Morning</option>
       <option>Evening</option>
+      <option>Night</option>
     </select></div>
     <div class="form-row"><label>Format</label><select id="expFmt">
       <option value="csv">CSV</option>
@@ -571,7 +601,7 @@ var DEFAULT_STAFF=[
   {ini:'JB',name:'Johnathon Bures',role:'MLS1',shift:'Morning',benchEligible:true,defaultCycle:['H/C','C/U','C/U','F','F'],startDate:'2026-04-20',phone:'',active:true}
 ];
 var BENCHES=['H/C','C/U','F'];
-var SHIFTS=['Morning','Evening'];
+var SHIFTS=['Morning','Evening','Night'];
 var ASSIGN_CODES=['H/C','C/U','F','T','TR','PTO','CO','OT'];
 var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 var DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -705,7 +735,7 @@ async function initAuth(){
     me={initials:ini,fullName:acct.name||'',email:acct.username,isLead:false};
     // Determine role
     var s=STAFF.find(function(st){return st.name===me.fullName||st.ini===ini;});
-    if(s){me.initials=s.ini;me.isLead=s.role==='MLS Lead';}
+    if(s){me.initials=s.ini;me.isLead=s.role==='MLS Lead'||s.role==='Lab Manager'||s.role==='Health Services Manager'||s.role==='Lab Director';}
     document.getElementById('hdr-avatar').textContent=me.initials;
     document.getElementById('hdr-avatar').title=me.fullName;
     document.getElementById('app-header').style.display='';
@@ -724,7 +754,13 @@ async function initAuth(){
   }
 }
 function getInitials(name){if(!name)return'??';var p=name.split(' ');return p.length>=2?(p[0][0]+p[p.length-1][0]).toUpperCase():name.slice(0,2).toUpperCase();}
-function isLead(){return me&&me.isLead;}
+var ELEVATED_ROLES=['MLS Lead','Lab Manager','Health Services Manager','Lab Director'];
+function isLead(){
+  if(!me)return false;
+  if(me.isLead)return true;
+  var s=STAFF.find(function(x){return x.ini===me.initials;});
+  return s&&ELEVATED_ROLES.indexOf(s.role)>=0;
+}
 function updateHeaderDate(){
   var now=new Date();
   document.getElementById('hdr-date').textContent=now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+', '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
@@ -852,7 +888,7 @@ async function loadAllData(){
       _lastSyncISO=new Date().toISOString();
     }
     // Show roster and holiday auto-assign for leads
-    if(isLead()){document.getElementById('navRoster').style.display='';document.getElementById('holAutoBtn').style.display='';}
+    if(isLead()){document.getElementById('navRoster').style.display='';document.getElementById('navStats').style.display='';document.getElementById('holAutoBtn').style.display='';}
     document.getElementById('hdr-sync').innerHTML='<span class="mi mi-xs">sync</span> Synced '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
     return true;
   }catch(e){
@@ -861,7 +897,7 @@ async function loadAllData(){
     else{
       // If SP lists don't exist yet, use defaults
       if(!STAFF.length)STAFF=DEFAULT_STAFF.slice();
-      if(isLead())document.getElementById('navRoster').style.display='';
+      if(isLead()){document.getElementById('navRoster').style.display='';document.getElementById('navStats').style.display='';}
     }
     return false;
   }
@@ -948,7 +984,7 @@ function recommendAssignments(dateStr,shift){
   // Get the start of the current week for fairness window
   var d=new Date(dateStr+'T12:00:00');
   var dow=d.getDay();
-  var weekStart=new Date(d);weekStart.setDate(weekStart.getDate()-(dow===0?6:dow-1));
+  var weekStart=new Date(d);weekStart.setDate(weekStart.getDate()-dow);// Sunday start
   // Use a 4-week window for fairness
   var fairStart=new Date(weekStart);fairStart.setDate(fairStart.getDate()-21);
   var fairStartStr=fmtDate(fairStart);
@@ -1023,11 +1059,11 @@ function hideLoad(){document.getElementById('loading').classList.remove('show');
 function openModal(id){document.getElementById(id).classList.add('show');}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 
-function getMonday(d){var day=d.getDay();var diff=d.getDate()-day+(day===0?-6:1);var m=new Date(d);m.setDate(diff);return m;}
+function getSunday(d){var day=d.getDay();var s=new Date(d);s.setDate(s.getDate()-day);return s;}
 
 function initViews(){
   var now=new Date();
-  curWeekStart=getMonday(now);
+  curWeekStart=getSunday(now);
   curDay=new Date(now);
   curMonth={month:now.getMonth(),year:now.getFullYear()};
 }
@@ -1043,6 +1079,7 @@ function switchTab(tab){
   else if(tab==='swap')renderSwaps();
   else if(tab==='pto')renderPTO();
   else if(tab==='holiday')renderHolidays();
+  else if(tab==='stats')renderStats();
   else if(tab==='roster')renderRoster();
 }
 
@@ -1055,6 +1092,7 @@ function renderCurrentView(){
     else if(active.id==='pageSwap')renderSwaps();
     else if(active.id==='pagePto')renderPTO();
     else if(active.id==='pageHoliday')renderHolidays();
+    else if(active.id==='pageStats')renderStats();
     else if(active.id==='pageRoster')renderRoster();
   }
 }
@@ -1104,8 +1142,8 @@ function renderWeek(){
   var html='';
   SHIFTS.forEach(function(shift){
     var shClass=shift.toLowerCase();
-    var shIcon=shift==='Morning'?'light_mode':'dark_mode';
-    var shTime=shift==='Morning'?'0700 - 1530':'1500 - 2330';
+    var shIcon=shift==='Morning'?'wb_sunny':shift==='Evening'?'wb_twilight':'bedtime';
+    var shTime=shift==='Morning'?'0700 - 1530':shift==='Evening'?'1500 - 2330':'2300 - 0730';
     html+='<div class="shift-section"><div class="shift-hdr '+shClass+'"><span class="mi">'+shIcon+'</span> '+shift+' | '+shTime+'</div>';
     html+='<div class="shift-body"><table class="sched-table"><thead><tr><th style="text-align:left;padding-left:12px;min-width:130px">Staff</th>';
     dates.forEach(function(d){
@@ -1117,7 +1155,8 @@ function renderWeek(){
     var shiftStaff=STAFF.filter(function(s){return s.active!==false&&s.shift===shift;});
     shiftStaff.forEach(function(staff){
       html+='<tr>';
-      html+='<td class="name-cell"><div style="font-weight:700;font-size:12px;">'+esc(staff.name.split(' ')[0])+'</div><div style="font-size:9px;color:var(--g400);">'+esc(staff.role)+'</div></td>';
+      var roleCls=ELEVATED_ROLES.indexOf(staff.role)>=0?(staff.role==='MLS Lead'?'role-lead':'role-manager'):'role-tech';
+      html+='<td class="name-cell '+roleCls+'"><div style="font-weight:700;font-size:12px;">'+esc(staff.name.split(' ')[0])+'</div><div style="font-size:9px;color:var(--g400);">'+esc(staff.role)+'</div></td>';
       dates.forEach(function(d){
         var tdClass=(d.isToday?'today-col':'')+(d.isWeekend?' weekend':'');
         if(d.isWeekend){
@@ -1147,7 +1186,7 @@ function renderWeek(){
 }
 
 function navWeek(dir){
-  if(dir===0){curWeekStart=getMonday(new Date());}
+  if(dir===0){curWeekStart=getSunday(new Date());}
   else{curWeekStart.setDate(curWeekStart.getDate()+(dir*7));}
   renderWeek();
 }
@@ -1166,13 +1205,13 @@ function renderDay(){
 
   var html='';
   SHIFTS.forEach(function(shift){
-    var shClass=shift==='Morning'?'morning':'evening';
-    var shIcon=shift==='Morning'?'light_mode':'dark_mode';
-    var shTime=shift==='Morning'?'0700 - 1530':'1500 - 2330';
+    var shClass=shift.toLowerCase();
+    var shIcon=shift==='Morning'?'wb_sunny':shift==='Evening'?'wb_twilight':'bedtime';
+    var shTime=shift==='Morning'?'0700 - 1530':shift==='Evening'?'1500 - 2330':'2300 - 0730';
     var cov=getCoverage(ds,shift);
     var covHtml=cov.missing.length?'<span style="color:var(--red);font-size:10px;font-weight:700;">Missing: '+cov.missing.join(', ')+'</span>':'<span style="color:var(--green);font-size:10px;font-weight:700;">All benches covered</span>';
 
-    html+='<div class="daily-card"><div class="daily-card-hdr '+shClass+'" style="background:var(--'+(shift==='Morning'?'green':'blue')+'-bg);color:var(--'+(shift==='Morning'?'green':'blue')+');"><span class="mi">'+shIcon+'</span> '+shift+' | '+shTime+'</div>';
+    html+='<div class="daily-card"><div class="daily-card-hdr '+shClass+'" style="background:var(--'+(shift==='Morning'?'green':shift==='Evening'?'blue':'purple')+'-bg);color:var(--'+(shift==='Morning'?'green':shift==='Evening'?'blue':'purple')+');"><span class="mi">'+shIcon+'</span> '+shift+' | '+shTime+'</div>';
     html+='<div class="daily-card-body">';
 
     var shiftStaff=STAFF.filter(function(s){return s.active!==false&&s.shift===shift;});
@@ -1223,11 +1262,11 @@ function renderMonth(){
   var firstDay=new Date(y,m,1);
   var lastDay=new Date(y,m+1,0);
   var startDow=firstDay.getDay();
-  var gridStart=new Date(firstDay);gridStart.setDate(gridStart.getDate()-(startDow===0?6:startDow-1));// Monday
+  var gridStart=new Date(firstDay);gridStart.setDate(gridStart.getDate()-startDow);// Sunday start
 
   var today=fmtDate(new Date());
   var html='';
-  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(function(d){html+='<div class="month-hdr">'+d+'</div>';});
+  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(function(d){html+='<div class="month-hdr">'+d+'</div>';});
 
   var cur=new Date(gridStart);
   for(var w=0;w<6;w++){
@@ -1242,27 +1281,45 @@ function renderMonth(){
 
       if(!isWE&&!isOther){
         var shifts=shiftFilter?[shiftFilter]:SHIFTS;
-        html+='<div class="month-chips">';
         shifts.forEach(function(sh){
           var assigns=getShiftAssignments(ds,sh);
-          assigns.forEach(function(a){
-            var mcls=a.bench==='H/C'?'hc':a.bench==='C/U'?'cu':a.bench==='F'?'fl':a.bench==='PTO'?'pto':a.bench==='CO'?'co':'tr';
-            html+='<span class="month-mini bench-chip '+mcls+'" title="'+esc(a.userName)+': '+esc(a.bench)+'">'+esc(a.userIni)+'</span>';
-          });
+          if(!assigns.length&&!shiftFilter)return;// skip empty shifts in "All" view to save space
+          var shLabel=sh==='Morning'?'AM':sh==='Evening'?'PM':'NT';
+          var shColor=sh==='Morning'?'var(--green)':sh==='Evening'?'var(--blue)':'var(--purple)';
+          html+='<div style="display:flex;align-items:center;gap:2px;margin:1px 0;">';
+          if(shifts.length>1)html+='<span style="font-size:7px;font-weight:800;color:'+shColor+';min-width:12px;">'+shLabel+'</span>';
+          if(assigns.length){
+            assigns.forEach(function(a){
+              var mcls=a.bench==='H/C'?'hc':a.bench==='C/U'?'cu':a.bench==='F'?'fl':a.bench==='PTO'?'pto':a.bench==='CO'?'co':a.bench==='OT'?'ot':'tr';
+              html+='<span class="month-mini bench-chip '+mcls+'" title="'+esc(a.userName)+': '+esc(a.bench)+' ('+sh+')">'+esc(a.userIni)+'</span>';
+            });
+          }else{
+            html+='<span style="font-size:7px;color:var(--g300);">empty</span>';
+          }
+          html+='</div>';
         });
-        html+='</div>';
-        // Coverage indicator
+        // Coverage summary across all displayed shifts
+        var totalGaps=0;var totalStaff=0;
         shifts.forEach(function(sh){
           var cov=getCoverage(ds,sh);
-          if(cov.missing.length>0){
-            html+='<span class="month-cov" style="background:var(--red-bg);color:var(--red);">'+cov.missing.length+' gap</span>';
-          }
+          totalGaps+=cov.missing.length;
+          totalStaff+=cov.staffCount;
         });
+        if(totalGaps>0){
+          html+='<span class="month-cov" style="background:var(--red-bg);color:var(--red);">'+totalGaps+' gap'+(totalGaps>1?'s':'')+'</span>';
+        }else if(totalStaff>0){
+          html+='<span class="month-cov" style="background:var(--green-bg);color:var(--green);">'+totalStaff+' staff</span>';
+        }
+        // Show PTO indicators
+        var ptoToday=schedEntries.filter(function(e){return e.date===ds&&(e.bench==='PTO'||e.bench==='CO');});
+        if(ptoToday.length){
+          html+='<span class="month-cov" style="background:var(--amber-bg);color:var(--amber);">'+ptoToday.length+' out</span>';
+        }
       }
       html+='</div>';
       cur.setDate(cur.getDate()+1);
     }
-    if(cur.getMonth()!==m&&cur.getDay()===1)break;// stop if we've passed the month
+    if(cur.getMonth()!==m&&cur.getDay()===1)break;
   }
   document.getElementById('monthGrid').innerHTML=html;
 }
@@ -1411,10 +1468,13 @@ async function saveAssignment(){
   var staff=STAFF.find(function(s){return s.ini===userIni;});
 
   // Check if this would create a double shift (OT warning)
-  var otherShift=shift==='Morning'?'Evening':'Morning';
-  var otherAssign=getAssignment(userIni,dateStr,otherShift);
-  if(otherAssign&&otherAssign.bench&&otherAssign.bench!=='PTO'&&otherAssign.bench!=='CO'){
-    if(!confirm(staff.name+' already has a '+otherShift+' shift on this date. This creates a double shift (OT). Continue?'))return;
+  var otherShifts=SHIFTS.filter(function(s){return s!==shift;});
+  var hasOtherShift=otherShifts.some(function(os){
+    var oa=getAssignment(userIni,dateStr,os);
+    return oa&&oa.bench&&oa.bench!=='PTO'&&oa.bench!=='CO';
+  });
+  if(hasOtherShift){
+    if(!confirm(staff.name+' already has another shift on this date. This creates a double shift (OT). Continue?'))return;
   }
 
   var existing=getAssignment(userIni,dateStr,shift);
@@ -1436,6 +1496,11 @@ async function saveAssignment(){
 }
 
 // ═══ RECOMMENDATION PANEL ═══
+var _recPanelOpen=false;
+function toggleRecPanel(){
+  if(_recPanelOpen){document.getElementById('recPanelWrap').innerHTML='';_recPanelOpen=false;return;}
+  openRecPanel();_recPanelOpen=true;
+}
 function openRecPanel(){
   var ws=new Date(curWeekStart);
   var html='<div class="rec-panel"><h3><span class="mi">auto_awesome</span> Weekly Recommendations</h3>';
@@ -1619,7 +1684,7 @@ async function reactivateRoster(ini){
 function openExportModal(){
   var now=new Date();
   // Default to current week
-  var ws=getMonday(now);
+  var ws=getSunday(now);
   var we=new Date(ws);we.setDate(we.getDate()+6);
   document.getElementById('expFrom').value=fmtDate(ws);
   document.getElementById('expTo').value=fmtDate(we);
@@ -1632,7 +1697,7 @@ function openExportModal(){
 
 function setExpPreset(p){
   var now=new Date(),y=now.getFullYear(),m=now.getMonth();
-  if(p==='week'){var ws=getMonday(now);var we=new Date(ws);we.setDate(we.getDate()+6);document.getElementById('expFrom').value=fmtDate(ws);document.getElementById('expTo').value=fmtDate(we);}
+  if(p==='week'){var ws=getSunday(now);var we=new Date(ws);we.setDate(we.getDate()+6);document.getElementById('expFrom').value=fmtDate(ws);document.getElementById('expTo').value=fmtDate(we);}
   else if(p==='month'){document.getElementById('expFrom').value=y+'-'+String(m+1).padStart(2,'0')+'-01';document.getElementById('expTo').value=y+'-'+String(m+1).padStart(2,'0')+'-'+new Date(y,m+1,0).getDate();}
   else if(p==='quarter'){var qm=Math.floor(m/3)*3;document.getElementById('expFrom').value=y+'-'+String(qm+1).padStart(2,'0')+'-01';var qEnd=qm+2;document.getElementById('expTo').value=y+'-'+String(qEnd+1).padStart(2,'0')+'-'+new Date(y,qEnd+1,0).getDate();}
   else if(p==='year'){document.getElementById('expFrom').value=y+'-01-01';document.getElementById('expTo').value=y+'-12-31';}
@@ -2143,6 +2208,249 @@ async function autoAssignHolidays(){
   });
 
   renderHolidays();toast('Auto-assigned '+added+' holidays for '+year);
+}
+
+// ═══════════════════════════════════════════
+// SCHEDULE STATISTICS (Leads only)
+// ═══════════════════════════════════════════
+var _statsPeriod={month:new Date().getMonth(),year:new Date().getFullYear()};
+
+function getStatsDateRange(){
+  var range=document.getElementById('statsRange').value;
+  var m=_statsPeriod.month,y=_statsPeriod.year;
+  if(range==='month'){
+    var start=y+'-'+String(m+1).padStart(2,'0')+'-01';
+    var end=y+'-'+String(m+1).padStart(2,'0')+'-'+new Date(y,m+1,0).getDate();
+    return{start:start,end:end,label:MONTHS[m]+' '+y};
+  }else if(range==='quarter'){
+    var qm=Math.floor(m/3)*3;
+    var start=y+'-'+String(qm+1).padStart(2,'0')+'-01';
+    var qEnd=qm+2;
+    var end=y+'-'+String(qEnd+1).padStart(2,'0')+'-'+new Date(y,qEnd+1,0).getDate();
+    return{start:start,end:end,label:'Q'+Math.floor(qm/3+1)+' '+y};
+  }else{
+    return{start:y+'-01-01',end:y+'-12-31',label:y+''};
+  }
+}
+
+function navStatsPeriod(dir){
+  var range=document.getElementById('statsRange').value;
+  if(range==='month'){_statsPeriod.month+=dir;if(_statsPeriod.month<0){_statsPeriod.month=11;_statsPeriod.year--;}if(_statsPeriod.month>11){_statsPeriod.month=0;_statsPeriod.year++;}}
+  else if(range==='quarter'){_statsPeriod.month+=dir*3;if(_statsPeriod.month<0){_statsPeriod.month=9;_statsPeriod.year--;}if(_statsPeriod.month>11){_statsPeriod.month=0;_statsPeriod.year++;}}
+  else{_statsPeriod.year+=dir;}
+  renderStats();
+}
+
+function renderStats(){
+  if(!isLead())return;
+  var dr=getStatsDateRange();
+  document.getElementById('statsLabel').textContent=dr.label;
+
+  // Filter entries in range
+  var inRange=schedEntries.filter(function(e){return e.date>=dr.start&&e.date<=dr.end;});
+  var activeStaff=STAFF.filter(function(s){return s.active!==false;});
+
+  // Overview stats
+  var totalAssignments=inRange.filter(function(e){return e.bench&&e.bench!=='PTO'&&e.bench!=='CO';}).length;
+  var totalPTO=inRange.filter(function(e){return e.bench==='PTO';}).length;
+  var totalCO=inRange.filter(function(e){return e.bench==='CO';}).length;
+  var totalOT=inRange.filter(function(e){return e.bench==='OT';}).length;
+
+  // Count workdays in range for coverage gap calculation
+  var workdays=0;
+  var cur=new Date(dr.start+'T12:00:00');
+  var end=new Date(dr.end+'T12:00:00');
+  while(cur<=end){if(cur.getDay()!==0&&cur.getDay()!==6)workdays++;cur.setDate(cur.getDate()+1);}
+
+  document.getElementById('statsOverview').innerHTML=
+    '<div class="stat-card"><div class="stat-label">Total Assignments</div><div class="stat-val">'+totalAssignments+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">PTO Days Used</div><div class="stat-val" style="color:var(--amber)">'+totalPTO+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Callouts</div><div class="stat-val" style="color:var(--red)">'+totalCO+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Overtime Shifts</div><div class="stat-val" style="color:var(--purple)">'+totalOT+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Workdays</div><div class="stat-val">'+workdays+'</div></div>';
+
+  // Per-shift breakdown
+  var shiftData={};
+  SHIFTS.forEach(function(sh){shiftData[sh]={assignments:0,pto:0,co:0,gaps:0};});
+  inRange.forEach(function(e){
+    if(!shiftData[e.shift])return;
+    if(e.bench==='PTO')shiftData[e.shift].pto++;
+    else if(e.bench==='CO')shiftData[e.shift].co++;
+    else shiftData[e.shift].assignments++;
+  });
+
+  var sbHtml='<div class="rec-panel"><h3><span class="mi">stacked_bar_chart</span> Per-Shift Breakdown</h3>';
+  sbHtml+='<table class="sched-table" style="min-width:auto;"><thead><tr><th style="text-align:left;padding-left:12px;">Shift</th><th>Assignments</th><th>PTO</th><th>Callouts</th></tr></thead><tbody>';
+  SHIFTS.forEach(function(sh){
+    var d=shiftData[sh];
+    sbHtml+='<tr><td style="text-align:left;padding-left:12px;font-weight:700;">'+esc(sh)+'</td>';
+    sbHtml+='<td style="text-align:center;font-weight:700;">'+d.assignments+'</td>';
+    sbHtml+='<td style="text-align:center;color:var(--amber);font-weight:700;">'+d.pto+'</td>';
+    sbHtml+='<td style="text-align:center;color:var(--red);font-weight:700;">'+d.co+'</td></tr>';
+  });
+  sbHtml+='</tbody></table></div>';
+  document.getElementById('statsShiftBreakdown').innerHTML=sbHtml;
+
+  // Per-staff table
+  var staffStats=[];
+  activeStaff.forEach(function(s){
+    var mine=inRange.filter(function(e){return e.userIni===s.ini;});
+    var hc=mine.filter(function(e){return e.bench==='H/C';}).length;
+    var cu=mine.filter(function(e){return e.bench==='C/U';}).length;
+    var fl=mine.filter(function(e){return e.bench==='F';}).length;
+    var pto=mine.filter(function(e){return e.bench==='PTO';}).length;
+    var co=mine.filter(function(e){return e.bench==='CO';}).length;
+    var ot=mine.filter(function(e){return e.bench==='OT';}).length;
+    var tr=mine.filter(function(e){return e.bench==='T'||e.bench==='TR';}).length;
+    var total=hc+cu+fl+ot+tr;
+    staffStats.push({ini:s.ini,name:s.name,role:s.role,hc:hc,cu:cu,fl:fl,pto:pto,co:co,ot:ot,tr:tr,total:total});
+  });
+
+  // Sort by callouts descending for visibility
+  staffStats.sort(function(a,b){return b.co-a.co;});
+
+  var stHtml='<div class="rec-panel"><h3><span class="mi">person</span> Per-Staff Breakdown <span style="font-size:11px;font-weight:400;color:var(--g400);">(click a row for details)</span></h3>';
+  stHtml+='<div style="overflow-x:auto;"><table class="sched-table" style="min-width:700px;"><thead><tr><th style="text-align:left;padding-left:12px;">Staff</th><th style="text-align:left;">Role</th><th>H/C</th><th>C/U</th><th>Float</th><th>Training</th><th>OT</th><th style="color:var(--amber)">PTO</th><th style="color:var(--red)">Callouts</th><th>Total</th></tr></thead><tbody>';
+  staffStats.forEach(function(s){
+    var coHighlight=s.co>=3?'background:var(--red-bg);':s.co>=2?'background:var(--amber-bg);':'';
+    stHtml+='<tr onclick="showStaffDetail(\''+esc(s.ini)+'\')" style="cursor:pointer;'+coHighlight+'">';
+    stHtml+='<td style="text-align:left;padding-left:12px;font-weight:700;">'+esc(s.name)+'</td>';
+    stHtml+='<td style="text-align:left;font-size:11px;color:var(--g500);">'+esc(s.role)+'</td>';
+    stHtml+='<td style="text-align:center;">'+s.hc+'</td>';
+    stHtml+='<td style="text-align:center;">'+s.cu+'</td>';
+    stHtml+='<td style="text-align:center;">'+s.fl+'</td>';
+    stHtml+='<td style="text-align:center;">'+s.tr+'</td>';
+    stHtml+='<td style="text-align:center;color:var(--purple);font-weight:700;">'+s.ot+'</td>';
+    stHtml+='<td style="text-align:center;color:var(--amber);font-weight:700;">'+s.pto+'</td>';
+    stHtml+='<td style="text-align:center;color:var(--red);font-weight:800;font-size:14px;">'+s.co+'</td>';
+    stHtml+='<td style="text-align:center;font-weight:700;">'+s.total+'</td></tr>';
+  });
+  stHtml+='</tbody></table></div></div>';
+  document.getElementById('statsStaffTable').innerHTML=stHtml;
+  document.getElementById('statsStaffDetail').innerHTML='';
+}
+
+function showStaffDetail(userIni){
+  var dr=getStatsDateRange();
+  var staff=STAFF.find(function(s){return s.ini===userIni;});
+  if(!staff)return;
+
+  var mine=schedEntries.filter(function(e){return e.userIni===userIni&&e.date>=dr.start&&e.date<=dr.end;});
+
+  // Callout details
+  var callouts=mine.filter(function(e){return e.bench==='CO';}).sort(function(a,b){return a.date.localeCompare(b.date);});
+  var ptos=mine.filter(function(e){return e.bench==='PTO';}).sort(function(a,b){return a.date.localeCompare(b.date);});
+
+  // Callout patterns
+  var coDays={Mon:0,Tue:0,Wed:0,Thu:0,Fri:0};
+  var coShifts={};
+  callouts.forEach(function(c){
+    var d=new Date(c.date+'T12:00:00');
+    var dayName=DAYS[d.getDay()];
+    if(coDays.hasOwnProperty(dayName))coDays[dayName]++;
+    coShifts[c.shift]=(coShifts[c.shift]||0)+1;
+  });
+
+  // Find most frequent callout day
+  var maxDay='',maxDayCount=0;
+  Object.keys(coDays).forEach(function(d){if(coDays[d]>maxDayCount){maxDayCount=coDays[d];maxDay=d;}});
+
+  // Bench fairness
+  var hc=mine.filter(function(e){return e.bench==='H/C';}).length;
+  var cu=mine.filter(function(e){return e.bench==='C/U';}).length;
+  var fl=mine.filter(function(e){return e.bench==='F';}).length;
+  var benchTotal=hc+cu+fl;
+  var ideal=benchTotal>0?Math.round(benchTotal/3):0;
+
+  // Historical callout trend (all time)
+  var allCallouts=schedEntries.filter(function(e){return e.userIni===userIni&&e.bench==='CO';});
+  var coByMonth={};
+  allCallouts.forEach(function(c){
+    var key=c.date.slice(0,7);// YYYY-MM
+    coByMonth[key]=(coByMonth[key]||0)+1;
+  });
+
+  var html='<div class="rec-panel" style="animation:modalScaleIn var(--dur-long) var(--me-decelerate);">';
+  html+='<h3><span class="mi">person</span> '+esc(staff.name)+' <span style="font-size:11px;font-weight:400;color:var(--g400);">'+esc(staff.role)+' | Seniority #'+getSeniorityRank(userIni)+'</span> <button class="tb-btn" onclick="document.getElementById(\'statsStaffDetail\').innerHTML=\'\'" style="margin-left:auto;"><span class="mi mi-xs">close</span></button></h3>';
+
+  // Callout section
+  html+='<div style="margin-bottom:16px;"><div style="font-size:12px;font-weight:800;color:var(--red);margin-bottom:8px;display:flex;align-items:center;gap:6px;"><span class="mi mi-sm">warning</span> Callouts ('+callouts.length+' in period, '+allCallouts.length+' all-time)</div>';
+  if(callouts.length){
+    html+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;">';
+    html+='<div style="font-size:11px;"><strong>Most frequent day:</strong> '+(maxDay||'N/A')+' ('+maxDayCount+'x)</div>';
+    html+='<div style="font-size:11px;"><strong>By shift:</strong> '+Object.keys(coShifts).map(function(s){return s+': '+coShifts[s];}).join(', ')+'</div>';
+    html+='</div>';
+
+    // Day-of-week distribution
+    html+='<div style="display:flex;gap:4px;margin-bottom:8px;">';
+    ['Mon','Tue','Wed','Thu','Fri'].forEach(function(d){
+      var pct=callouts.length>0?Math.round(coDays[d]/callouts.length*100):0;
+      var h=Math.max(pct,4);
+      html+='<div style="text-align:center;flex:1;"><div style="height:40px;display:flex;align-items:flex-end;justify-content:center;"><div style="width:100%;max-width:30px;height:'+h+'%;background:'+(coDays[d]===maxDayCount&&maxDayCount>0?'var(--red)':'var(--g200)')+';border-radius:3px 3px 0 0;"></div></div><div style="font-size:9px;font-weight:700;color:var(--g400);margin-top:2px;">'+d+'</div><div style="font-size:9px;font-weight:700;">'+coDays[d]+'</div></div>';
+    });
+    html+='</div>';
+
+    // Callout list
+    html+='<div style="max-height:150px;overflow-y:auto;">';
+    callouts.forEach(function(c){
+      var d=new Date(c.date+'T12:00:00');
+      html+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--g50);font-size:11px;"><span>'+c.date+' ('+DAYS[d.getDay()]+')</span><span style="color:var(--g400);">'+esc(c.shift)+'</span><span style="color:var(--g400);">'+esc(c.notes||'')+'</span></div>';
+    });
+    html+='</div>';
+
+    // Monthly trend
+    var trendKeys=Object.keys(coByMonth).sort();
+    if(trendKeys.length>1){
+      html+='<div style="margin-top:8px;font-size:11px;font-weight:700;color:var(--g500);">Monthly Trend (all-time)</div>';
+      html+='<div style="display:flex;gap:3px;align-items:flex-end;margin-top:4px;">';
+      var maxM=Math.max.apply(null,trendKeys.map(function(k){return coByMonth[k];}));
+      trendKeys.forEach(function(k){
+        var h=maxM>0?Math.round(coByMonth[k]/maxM*40):0;
+        html+='<div style="text-align:center;flex:1;max-width:30px;"><div style="height:'+Math.max(h,3)+'px;background:var(--red);border-radius:2px;"></div><div style="font-size:7px;color:var(--g400);margin-top:1px;">'+k.slice(5)+'</div></div>';
+      });
+      html+='</div>';
+    }
+  }else{
+    html+='<div style="font-size:12px;color:var(--green);">No callouts in this period.</div>';
+  }
+  html+='</div>';
+
+  // PTO section
+  html+='<div style="margin-bottom:16px;"><div style="font-size:12px;font-weight:800;color:var(--amber);margin-bottom:6px;display:flex;align-items:center;gap:6px;"><span class="mi mi-sm">event_busy</span> PTO ('+ptos.length+' days)</div>';
+  if(ptos.length){
+    // Group consecutive PTO days
+    var ptoRanges=[];var curRange=null;
+    ptos.forEach(function(p){
+      if(!curRange){curRange={start:p.date,end:p.date,days:1};}
+      else{
+        var prev=new Date(curRange.end+'T12:00:00');prev.setDate(prev.getDate()+1);
+        // Skip weekends
+        while(prev.getDay()===0||prev.getDay()===6)prev.setDate(prev.getDate()+1);
+        if(fmtDate(prev)===p.date){curRange.end=p.date;curRange.days++;}
+        else{ptoRanges.push(curRange);curRange={start:p.date,end:p.date,days:1};}
+      }
+    });
+    if(curRange)ptoRanges.push(curRange);
+    ptoRanges.forEach(function(r){
+      html+='<div style="font-size:11px;padding:2px 0;">'+r.start+(r.start!==r.end?' to '+r.end:'')+' ('+r.days+' day'+(r.days>1?'s':'')+')</div>';
+    });
+  }else{html+='<div style="font-size:12px;color:var(--g400);">No PTO in this period.</div>';}
+  html+='</div>';
+
+  // Bench balance
+  html+='<div><div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:6px;display:flex;align-items:center;gap:6px;"><span class="mi mi-sm">balance</span> Bench Balance</div>';
+  html+='<div style="display:flex;gap:16px;">';
+  [['H/C',hc,'hc'],['C/U',cu,'cu'],['Float',fl,'fl']].forEach(function(b){
+    var pct=benchTotal>0?Math.round(b[1]/benchTotal*100):0;
+    var diff=b[1]-ideal;
+    var diffLabel=diff>0?'+'+diff:diff<0?''+diff:'even';
+    html+='<div style="text-align:center;"><div style="font-size:20px;font-weight:800;">'+b[1]+'</div><div style="font-size:10px;font-weight:700;color:var(--g400);">'+b[0]+'</div><div style="font-size:9px;color:'+(Math.abs(diff)>2?'var(--red)':'var(--green)')+';">'+diffLabel+'</div></div>';
+  });
+  html+='</div></div>';
+
+  html+='</div>';
+  document.getElementById('statsStaffDetail').innerHTML=html;
+  document.getElementById('statsStaffDetail').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 // ═══════════════════════════════════════════
