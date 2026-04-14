@@ -1643,7 +1643,9 @@ function tryParse(s, def) {
 // ═══════════════════════════════════════════
 // OPTIMIZED DATA LOADING
 // ═══════════════════════════════════════════
-var _auditLoaded=false; // lazy-load audit only when Audit tab opened
+var _auditLoaded=false;
+var _firstLoadDone=false;
+var _lastSyncISO=null;
 
 async function loadAllData() {
   try {
@@ -1654,28 +1656,68 @@ async function loadAllData() {
       discoverFields('AuditLog')
     ]);
     var fmR={};try{fmR=await discoverFields('MonthlyReviews');}catch(e){console.warn('MonthlyReviews list not found yet:',e.message);}
-    var [spEntries, spAnns, spUsers] = await Promise.all([
-      spGet('ShiftEntries'),
-      spGet('Announcements'),
-      spGet('HubUsers')
-    ]);
-    var spReviews=[];try{spReviews=await spGet('MonthlyReviews');}catch(e){}
-    entries = spEntries.map(function(i){return spToEntry(i,fmE);});
-    announcements = spAnns.map(function(i){return spToAnn(i,fmA);});
-    monthlyReviews = spReviews.map(function(i){return spToReview(i,fmR);});
-    users = {};
-    spUsers.forEach(function(item) {
-      users[item.Title] = spToUser(item,fmU);
-    });
-    if (!users[ADMIN_INI]) {
-      users[ADMIN_INI] = { fullName: 'Jesus Martinez', role: 'MLS Lead', isAdmin: true, nickname: '', picture: '', password: '' };
-      await spAdd('HubUsers', spSetUser(ADMIN_INI, users[ADMIN_INI]));
+
+    if(!_firstLoadDone){
+      // === FIRST LOAD: full fetch of entries, announcements, users ===
+      var [spEntries, spAnns, spUsers] = await Promise.all([
+        spGet('ShiftEntries'),
+        spGet('Announcements'),
+        spGet('HubUsers')
+      ]);
+      var spReviews=[];try{spReviews=await spGet('MonthlyReviews');}catch(e){}
+      entries = spEntries.map(function(i){return spToEntry(i,fmE);});
+      announcements = spAnns.map(function(i){return spToAnn(i,fmA);});
+      monthlyReviews = spReviews.map(function(i){return spToReview(i,fmR);});
+      users = {};
+      spUsers.forEach(function(item) {
+        users[item.Title] = spToUser(item,fmU);
+      });
+      if (!users[ADMIN_INI]) {
+        users[ADMIN_INI] = { fullName: 'Jesus Martinez', role: 'MLS Lead', isAdmin: true, nickname: '', picture: '', password: '' };
+        await spAdd('HubUsers', spSetUser(ADMIN_INI, users[ADMIN_INI]));
+      }
+      users[ADMIN_INI].isAdmin = true;
+      hist=[];
+      _firstLoadDone=true;
+      _lastSyncISO=new Date().toISOString();
+    }else{
+      // === DELTA SYNC: only items modified since last sync ===
+      var mf="Modified ge datetime'"+_lastSyncISO+"'";
+      var [deltaE,deltaA,deltaU]=await Promise.all([
+        spGet('ShiftEntries',mf),
+        spGet('Announcements',mf),
+        spGet('HubUsers',mf)
+      ]);
+      // Merge entries
+      deltaE.forEach(function(sp){
+        var e=spToEntry(sp,fmE);
+        var idx=entries.findIndex(function(x){return x.id===e.id;});
+        if(idx>=0)entries[idx]=e;else entries.push(e);
+      });
+      // Merge announcements
+      deltaA.forEach(function(sp){
+        var a=spToAnn(sp,fmA);
+        var idx=announcements.findIndex(function(x){return x.id===a.id;});
+        if(idx>=0)announcements[idx]=a;else announcements.push(a);
+      });
+      // Merge users
+      deltaU.forEach(function(sp){users[sp.Title]=spToUser(sp,fmU);});
+      users[ADMIN_INI].isAdmin=true;
+      // Monthly reviews (small list, always full)
+      try{var spR=await spGet('MonthlyReviews');monthlyReviews=spR.map(function(i){return spToReview(i,fmR);});}catch(e){}
+      _lastSyncISO=new Date().toISOString();
+      if(deltaE.length||deltaA.length||deltaU.length)console.log('Delta sync: +'+deltaE.length+'e +'+deltaA.length+'a +'+deltaU.length+'u');
     }
-    users[ADMIN_INI].isAdmin = true;
     return true;
   } catch (e) {
     console.error('Failed to load SP data:', e);
-    toast('Failed to load data from SharePoint. Check permissions.');
+    // If delta sync fails, reset and try full load next time
+    if(_firstLoadDone){
+      console.warn('Delta sync failed, will do full reload next cycle');
+      _firstLoadDone=false;
+    }else{
+      toast('Failed to load data from SharePoint. Check permissions.');
+    }
     return false;
   }
 }

@@ -843,7 +843,7 @@ async function initAuth(){
     var dn=document.getElementById('desktop-nav');if(dn)dn.classList.add('authed');
     var dp=document.getElementById('desktop-panel');if(dp)dp.classList.add('authed');
     hideLoad();goScreen('screen-scan');
-    testSP().then(function(){loadTodayLog();loadPanelData();setInterval(loadTodayLog,60000);}).catch(function(e){console.warn('SP test:',e);loadTodayLog();loadPanelData();setInterval(loadTodayLog,60000);});
+    testSP().then(function(){loadTodayLog();loadPanelData();setInterval(loadTodayLog,60000);setInterval(loadPanelData,120000);}).catch(function(e){console.warn('SP test:',e);loadTodayLog();loadPanelData();setInterval(loadTodayLog,60000);setInterval(loadPanelData,120000);});
   }catch(e){hideLoad();console.error('Auth error:',e);goScreen('screen-auth');}
 }
 async function triggerLogin(){if(!msalInstance)msalInstance=new msal.PublicClientApplication(MSAL_CONFIG);await msalInstance.loginRedirect({scopes:['https://uwnetid.sharepoint.com/AllSites.Write','User.Read']});}
@@ -1463,16 +1463,34 @@ async function spFetchAll(listName,sel,filter){
 }
 
 // Load inventory for panel features
+var _scannerFirstLoad=false;
+var _scannerLastSync=null;
+
 async function loadPanelData(){
   try{
     var invSel='Id,Title,field_1,field_2,field_3,field_4,field_5,field_7';// Instrument,ItemType,Unit,InStock,MinPAR,ExpiryDate
-    allInvCache=await spFetchAll(SP.lists.inventory,invSel);
-    console.log('Panel loaded: '+allInvCache.length+' items'+(allInvCache[0]?', first: '+allInvCache[0].Title:''));
+    if(!_scannerFirstLoad){
+      allInvCache=await spFetchAll(SP.lists.inventory,invSel);
+      _scannerFirstLoad=true;
+      _scannerLastSync=new Date().toISOString();
+      console.log('Panel loaded: '+allInvCache.length+' items'+(allInvCache[0]?', first: '+allInvCache[0].Title:''));
+    }else{
+      // Delta sync: only items modified since last sync
+      var mf="Modified ge datetime'"+_scannerLastSync+"'";
+      var delta=await spFetchAll(SP.lists.inventory,invSel,mf);
+      delta.forEach(function(ni){
+        var idx=allInvCache.findIndex(function(x){return x.Id===ni.Id;});
+        if(idx>=0)allInvCache[idx]=ni;else allInvCache.push(ni);
+      });
+      _scannerLastSync=new Date().toISOString();
+      if(delta.length)console.log('Scanner delta: +'+delta.length+' inv items');
+    }
     renderAlerts();
     renderSnapshot();
     renderPanel();
   }catch(e){
     console.warn('Panel data failed:',e.message);
+    if(_scannerFirstLoad){_scannerFirstLoad=false;console.warn('Scanner delta failed, will full reload next cycle');}
     var snap=document.getElementById('inv-snapshot');
     if(snap)snap.innerHTML='<div style="font-size:11px;color:var(--md-error)">'+esc(e.message.slice(0,60))+'</div>';
   }

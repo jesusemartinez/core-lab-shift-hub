@@ -784,18 +784,50 @@ async function spPatch(ln,id,f){var dg=await getDigest(),mt=await getItemType(ln
 
 // DATA
 // ═══════════════════════════════════════════════
-// DATA LOADING
+// OPTIMIZED DATA LOADING
 // ═══════════════════════════════════════════════
+var _dashFirstLoad=false;
+var _dashLastSync=null;
 
 async function loadAllData(){
   showLoad('Loading inventory...');
-  allInventory=await spFetchAll(SP.lists.inventory,'Id,Title,'+Object.values(INV).join(','));
-  showLoad('Loading transactions...');
-  var lf=Object.values(LOG).filter(function(v,i,a){return a.indexOf(v)===i;});
-  allLogs=await spFetchAll(SP.lists.log,'Id,Title,'+lf.join(','));
-  allLogs.sort(function(a,b){return(b[LOG.Timestamp]||'').localeCompare(a[LOG.Timestamp]||'');});
-  document.getElementById('side-sp').textContent='SharePoint connected';
-  renderAll();
+  try{
+    if(!_dashFirstLoad){
+      // First load: full fetch
+      allInventory=await spFetchAll(SP.lists.inventory,'Id,Title,'+Object.values(INV).join(','));
+      showLoad('Loading transactions...');
+      var lf=Object.values(LOG).filter(function(v,i,a){return a.indexOf(v)===i;});
+      allLogs=await spFetchAll(SP.lists.log,'Id,Title,'+lf.join(','));
+      allLogs.sort(function(a,b){return(b[LOG.Timestamp]||'').localeCompare(a[LOG.Timestamp]||'');});
+      _dashFirstLoad=true;
+      _dashLastSync=new Date().toISOString();
+    }else{
+      // Delta sync: only modified since last sync
+      var mf="Modified ge datetime'"+_dashLastSync+"'";
+      var deltaInv=await spFetchAll(SP.lists.inventory,'Id,Title,'+Object.values(INV).join(','),mf);
+      var lf=Object.values(LOG).filter(function(v,i,a){return a.indexOf(v)===i;});
+      var deltaLog=await spFetchAll(SP.lists.log,'Id,Title,'+lf.join(','),mf);
+      // Merge inventory
+      deltaInv.forEach(function(ni){
+        var idx=allInventory.findIndex(function(x){return x.Id===ni.Id;});
+        if(idx>=0)allInventory[idx]=ni;else allInventory.push(ni);
+      });
+      // Merge logs
+      deltaLog.forEach(function(nl){
+        var idx=allLogs.findIndex(function(x){return x.Id===nl.Id;});
+        if(idx>=0)allLogs[idx]=nl;else allLogs.unshift(nl);
+      });
+      allLogs.sort(function(a,b){return(b[LOG.Timestamp]||'').localeCompare(a[LOG.Timestamp]||'');});
+      _dashLastSync=new Date().toISOString();
+      if(deltaInv.length||deltaLog.length)console.log('Dashboard delta: +'+deltaInv.length+' inv, +'+deltaLog.length+' log');
+    }
+    document.getElementById('side-sp').textContent='SharePoint connected';
+    renderAll();
+  }catch(e){
+    console.error('Dashboard load failed:',e);
+    if(_dashFirstLoad){_dashFirstLoad=false;console.warn('Delta failed, will full reload next cycle');}
+  }
+  hideLoad();
 }
 
 // VIEWS
@@ -1555,8 +1587,9 @@ function showLoad(m){document.getElementById('loading-text').textContent=m||'Loa
 function hideLoad(){document.getElementById('loading').classList.remove('show');}
 window.addEventListener('load',function(){
   initAuth();
-  // Resolve doc library name then auto-backup
-  setTimeout(async function(){if(spToken&&isAdmin){await resolveLibName();autoBackupCheck();}},4000);
+  setTimeout(async function(){if(spToken){await resolveLibName();autoBackupCheck();}},4000);
+  // Auto-refresh every 60 seconds (delta sync after first load)
+  setInterval(async function(){if(!_dashFirstLoad)return;try{await loadAllData();}catch(e){}},60000);
 });
 </script>
 <!-- Bulk action bar — fixed overlay, never affects layout -->
