@@ -315,8 +315,8 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
         <button onclick="navWeek(-1)" title="Previous week"><span class="mi mi-sm">chevron_left</span></button>
         <div class="week-label" id="weekLabel"></div>
         <button onclick="navWeek(1)" title="Next week"><span class="mi mi-sm">chevron_right</span></button>
-        <button onclick="navWeek(0)" title="This week" class="tb-btn" style="margin-left:8px;padding:6px 16px;"><span class="mi mi-xs">today</span> Today</button>
       </div>
+      <button onclick="navWeek(0)" class="tb-btn"><span class="mi mi-xs">today</span> Today</button>
       <button class="tb-btn" onclick="toggleRecPanel()"><span class="mi mi-xs">star</span> Recommend</button>
       <button class="tb-btn" onclick="openExportModal()"><span class="mi mi-xs">download</span> Export</button>
     </div>
@@ -416,6 +416,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
         <option>2026</option><option>2027</option><option>2028</option>
       </select>
       <button class="tb-btn" onclick="autoAssignHolidays()" id="holAutoBtn" style="display:none"><span class="mi mi-xs">star</span> Auto-Assign</button>
+      <button class="tb-btn" onclick="removeAllHolidays()" id="holClearBtn" style="display:none;color:var(--red);"><span class="mi mi-xs">delete</span> Remove All</button>
     </div>
   </div>
   <div id="holSummary" class="stats-row"></div>
@@ -437,6 +438,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
         <option value="roster">Roster</option>
       </select>
       <input type="text" id="auditSearch" oninput="renderAuditLog()" placeholder="Search..." style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-family:var(--font);width:140px;">
+      <button class="tb-btn" id="auditClearBtn" onclick="clearAuditLog()" style="display:none;color:var(--red);"><span class="mi mi-xs">delete</span> Clear All</button>
     </div>
   </div>
   <div id="auditList"></div>
@@ -958,7 +960,7 @@ async function loadAllData(){
       _lastSyncISO=new Date().toISOString();
     }
     // Show roster and holiday auto-assign for leads
-    if(isLead()){document.getElementById('navRoster').style.display='';document.getElementById('navStats').style.display='';document.getElementById('navAudit').style.display='';document.getElementById('holAutoBtn').style.display='';}
+    if(isLead()){document.getElementById('navRoster').style.display='';document.getElementById('navStats').style.display='';document.getElementById('navAudit').style.display='';document.getElementById('holAutoBtn').style.display='';document.getElementById('holClearBtn').style.display='';if(me&&me.initials==='JM')document.getElementById('auditClearBtn').style.display='';}
     document.getElementById('hdr-sync').innerHTML='<span class="mi mi-xs">sync</span> Synced '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
     return true;
   }catch(e){
@@ -1255,7 +1257,7 @@ function renderWeek(){
         var chip;
         if(assign){chip=benchChip(assign.bench,false);}
         else if(isInTraining(staff,d.date)){chip=benchChip('T',false);}
-        else if(!staff.benchEligible&&ELEVATED_ROLES.indexOf(staff.role)>=0){chip=benchChip('IO',false);}
+        else if(ELEVATED_ROLES.indexOf(staff.role)>=0){chip=benchChip('IO',false);}
         else{chip=benchChip(null,false);}
         html+='<td class="'+tdClass+'" onclick="openAssignModal(\''+staff.ini+'\',\''+d.date+'\',\''+shift+'\')" style="cursor:pointer">'+chip+'</td>';
       });
@@ -1339,7 +1341,7 @@ function renderDay(){
         var chip;
         if(assign){chip=benchChip(assign.bench);}
         else if(isInTraining(staff,ds)){chip=benchChip('T');}
-        else if(!staff.benchEligible&&ELEVATED_ROLES.indexOf(staff.role)>=0){chip=benchChip('IO');}
+        else if(ELEVATED_ROLES.indexOf(staff.role)>=0){chip=benchChip('IO');}
         else{chip=benchChip(null);}
         var notes=assign&&assign.notes?'<div style="font-size:10px;color:var(--g400);margin-top:2px;">'+esc(assign.notes)+'</div>':'';
         var trainingNote=(!assign&&isInTraining(staff,ds))?'<div style="font-size:10px;color:var(--purple);margin-top:2px;">Training period (auto)</div>':'';
@@ -2377,6 +2379,20 @@ async function removeHolidayAssignment(id){
   try{var sp=await spGet('HolidayRotation',"Title eq '"+id+"'");if(sp.length)await spDelete('HolidayRotation',sp[0].Id);}catch(er){}
 }
 
+async function removeAllHolidays(){
+  var year=parseInt(document.getElementById('holYear').value);
+  var existing=holidayAssignments.filter(function(h){return h.year===String(year)&&h.assigned;});
+  if(!existing.length){toast('No assignments to remove for '+year);return;}
+  if(!confirm('Remove all '+existing.length+' holiday assignments for '+year+'?'))return;
+  showLoad('Removing holiday assignments...');
+  for(var i=0;i<existing.length;i++){
+    try{var sp=await spGet('HolidayRotation',"Title eq '"+existing[i].id+"'");if(sp.length)await spDelete('HolidayRotation',sp[0].Id);}catch(e){}
+  }
+  holidayAssignments=holidayAssignments.filter(function(h){return h.year!==String(year);});
+  logAudit('delete','holiday','Removed all '+existing.length+' holiday assignments for '+year,'');
+  hideLoad();renderHolidays();toast('Removed '+existing.length+' assignments for '+year);
+}
+
 async function autoAssignHolidays(){
   var year=parseInt(document.getElementById('holYear').value);
   var existing=holidayAssignments.filter(function(h){return h.year===String(year)&&h.assigned;});
@@ -2717,6 +2733,21 @@ async function loadAuditIfNeeded(){
     auditLog=sp.map(function(i){return spToAuditEntry(i,fm);});
     _auditLoaded=true;
   }catch(e){console.warn('Audit load failed:',e);}
+}
+
+async function clearAuditLog(){
+  if(!confirm('Delete ALL audit records? This cannot be undone.'))return;
+  if(!confirm('FINAL confirmation: clear entire audit log?'))return;
+  showLoad('Clearing audit log...');
+  try{
+    var sp=await spGet('ScheduleAudit');
+    for(var i=0;i<sp.length;i++){
+      try{await spDelete('ScheduleAudit',sp[i].Id);}catch(e){}
+    }
+  }catch(e){console.warn('Clear audit failed:',e);}
+  auditLog=[];
+  _auditLoaded=false;
+  hideLoad();renderAuditLog();toast('Audit log cleared');
 }
 
 function renderAuditLog(){
