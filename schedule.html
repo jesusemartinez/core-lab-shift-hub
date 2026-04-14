@@ -780,7 +780,7 @@ async function initAuth(){
     me={initials:ini,fullName:acct.name||'',email:acct.username,isLead:false};
     // Determine role
     var s=STAFF.find(function(st){return st.name===me.fullName||st.ini===ini;});
-    if(s){me.initials=s.ini;me.isLead=s.role==='MLS Lead'||s.role==='Lab Manager'||s.role==='Health Services Manager'||s.role==='Lab Director';}
+    if(s){me.initials=s.ini;me.isLead=ELEVATED_ROLES.some(function(r){return s.role&&s.role.indexOf(r)>=0;});}
     document.getElementById('hdr-avatar').textContent=me.initials;
     document.getElementById('hdr-avatar').title=me.fullName;
     document.getElementById('app-header').style.display='';
@@ -804,7 +804,7 @@ function isLead(){
   if(!me)return false;
   if(me.isLead)return true;
   var s=STAFF.find(function(x){return x.ini===me.initials;});
-  return s&&ELEVATED_ROLES.indexOf(s.role)>=0;
+  return s&&ELEVATED_ROLES.some(function(r){return s.role&&s.role.indexOf(r)>=0;});
 }
 function updateHeaderDate(){
   var now=new Date();
@@ -927,6 +927,7 @@ async function loadAllData(){
       holidayAssignments=spHol.map(function(i){return spToHoliday(i,fmH);});
       // Load roster from SP; if empty, seed with defaults
       var rosterItems=spRoster.map(function(i){return spToRoster(i,fmR);});
+      console.log('Roster loaded:',rosterItems.map(function(s){return s.ini+':'+s.role+' bench='+s.benchEligible;}));
       if(rosterItems.length){
         STAFF=rosterItems;
         // Check for any default staff missing from SP roster and add them
@@ -1240,12 +1241,14 @@ function renderWeek(){
 
     // Filter and sort staff: leads/managers first, then techs
     var shiftStaff=STAFF.filter(function(s){return s.active!==false&&s.shift===shift;}).sort(function(a,b){
-      var aP=ELEVATED_ROLES.indexOf(a.role)>=0?0:1;var bP=ELEVATED_ROLES.indexOf(b.role)>=0?0:1;
+      var aP=ELEVATED_ROLES.some(function(r){return a.role&&a.role.indexOf(r)>=0;})?0:1;var bP=ELEVATED_ROLES.some(function(r){return b.role&&b.role.indexOf(r)>=0;})?0:1;
       if(aP!==bP)return aP-bP;return a.name.localeCompare(b.name);
     });
     shiftStaff.forEach(function(staff){
       html+='<tr>';
-      var roleCls=staff.role==='MLS Lead'?'role-lead':ELEVATED_ROLES.indexOf(staff.role)>=0?'role-manager':staff.role==='MLS2'?'role-mls2':'role-tech';
+      var isLeadRole=staff.role&&staff.role.indexOf('MLS Lead')>=0;
+      var isElevatedRole=ELEVATED_ROLES.some(function(r){return staff.role&&staff.role.indexOf(r)>=0;});
+      var roleCls=isLeadRole?'role-lead':isElevatedRole?'role-manager':staff.role==='MLS2'?'role-mls2':'role-tech';
       html+='<td class="name-cell '+roleCls+'"><div style="font-weight:700;font-size:12px;">'+esc(staff.name.split(' ')[0])+'</div><div style="font-size:9px;color:var(--g400);">'+esc(staff.role)+'</div></td>';
       dates.forEach(function(d){
         var tdClass=(d.isToday?'today-col':'')+(d.isWeekend?' weekend':'');
@@ -1255,9 +1258,10 @@ function renderWeek(){
         }
         var assign=getAssignment(staff.ini,d.date,shift);
         var chip;
+        var isElevated=ELEVATED_ROLES.some(function(r){return staff.role&&staff.role.indexOf(r)>=0;});
         if(assign){chip=benchChip(assign.bench,false);}
         else if(isInTraining(staff,d.date)){chip=benchChip('T',false);}
-        else if(ELEVATED_ROLES.indexOf(staff.role)>=0){chip=benchChip('IO',false);}
+        else if(isElevated){chip=benchChip('IO',false);}
         else{chip=benchChip(null,false);}
         html+='<td class="'+tdClass+'" onclick="openAssignModal(\''+staff.ini+'\',\''+d.date+'\',\''+shift+'\')" style="cursor:pointer">'+chip+'</td>';
       });
@@ -1331,7 +1335,7 @@ function renderDay(){
     html+='<div class="daily-card-body">';
 
     var shiftStaff=STAFF.filter(function(s){return s.active!==false&&s.shift===shift;}).sort(function(a,b){
-      var aP=ELEVATED_ROLES.indexOf(a.role)>=0?0:1;var bP=ELEVATED_ROLES.indexOf(b.role)>=0?0:1;
+      var aP=ELEVATED_ROLES.some(function(r){return a.role&&a.role.indexOf(r)>=0;})?0:1;var bP=ELEVATED_ROLES.some(function(r){return b.role&&b.role.indexOf(r)>=0;})?0:1;
       if(aP!==bP)return aP-bP;return a.name.localeCompare(b.name);
     });
     if(!shiftStaff.length){html+='<div class="empty"><p>No staff assigned to this shift</p></div>';}
@@ -1341,7 +1345,7 @@ function renderDay(){
         var chip;
         if(assign){chip=benchChip(assign.bench);}
         else if(isInTraining(staff,ds)){chip=benchChip('T');}
-        else if(ELEVATED_ROLES.indexOf(staff.role)>=0){chip=benchChip('IO');}
+        else if(ELEVATED_ROLES.some(function(r){return staff.role&&staff.role.indexOf(r)>=0;})){chip=benchChip('IO');}
         else{chip=benchChip(null);}
         var notes=assign&&assign.notes?'<div style="font-size:10px;color:var(--g400);margin-top:2px;">'+esc(assign.notes)+'</div>':'';
         var trainingNote=(!assign&&isInTraining(staff,ds))?'<div style="font-size:10px;color:var(--purple);margin-top:2px;">Training period (auto)</div>':'';
