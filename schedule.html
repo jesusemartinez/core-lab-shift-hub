@@ -10,7 +10,7 @@
 <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
 <style>
 /* ═══ RESET & TOKENS ═══ */
-*{margin:0;padding:0;box-sizing:border-box;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{
   --navy:#1a3a3a;--navy-l:#224848;--teal:#00796B;--teal-l:#00897B;--teal-bg:#e0f2f1;
   --surface:#f7f4ef;--white:#fffcf7;
@@ -253,20 +253,83 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 .fairness-fill.heavy{background:var(--red);}
 
 /* ═══ MOBILE ═══ */
-@media(max-width:600px){
-  .header{padding:0 12px;height:56px;}
-  .hdr-info h1{font-size:14px;}
-  .hdr-chip{display:none;}
-  .main{padding:12px 10px 100px;}
-  .toolbar{flex-direction:column;align-items:stretch;}
-  .toolbar h2{font-size:15px;}
-  .tb-controls{justify-content:center;}
+@media(max-width:768px){
+  .header{padding:0 12px;height:50px;}
+  .hdr-info h1{font-size:13px;}
+  .hdr-info p{font-size:9px;}
+  .hdr-chip{font-size:8px;padding:3px 6px;}
+  .hdr-chip#hdr-date{display:none;}
+  .hdr-avatar{width:30px;height:30px;font-size:11px;}
+  .hdr-logo{width:28px;height:28px;margin-right:8px;}
+  .nav{top:50px;-webkit-overflow-scrolling:touch;}
+  .nav-tab{font-size:10px;padding:8px 10px;min-width:fit-content;white-space:nowrap;}
+  .nav-tab .mi{font-size:16px;}
+  .main{padding:10px 8px 80px;}
+  .toolbar{flex-direction:column;align-items:stretch;gap:8px;}
+  .toolbar h2{font-size:14px;}
+  .tb-controls{justify-content:center;gap:6px;flex-wrap:wrap;}
+  .tb-btn{font-size:11px;padding:6px 10px;}
+  .week-nav{gap:2px;}
+  .week-nav button{width:28px;height:28px;}
+  .week-label{font-size:12px;min-width:130px;}
+  .stats-row{flex-direction:column;gap:6px;}
+  .stat-card{padding:8px 12px;}
+  .stat-label{font-size:9px;}
+  .stat-val{font-size:18px;}
+  .sched-grid{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -8px;padding:0 8px;}
+  .sched-table{min-width:700px;}
+  .sched-table th{font-size:8px;padding:4px 2px;}
+  .sched-table td{padding:3px 2px;}
+  .sched-table td.name-cell{min-width:80px;font-size:10px;padding-left:8px;}
+  .sched-table td.name-cell div:first-child{font-size:10px;}
+  .sched-table td.name-cell div:last-child{font-size:8px;}
+  .bench-chip{font-size:9px;padding:2px 6px;min-width:28px;}
+  .bench-chip.empty{width:24px;height:24px;font-size:14px;}
+  .shift-hdr{padding:8px 12px;font-size:11px;}
+  .shift-hdr .shift-toggle{font-size:12px;}
+  .coverage-bar{padding:4px 8px;flex-wrap:wrap;gap:4px;}
+  .cov-item{font-size:8px;padding:2px 6px;}
   .daily-cards{grid-template-columns:1fr;}
-  .stats-row{flex-direction:column;}
-  .month-cell{min-height:50px;}
-  .sched-table td.name-cell{min-width:90px;font-size:10px;}
-  #recPanelWrap{right:10px;left:10px;width:auto;}
+  .daily-card{margin-bottom:8px;}
+  .daily-card-hdr{font-size:11px;padding:8px 12px;}
+  .daily-row{padding:6px 10px;font-size:12px;}
+  .daily-name{font-size:12px;}
+  .daily-role{font-size:9px;}
+  .month-grid{gap:1px;}
+  .month-hdr{font-size:8px;padding:3px 1px;}
+  .month-cell{min-height:50px;padding:2px;font-size:7px;}
+  .month-day{font-size:9px;}
+  .month-mini{font-size:7px;padding:1px 3px;}
+  .month-cov{font-size:7px;padding:1px 4px;}
+  .modal-bg{align-items:flex-end;padding:0;}
+  .modal{width:100%;max-width:100%;max-height:85vh;border-radius:16px 16px 0 0;margin:0;overflow-y:auto;animation:modalSlideUp var(--dur-med) var(--me-decelerate);}
+  .modal h3{font-size:14px;}
+  .form-row{margin-bottom:10px;}
+  .form-row label{font-size:10px;}
+  .form-row input,.form-row select,.form-row textarea{font-size:14px;padding:10px 12px;}
+  .btn-row{flex-wrap:wrap;gap:6px;}
+  .btn{padding:10px 16px;font-size:12px;flex:1;min-width:100px;text-align:center;}
+  .rec-panel{padding:12px;margin-bottom:10px;}
+  .rec-panel h3{font-size:13px;}
+  .rec-row{flex-wrap:wrap;gap:4px;}
+  .rec-name{font-size:11px;min-width:80px;}
+  .rec-reason{font-size:9px;}
+  .rec-accept{font-size:10px;padding:4px 10px;}
+  .swap-card{padding:12px;margin-bottom:8px;}
+  .swap-hdr{font-size:12px;}
+  .swap-detail{font-size:10px;}
+  .swap-actions{flex-wrap:wrap;gap:4px;}
+  .swap-actions .btn{font-size:10px;padding:6px 10px;flex:none;}
+  #recPanelWrap{left:6px;right:6px;bottom:10px;max-height:50vh;}
+  .auth-screen{padding:20px;}
+  .auth-btn{font-size:14px;padding:12px 24px;}
+  .auth-title{font-size:20px;}
+  .auth-sub{font-size:12px;}
+  .empty{padding:20px 12px;}
+  .empty h3{font-size:14px;}
+  .empty p{font-size:11px;}
 }
+@keyframes modalSlideUp{from{transform:translateY(100%);opacity:0;}to{transform:translateY(0);opacity:1;}}
 </style>
 </head>
 <body>
