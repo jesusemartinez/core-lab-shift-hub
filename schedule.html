@@ -301,6 +301,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
   <div class="nav-tab" id="navStats" onclick="switchTab('stats')" style="display:none"><span class="mi mi-sm">assessment</span> Stats</div>
   <div class="nav-tab" id="navAudit" onclick="switchTab('audit')" style="display:none"><span class="mi mi-sm">history</span> Audit</div>
   <div class="nav-tab" id="navRoster" onclick="switchTab('roster')" style="display:none"><span class="mi mi-sm">group</span> Staff Roster</div>
+  <div class="nav-tab" id="navAdmin" onclick="switchTab('admin')" style="display:none"><span class="mi mi-sm">settings</span> Admin</div>
 </div>
 
 <!-- Main Content -->
@@ -353,7 +354,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
         <div class="week-label" id="monthLabel"></div>
         <button onclick="navMonth(1)"><span class="mi mi-sm">chevron_right</span></button>
       </div>
-      <select id="monthShiftFilter" onchange="renderMonth()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
+      <select id="monthShiftFilter" onchange="renderMonth();saveUIState()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
         <option value="">All Shifts</option>
         <option value="Morning">Morning</option>
         <option value="Evening">Evening</option>
@@ -371,7 +372,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
     <h2><span class="mi">compare_arrows</span> Swap Requests</h2>
     <div class="tb-controls">
       <button class="tb-btn primary" onclick="openSwapModal()"><span class="mi mi-xs">add</span> New Request</button>
-      <select id="swapFilter" onchange="renderSwaps()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
+      <select id="swapFilter" onchange="renderSwaps();saveUIState()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
         <option value="">All</option>
         <option value="Pending">Pending</option>
         <option value="Approved">Approved</option>
@@ -388,14 +389,14 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
     <h2><span class="mi">event</span> PTO Requests</h2>
     <div class="tb-controls">
       <button class="tb-btn primary" onclick="openPTOModal()"><span class="mi mi-xs">add</span> New Request</button>
-      <select id="ptoFilter" onchange="renderPTO()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
+      <select id="ptoFilter" onchange="renderPTO();saveUIState()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
         <option value="">All</option>
         <option value="Pending">Pending</option>
         <option value="Approved">Approved</option>
         <option value="Denied">Denied</option>
         <option value="Waitlisted">Waitlisted</option>
       </select>
-      <select id="ptoTypeFilter" onchange="renderPTO()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
+      <select id="ptoTypeFilter" onchange="renderPTO();saveUIState()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
         <option value="">All Types</option>
         <option value="General">General PTO</option>
         <option value="Holiday">Holiday PTO</option>
@@ -429,7 +430,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
   <div class="toolbar">
     <h2><span class="mi">history</span> Audit Log</h2>
     <div class="tb-controls">
-      <select id="auditTypeFilter" onchange="renderAuditLog()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
+      <select id="auditTypeFilter" onchange="renderAuditLog();saveUIState()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
         <option value="">All Types</option>
         <option value="assignment">Assignments</option>
         <option value="pto">PTO</option>
@@ -437,7 +438,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
         <option value="holiday">Holidays</option>
         <option value="roster">Roster</option>
       </select>
-      <input type="text" id="auditSearch" oninput="renderAuditLog()" placeholder="Search..." style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-family:var(--font);width:140px;">
+      <input type="text" id="auditSearch" oninput="renderAuditLog();saveUIState()" placeholder="Search..." style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-family:var(--font);width:140px;">
       <button class="tb-btn" id="auditClearBtn" onclick="clearAuditLog()" style="display:none;color:var(--red);"><span class="mi mi-xs">delete</span> Clear All</button>
     </div>
   </div>
@@ -454,7 +455,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
         <div class="week-label" id="statsLabel"></div>
         <button onclick="navStatsPeriod(1)"><span class="mi mi-sm">chevron_right</span></button>
       </div>
-      <select id="statsRange" onchange="renderStats()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
+      <select id="statsRange" onchange="renderStats();saveUIState()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
         <option value="month">Monthly</option>
         <option value="quarter">Quarterly</option>
         <option value="year">Yearly</option>
@@ -494,6 +495,55 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
     </table>
   </div>
 </div>
+
+<!-- ADMIN PAGE -->
+<div class="page" id="pageAdmin">
+  <div class="toolbar">
+    <h2><span class="mi">settings</span> Administration</h2>
+  </div>
+
+  <div class="rec-panel" style="margin-bottom:16px;">
+    <h3><span class="mi">sync</span> SharePoint Connection</h3>
+    <p style="font-size:11px;color:var(--g500);margin-bottom:10px;">Data syncs from SharePoint every 60 seconds. Last sync shown in the header.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn primary" onclick="forceSync()"><span class="mi mi-xs">sync</span> Force Sync Now</button>
+    </div>
+    <div style="margin-top:10px;">
+      <div style="font-size:10px;font-weight:700;color:var(--g500);margin-bottom:4px;">SP Lists Status</div>
+      <div id="adminSpStatus" style="font-size:11px;"></div>
+    </div>
+  </div>
+
+  <div class="rec-panel" style="margin-bottom:16px;">
+    <h3><span class="mi">cloud_upload</span> Backup &amp; Restore</h3>
+    <p style="font-size:11px;color:var(--g500);margin-bottom:10px;">Export all schedule data as a JSON backup file, or restore from a previous backup.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="btn primary" onclick="exportBackup()"><span class="mi mi-xs">download</span> Export Backup</button>
+      <button class="btn" onclick="backupToSP()"><span class="mi mi-xs">cloud_upload</span> Backup to SharePoint</button>
+    </div>
+    <div style="font-size:10px;color:var(--g400);margin-bottom:8px;" id="adminBackupStatus"></div>
+    <div style="border-top:1px solid var(--g200);padding-top:10px;margin-top:8px;">
+      <div style="font-size:10px;font-weight:700;color:var(--g600);margin-bottom:6px;">Restore from Backup</div>
+      <p style="font-size:10px;color:var(--g500);margin-bottom:6px;">Upload a JSON backup. Existing items with matching IDs will be updated. New items will be created.</p>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input type="file" id="restoreFile" accept=".json" style="font-size:10px;max-width:200px;">
+        <button class="btn" style="color:var(--amber);" onclick="restoreBackup()"><span class="mi mi-xs">restore</span> Restore</button>
+      </div>
+      <div id="adminRestoreStatus" style="margin-top:6px;font-size:10px;color:var(--g500);display:none;"></div>
+    </div>
+    <div style="border-top:1px solid var(--g200);padding-top:10px;margin-top:10px;">
+      <div style="font-size:10px;font-weight:700;color:var(--g600);margin-bottom:6px;">Backup History (SharePoint)</div>
+      <div id="adminBackupHistory" style="font-size:10px;color:var(--g500);">Click "Load History" to check.</div>
+      <button class="btn" onclick="loadBackupHistory()" style="margin-top:6px;font-size:10px;"><span class="mi mi-xs">history</span> Load History</button>
+    </div>
+  </div>
+
+  <div class="rec-panel" style="margin-bottom:16px;">
+    <h3><span class="mi">info</span> System Info</h3>
+    <div style="font-size:11px;color:var(--g500);" id="adminSysInfo"></div>
+  </div>
+</div>
+
 </div><!-- end main -->
 
 <!-- ASSIGNMENT MODAL -->
@@ -783,7 +833,6 @@ async function initAuth(){
     var acct=accts[0];
     var ini=getInitials(acct.name||acct.username);
     me={initials:ini,fullName:acct.name||'',email:acct.username,isLead:false};
-    // Determine role
     var s=STAFF.find(function(st){return st.name===me.fullName||st.ini===ini;});
     if(s){me.initials=s.ini;me.isLead=ELEVATED_ROLES.some(function(r){return s.role&&s.role.indexOf(r)>=0;});}
     document.getElementById('hdr-avatar').textContent=me.initials;
@@ -792,11 +841,17 @@ async function initAuth(){
     document.getElementById('app-nav').style.display='';
     document.getElementById('app-main').style.display='';
     updateHeaderDate();
-    await loadAllData();
-    hideLoad();
     initViews();
-    renderWeek();
-    // Auto-refresh every 60 seconds
+    // Show UI immediately with empty grid, then load data
+    restoreUIState();
+    hideLoad();
+    showLoad('Loading schedule data...');
+    await loadAllData();
+    // Re-check role after roster loads from SP
+    s=STAFF.find(function(st){return st.name===me.fullName||st.ini===ini;});
+    if(s){me.initials=s.ini;me.isLead=ELEVATED_ROLES.some(function(r){return s.role&&s.role.indexOf(r)>=0;});}
+    hideLoad();
+    renderCurrentView();
     setInterval(async function(){try{await loadAllData();renderCurrentView();}catch(e){}},60000);
   }catch(e){
     hideLoad();console.error('Auth:',e);
@@ -966,7 +1021,7 @@ async function loadAllData(){
       _lastSyncISO=new Date().toISOString();
     }
     // Show roster and holiday auto-assign for leads
-    if(isLead()){document.getElementById('navRoster').style.display='';document.getElementById('navStats').style.display='';document.getElementById('navAudit').style.display='';document.getElementById('holAutoBtn').style.display='';document.getElementById('holClearBtn').style.display='';if(me&&me.initials==='JM')document.getElementById('auditClearBtn').style.display='';}
+    if(isLead()){document.getElementById('navRoster').style.display='';document.getElementById('navStats').style.display='';document.getElementById('navAudit').style.display='';document.getElementById('holAutoBtn').style.display='';document.getElementById('holClearBtn').style.display='';if(me&&me.initials==='JM'){document.getElementById('auditClearBtn').style.display='';document.getElementById('navAdmin').style.display='';}}
     document.getElementById('hdr-sync').innerHTML='<span class="mi mi-xs">sync</span> Synced '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
     return true;
   }catch(e){
@@ -1161,19 +1216,61 @@ function initViews(){
   curMonth={month:now.getMonth(),year:now.getFullYear()};
 }
 
+// ═══ UI STATE PERSISTENCE ═══
+function saveUIState(){
+  try{
+    var state={
+      activeTab:document.querySelector('.nav-tab.active')?document.querySelector('.nav-tab.active').id.replace('nav','').toLowerCase():'week',
+      collapsedShifts:_collapsedShifts,
+      swapFilter:(document.getElementById('swapFilter')||{}).value||'',
+      ptoFilter:(document.getElementById('ptoFilter')||{}).value||'',
+      ptoTypeFilter:(document.getElementById('ptoTypeFilter')||{}).value||'',
+      monthShiftFilter:(document.getElementById('monthShiftFilter')||{}).value||'',
+      auditTypeFilter:(document.getElementById('auditTypeFilter')||{}).value||'',
+      statsRange:(document.getElementById('statsRange')||{}).value||'month'
+    };
+    sessionStorage.setItem('schedState',JSON.stringify(state));
+  }catch(e){}
+}
+
+function restoreUIState(){
+  try{
+    var raw=sessionStorage.getItem('schedState');
+    if(!raw){renderWeek();return;}
+    var state=JSON.parse(raw);
+    // Restore filters first
+    if(state.swapFilter&&document.getElementById('swapFilter'))document.getElementById('swapFilter').value=state.swapFilter;
+    if(state.ptoFilter&&document.getElementById('ptoFilter'))document.getElementById('ptoFilter').value=state.ptoFilter;
+    if(state.ptoTypeFilter&&document.getElementById('ptoTypeFilter'))document.getElementById('ptoTypeFilter').value=state.ptoTypeFilter;
+    if(state.monthShiftFilter&&document.getElementById('monthShiftFilter'))document.getElementById('monthShiftFilter').value=state.monthShiftFilter;
+    if(state.auditTypeFilter&&document.getElementById('auditTypeFilter'))document.getElementById('auditTypeFilter').value=state.auditTypeFilter;
+    if(state.statsRange&&document.getElementById('statsRange'))document.getElementById('statsRange').value=state.statsRange;
+    // Restore collapsed shifts
+    if(state.collapsedShifts)_collapsedShifts=state.collapsedShifts;
+    // Restore active tab
+    var tab=state.activeTab||'week';
+    switchTab(tab);
+  }catch(e){renderWeek();}
+}
+
 function switchTab(tab){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active');});
-  document.getElementById('page'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
-  document.getElementById('nav'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
+  var pageId='page'+tab.charAt(0).toUpperCase()+tab.slice(1);
+  var navId='nav'+tab.charAt(0).toUpperCase()+tab.slice(1);
+  var pageEl=document.getElementById(pageId);
+  var navEl=document.getElementById(navId);
+  if(pageEl)pageEl.classList.add('active');
+  if(navEl)navEl.classList.add('active');
   if(tab==='week')renderWeek();
   else if(tab==='day')renderDay();
   else if(tab==='month')renderMonth();
   else if(tab==='swap')renderSwaps();
   else if(tab==='pto')renderPTO();
   else if(tab==='holiday')renderHolidays();
-  else if(tab==='stats')renderStats();else if(tab==='audit')renderAuditLog();
+  else if(tab==='stats')renderStats();else if(tab==='audit')renderAuditLog();else if(tab==='admin')renderAdmin();
   else if(tab==='roster')renderRoster();
+  saveUIState();
 }
 
 function renderCurrentView(){
@@ -1185,7 +1282,7 @@ function renderCurrentView(){
     else if(active.id==='pageSwap')renderSwaps();
     else if(active.id==='pagePto')renderPTO();
     else if(active.id==='pageHoliday')renderHolidays();
-    else if(active.id==='pageStats')renderStats();else if(active.id==='pageAudit')renderAuditLog();
+    else if(active.id==='pageStats')renderStats();else if(active.id==='pageAudit')renderAuditLog();else if(active.id==='pageAdmin')renderAdmin();
     else if(active.id==='pageRoster')renderRoster();
   }
 }
@@ -1322,6 +1419,7 @@ function toggleShiftSection(shId){
   if(body)body.classList.toggle('collapsed',_collapsedShifts[shId]);
   if(cov)cov.classList.toggle('collapsed',_collapsedShifts[shId]);
   if(hdr)hdr.classList.toggle('collapsed',_collapsedShifts[shId]);
+  saveUIState();
 }
 
 // ═══ DAILY VIEW ═══
@@ -2952,6 +3050,151 @@ function renderAuditLog(){
     });
     document.getElementById('auditList').innerHTML=html;
   });
+}
+
+// ═══════════════════════════════════════════
+// ADMIN
+// ═══════════════════════════════════════════
+function renderAdmin(){
+  // SP lists status
+  var lists=['ScheduleEntries','SwapRequests','ScheduleRoster','PTORequests','HolidayRotation','ScheduleAudit'];
+  var statusHtml='';
+  lists.forEach(function(ln){
+    var count=ln==='ScheduleEntries'?schedEntries.length:ln==='SwapRequests'?swapRequests.length:ln==='ScheduleRoster'?STAFF.length:ln==='PTORequests'?ptoRequests.length:ln==='HolidayRotation'?holidayAssignments.length:auditLog.length;
+    var fm=_fieldMaps[ln];
+    var status=fm&&Object.keys(fm).length>1?'<span style="color:var(--green);font-weight:700;">Connected</span>':'<span style="color:var(--amber);font-weight:700;">Pending</span>';
+    statusHtml+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--g50);"><span>'+ln+'</span><span>'+count+' items</span>'+status+'</div>';
+  });
+  document.getElementById('adminSpStatus').innerHTML=statusHtml;
+
+  // System info
+  document.getElementById('adminSysInfo').innerHTML=
+    '<div>App Version: Schedule 1.0</div>'+
+    '<div>MSAL Client ID: '+CLIENT_ID.slice(0,8)+'...</div>'+
+    '<div>SP Site: '+SP_SITE.split('/').pop()+'</div>'+
+    '<div>Current User: '+(me?me.fullName+' ('+me.initials+')':'Not signed in')+'</div>'+
+    '<div>Role: '+(me?STAFF.find(function(s){return s.ini===me.initials;})||{}:{}).role||'Unknown'+'</div>'+
+    '<div>Staff Count: '+STAFF.filter(function(s){return s.active!==false;}).length+' active</div>'+
+    '<div>Last Sync: '+(_lastSyncISO?new Date(_lastSyncISO).toLocaleString():'Never')+'</div>';
+}
+
+async function forceSync(){
+  showLoad('Forcing full sync...');
+  _firstLoadDone=false;
+  try{await loadAllData();renderCurrentView();}catch(e){console.error('Force sync failed:',e);}
+  hideLoad();toast('Full sync completed');
+  renderAdmin();
+}
+
+function exportBackup(){
+  var backup={
+    version:'1.0',
+    exported:new Date().toISOString(),
+    exportedBy:me?me.fullName:'',
+    scheduleEntries:schedEntries,
+    swapRequests:swapRequests,
+    staff:STAFF,
+    ptoRequests:ptoRequests,
+    holidayAssignments:holidayAssignments,
+    auditLog:auditLog
+  };
+  var json=JSON.stringify(backup,null,2);
+  dlFile(json,'schedule-backup-'+fmtDate(new Date())+'.json','application/json');
+  logAudit('add','admin','Exported backup ('+schedEntries.length+' entries, '+STAFF.length+' staff)','');
+  toast('Backup exported');
+}
+
+async function backupToSP(){
+  showLoad('Backing up to SharePoint...');
+  try{
+    var backup={version:'1.0',exported:new Date().toISOString(),exportedBy:me?me.fullName:'',scheduleEntries:schedEntries,swapRequests:swapRequests,staff:STAFF,ptoRequests:ptoRequests,holidayAssignments:holidayAssignments};
+    var json=JSON.stringify(backup);
+    var fileName='schedule-backup-'+fmtDate(new Date())+'T'+new Date().toTimeString().slice(0,5).replace(':','')+'.json';
+    var folderUrl=SP_SITE+"/_api/web/GetFolderByServerRelativeUrl('Shared%20Documents')/Files/add(url='"+fileName+"',overwrite=true)";
+    var t=await getToken();
+    await fetch(folderUrl,{method:'POST',headers:{'Authorization':'Bearer '+t,'Accept':'application/json;odata=verbose','Content-Type':'application/json'},body:json});
+    logAudit('add','admin','Backup saved to SharePoint: '+fileName,'');
+    document.getElementById('adminBackupStatus').innerHTML='<span style="color:var(--green);font-weight:700;">Backup saved: '+fileName+'</span>';
+  }catch(e){
+    console.error('SP backup failed:',e);
+    document.getElementById('adminBackupStatus').innerHTML='<span style="color:var(--red);">Backup failed: '+e.message+'</span>';
+  }
+  hideLoad();
+}
+
+async function loadBackupHistory(){
+  try{
+    var t=await getToken();
+    var url=SP_SITE+"/_api/web/GetFolderByServerRelativeUrl('Shared%20Documents')/Files?$filter=startswith(Name,'schedule-backup')&$orderby=TimeCreated desc&$top=20&$select=Name,TimeCreated,Length";
+    var r=await fetch(url,{headers:{'Authorization':'Bearer '+t,'Accept':'application/json;odata=verbose'}});
+    if(!r.ok){document.getElementById('adminBackupHistory').innerHTML='<span style="color:var(--red);">Could not load history</span>';return;}
+    var d=await r.json();
+    var files=(d.d&&d.d.results)?d.d.results:[];
+    if(!files.length){document.getElementById('adminBackupHistory').innerHTML='No backups found in Shared Documents.';return;}
+    var html='<div style="max-height:200px;overflow-y:auto;">';
+    files.forEach(function(f){
+      var size=Math.round((parseInt(f.Length)||0)/1024);
+      var created=new Date(f.TimeCreated).toLocaleString();
+      html+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--g50);font-size:10px;"><span style="font-weight:600;">'+esc(f.Name)+'</span><span style="color:var(--g400);">'+size+'KB | '+created+'</span></div>';
+    });
+    html+='</div>';
+    document.getElementById('adminBackupHistory').innerHTML=html;
+  }catch(e){
+    document.getElementById('adminBackupHistory').innerHTML='<span style="color:var(--red);">Error: '+e.message+'</span>';
+  }
+}
+
+async function restoreBackup(){
+  var fileInput=document.getElementById('restoreFile');
+  if(!fileInput.files.length){toast('Select a backup file first');return;}
+  if(!confirm('Restore from backup? Existing items with matching IDs will be updated. New items will be created. No data will be deleted.'))return;
+  showLoad('Restoring from backup...');
+  var statusEl=document.getElementById('adminRestoreStatus');
+  statusEl.style.display='block';statusEl.textContent='Reading file...';
+  try{
+    var text=await fileInput.files[0].text();
+    var backup=JSON.parse(text);
+    var added=0,updated=0;
+    statusEl.textContent='Restoring schedule entries...';
+    if(backup.scheduleEntries){
+      for(var i=0;i<backup.scheduleEntries.length;i++){
+        var e=backup.scheduleEntries[i];
+        var existing=schedEntries.find(function(x){return x.id===e.id;});
+        if(existing){Object.assign(existing,e);updated++;}
+        else{schedEntries.push(e);added++;}
+      }
+    }
+    statusEl.textContent='Restoring PTO requests...';
+    if(backup.ptoRequests){
+      backup.ptoRequests.forEach(function(p){
+        var existing=ptoRequests.find(function(x){return x.id===p.id;});
+        if(existing){Object.assign(existing,p);updated++;}
+        else{ptoRequests.push(p);added++;}
+      });
+    }
+    statusEl.textContent='Restoring swap requests...';
+    if(backup.swapRequests){
+      backup.swapRequests.forEach(function(s){
+        var existing=swapRequests.find(function(x){return x.id===s.id;});
+        if(existing){Object.assign(existing,s);updated++;}
+        else{swapRequests.push(s);added++;}
+      });
+    }
+    statusEl.textContent='Restoring holiday assignments...';
+    if(backup.holidayAssignments){
+      backup.holidayAssignments.forEach(function(h){
+        var existing=holidayAssignments.find(function(x){return x.id===h.id;});
+        if(existing){Object.assign(existing,h);updated++;}
+        else{holidayAssignments.push(h);added++;}
+      });
+    }
+    logAudit('add','admin','Restored from backup: '+added+' added, '+updated+' updated','');
+    renderCurrentView();
+    statusEl.innerHTML='<span style="color:var(--green);font-weight:700;">Restore complete: '+added+' added, '+updated+' updated</span>';
+  }catch(e){
+    statusEl.innerHTML='<span style="color:var(--red);">Restore failed: '+e.message+'</span>';
+  }
+  hideLoad();
 }
 
 // ═══════════════════════════════════════════
