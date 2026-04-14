@@ -30,7 +30,7 @@
   --dur-micro:80ms;--dur-short:200ms;--dur-med:300ms;--dur-long:400ms;--dur-xl:500ms;
   --hc-bg:#e8f5e9;--hc-c:#1b5e20;--cu-bg:#e3f2fd;--cu-c:#0d47a1;--fl-bg:#fff3e0;--fl-c:#e65100;
   --tr-bg:#f3e5f5;--tr-c:#4a148c;--t-bg:#fce4ec;--t-c:#880e4f;
-  --pto-bg:#fbe9e7;--pto-c:#bf360c;--co-bg:#ffebee;--co-c:#b71c1c;
+  --pto-bg:#fbe9e7;--pto-c:#bf360c;--sl-bg:#ffebee;--sl-c:#b71c1c;
   --ot-bg:#fff8e1;--ot-c:#f57f17;
 }
 
@@ -124,7 +124,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 .bench-chip.tr{background:var(--tr-bg);color:var(--tr-c);}
 .bench-chip.t{background:var(--t-bg);color:var(--t-c);}
 .bench-chip.pto{background:var(--pto-bg);color:var(--pto-c);}
-.bench-chip.co{background:var(--co-bg);color:var(--co-c);}
+.bench-chip.sl{background:var(--sl-bg);color:var(--sl-c);}
 .bench-chip.ot{background:var(--ot-bg);color:var(--ot-c);border:1px dashed var(--ot-c);}
 .bench-chip.io{background:#e0f2f1;color:#004D40;}
 .bench-chip.wfh{background:#e8eaf6;color:#283593;border:1px dashed #283593;}
@@ -294,13 +294,13 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 <div class="nav" id="app-nav" style="display:none">
   <div class="nav-tab active" id="navWeek" onclick="switchTab('week')"><span class="mi mi-sm">view_week</span> Weekly</div>
   <div class="nav-tab" id="navDay" onclick="switchTab('day')"><span class="mi mi-sm">today</span> Daily</div>
-  <div class="nav-tab" id="navMonth" onclick="switchTab('month')"><span class="mi mi-sm">calendar_month</span> Monthly</div>
-  <div class="nav-tab" id="navSwap" onclick="switchTab('swap')"><span class="mi mi-sm">swap_horiz</span> Swap Requests</div>
-  <div class="nav-tab" id="navPto" onclick="switchTab('pto')"><span class="mi mi-sm">event_busy</span> PTO</div>
-  <div class="nav-tab" id="navHoliday" onclick="switchTab('holiday')"><span class="mi mi-sm">celebration</span> Holidays</div>
-  <div class="nav-tab" id="navStats" onclick="switchTab('stats')" style="display:none"><span class="mi mi-sm">analytics</span> Stats</div>
+  <div class="nav-tab" id="navMonth" onclick="switchTab('month')"><span class="mi mi-sm">date_range</span> Monthly</div>
+  <div class="nav-tab" id="navSwap" onclick="switchTab('swap')"><span class="mi mi-sm">compare_arrows</span> Swap Requests</div>
+  <div class="nav-tab" id="navPto" onclick="switchTab('pto')"><span class="mi mi-sm">event</span> PTO</div>
+  <div class="nav-tab" id="navHoliday" onclick="switchTab('holiday')"><span class="mi mi-sm">emoji_events</span> Holidays</div>
+  <div class="nav-tab" id="navStats" onclick="switchTab('stats')" style="display:none"><span class="mi mi-sm">assessment</span> Stats</div>
   <div class="nav-tab" id="navAudit" onclick="switchTab('audit')" style="display:none"><span class="mi mi-sm">history</span> Audit</div>
-  <div class="nav-tab" id="navRoster" onclick="switchTab('roster')" style="display:none"><span class="mi mi-sm">groups</span> Staff Roster</div>
+  <div class="nav-tab" id="navRoster" onclick="switchTab('roster')" style="display:none"><span class="mi mi-sm">group</span> Staff Roster</div>
 </div>
 
 <!-- Main Content -->
@@ -317,7 +317,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
         <button onclick="navWeek(1)" title="Next week"><span class="mi mi-sm">chevron_right</span></button>
         <button onclick="navWeek(0)" title="This week" class="tb-btn" style="margin-left:4px"><span class="mi mi-xs">today</span> Today</button>
       </div>
-      <button class="tb-btn" onclick="toggleRecPanel()"><span class="mi mi-xs">auto_awesome</span> Recommend</button>
+      <button class="tb-btn" onclick="toggleRecPanel()"><span class="mi mi-xs">star</span> Recommend</button>
       <button class="tb-btn" onclick="openExportModal()"><span class="mi mi-xs">download</span> Export</button>
     </div>
   </div>
@@ -346,7 +346,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 <!-- MONTHLY PAGE -->
 <div class="page" id="pageMonth">
   <div class="toolbar">
-    <h2><span class="mi">calendar_month</span> Monthly Overview</h2>
+    <h2><span class="mi">date_range</span> Monthly Overview</h2>
     <div class="tb-controls">
       <div class="week-nav">
         <button onclick="navMonth(-1)"><span class="mi mi-sm">chevron_left</span></button>
@@ -368,7 +368,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 <!-- SWAP REQUESTS PAGE -->
 <div class="page" id="pageSwap">
   <div class="toolbar">
-    <h2><span class="mi">swap_horiz</span> Swap Requests</h2>
+    <h2><span class="mi">compare_arrows</span> Swap Requests</h2>
     <div class="tb-controls">
       <button class="tb-btn primary" onclick="openSwapModal()"><span class="mi mi-xs">add</span> New Request</button>
       <select id="swapFilter" onchange="renderSwaps()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
@@ -385,7 +385,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 <!-- PTO REQUESTS PAGE -->
 <div class="page" id="pagePto">
   <div class="toolbar">
-    <h2><span class="mi">event_busy</span> PTO Requests</h2>
+    <h2><span class="mi">event</span> PTO Requests</h2>
     <div class="tb-controls">
       <button class="tb-btn primary" onclick="openPTOModal()"><span class="mi mi-xs">add</span> New Request</button>
       <select id="ptoFilter" onchange="renderPTO()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
@@ -410,12 +410,12 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 <!-- HOLIDAY STAFFING PAGE -->
 <div class="page" id="pageHoliday">
   <div class="toolbar">
-    <h2><span class="mi">celebration</span> Holiday Staffing</h2>
+    <h2><span class="mi">emoji_events</span> Holiday Staffing</h2>
     <div class="tb-controls">
       <select id="holYear" onchange="renderHolidays()" style="padding:5px 10px;border:1px solid var(--g200);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font);">
         <option>2026</option><option>2027</option><option>2028</option>
       </select>
-      <button class="tb-btn" onclick="autoAssignHolidays()" id="holAutoBtn" style="display:none"><span class="mi mi-xs">auto_awesome</span> Auto-Assign</button>
+      <button class="tb-btn" onclick="autoAssignHolidays()" id="holAutoBtn" style="display:none"><span class="mi mi-xs">star</span> Auto-Assign</button>
     </div>
   </div>
   <div id="holSummary" class="stats-row"></div>
@@ -445,7 +445,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 <!-- STATS PAGE (Leads only) -->
 <div class="page" id="pageStats">
   <div class="toolbar">
-    <h2><span class="mi">analytics</span> Schedule Statistics</h2>
+    <h2><span class="mi">assessment</span> Schedule Statistics</h2>
     <div class="tb-controls">
       <div class="week-nav">
         <button onclick="navStatsPeriod(-1)"><span class="mi mi-sm">chevron_left</span></button>
@@ -468,7 +468,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 <!-- STAFF ROSTER PAGE (Leads only) -->
 <div class="page" id="pageRoster">
   <div class="toolbar">
-    <h2><span class="mi">groups</span> Staff Roster</h2>
+    <h2><span class="mi">group</span> Staff Roster</h2>
     <div class="tb-controls">
       <button class="tb-btn primary" onclick="openRosterModal()"><span class="mi mi-xs">person_add</span> Add Staff</button>
     </div>
@@ -497,7 +497,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 <!-- ASSIGNMENT MODAL -->
 <div class="modal-bg" id="assignModal" onclick="if(event.target===this)closeModal('assignModal')">
   <div class="modal">
-    <h3><span class="mi">edit_calendar</span> Edit Assignment</h3>
+    <h3><span class="mi">edit</span> Edit Assignment</h3>
     <div class="form-row"><label>Staff Member</label><select id="aStaff"></select></div>
     <div class="form-row"><label>Date</label><input type="date" id="aDate"></div>
     <div class="form-row"><label>Shift</label><select id="aShift"><option>Morning</option><option>Evening</option><option>Night</option></select></div>
@@ -515,11 +515,10 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
       </optgroup>
       <optgroup label="Training">
         <option value="T">T (Training)</option>
-        <option value="TR">TR (Training w/ Lead)</option>
       </optgroup>
       <optgroup label="Time Off">
         <option value="PTO">PTO</option>
-        <option value="CO">Callout</option>
+        <option value="SL">Sick Leave</option>
       </optgroup>
       <optgroup label="Extra">
         <option value="OT">OT (Overtime)</option>
@@ -536,7 +535,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 <!-- SWAP REQUEST MODAL -->
 <div class="modal-bg" id="swapModal" onclick="if(event.target===this)closeModal('swapModal')">
   <div class="modal">
-    <h3><span class="mi">swap_horiz</span> Request Shift Swap</h3>
+    <h3><span class="mi">compare_arrows</span> Request Shift Swap</h3>
     <div class="form-row"><label>Your Current Date</label><input type="date" id="swDate"></div>
     <div class="form-row"><label>Your Current Shift</label><select id="swShift"><option>Morning</option><option>Evening</option><option>Night</option></select></div>
     <div class="form-row"><label>Swap With</label><select id="swWith"></select></div>
@@ -608,7 +607,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 <!-- PTO REQUEST MODAL -->
 <div class="modal-bg" id="ptoModal" onclick="if(event.target===this)closeModal('ptoModal')">
   <div class="modal">
-    <h3><span class="mi">event_busy</span> Request PTO</h3>
+    <h3><span class="mi">event</span> Request PTO</h3>
     <div class="form-row"><label>Request Type</label><select id="ptoType"><option value="General">General PTO (Jan bidding)</option><option value="Holiday">Holiday PTO (May bidding)</option></select></div>
     <div class="form-row"><label>Start Date</label><input type="date" id="ptoStart"></div>
     <div class="form-row"><label>End Date</label><input type="date" id="ptoEnd"></div>
@@ -644,7 +643,7 @@ var DEFAULT_STAFF=[
 ];
 var BENCHES=['H/C','C/U','F'];
 var SHIFTS=['Morning','Evening','Night'];
-var ASSIGN_CODES=['H/C','C/U','F','T','TR','PTO','CO','OT'];
+var ASSIGN_CODES=['H/C','C/U','F','T','PTO','SL','OT'];
 var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 var DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
@@ -982,7 +981,7 @@ function getShiftAssignments(dateStr,shift){
 
 // Count bench assignments for a user in a date range
 function countBenches(userIni,startDate,endDate){
-  var counts={'H/C':0,'C/U':0,'F':0,'T':0,'TR':0,'PTO':0,'CO':0,'OT':0};
+  var counts={'H/C':0,'C/U':0,'F':0,'T':0,'PTO':0,'SL':0,'OT':0};
   schedEntries.forEach(function(e){
     if(e.userIni===userIni&&e.date>=startDate&&e.date<=endDate&&counts.hasOwnProperty(e.bench)){
       counts[e.bench]++;
@@ -1003,7 +1002,7 @@ function getWeekHours(userIni,weekStartStr){
     var ds=fmtDate(d);
     var assigns=schedEntries.filter(function(e){return e.userIni===userIni&&e.date===ds;});
     assigns.forEach(function(a){
-      if(a.bench==='PTO'||a.bench==='CO')return;
+      if(a.bench==='PTO'||a.bench==='SL')return;
       if(a.bench==='OT')hours+=8;// OT shift
       else hours+=8;// regular shift
     });
@@ -1028,7 +1027,7 @@ function getCoverage(dateStr,shift){
   var covered={'H/C':false,'C/U':false,'F':false};
   var staffOnShift=[];
   assigns.forEach(function(a){
-    if(a.bench==='PTO'||a.bench==='CO')return;
+    if(a.bench==='PTO'||a.bench==='SL')return;
     if(covered.hasOwnProperty(a.bench))covered[a.bench]=true;
     staffOnShift.push(a);
   });
@@ -1050,12 +1049,12 @@ function isInTraining(staff,dateStr){
 }
 
 // Get the training type: TR if a lead is on the same shift, T otherwise
-function getTrainingType(staff,dateStr,shift){
+function 'T'{
   var leadsOnShift=STAFF.filter(function(s){return s.active!==false&&ELEVATED_ROLES.indexOf(s.role)>=0&&s.shift===shift&&s.ini!==staff.ini;});
   // Check if any lead has an assignment (not PTO/CO) that day
   var leadPresent=leadsOnShift.some(function(l){
     var a=getAssignment(l.ini,dateStr,shift);
-    return !a||(!a.bench)||(a.bench!=='PTO'&&a.bench!=='CO');
+    return !a||(!a.bench)||(a.bench!=='PTO'&&a.bench!=='SL');
   });
   return leadPresent?'TR':'T';
 }
@@ -1073,12 +1072,12 @@ function recommendAssignments(dateStr,shift){
 
   eligible.forEach(function(staff){
     var existing=getAssignment(staff.ini,dateStr,shift);
-    if(existing&&(existing.bench==='PTO'||existing.bench==='CO'))return;
+    if(existing&&(existing.bench==='PTO'||existing.bench==='SL'))return;
     if(existing)return;
 
     // Check if still in training period (first 30 days)
     if(isInTraining(staff,dateStr)){
-      var tType=getTrainingType(staff,dateStr,shift);
+      var tType='T';
       recommendations.push({ini:staff.ini,name:staff.name,bench:tType,reason:'Training period (day '+Math.round((new Date(dateStr+'T00:00:00')-new Date(staff.startDate+'T00:00:00'))/86400000+1)+' of 30)',isWarning:false,score:200});
       return;
     }
@@ -1187,8 +1186,8 @@ function renderCurrentView(){
 
 function benchChip(bench,isRec){
   if(!bench)return'<span class="bench-chip empty" title="Click to assign">+</span>';
-  var cls=bench==='H/C'?'hc':bench==='C/U'?'cu':bench==='F'?'fl':bench==='TR'?'tr':bench==='T'?'t':bench==='PTO'?'pto':bench==='CO'?'co':bench==='OT'?'ot':bench==='IO'?'io':bench==='WFH'?'wfh':bench==='HALF'?'half':'';
-  var label=bench==='IO'?'Office':bench==='WFH'?'WFH':bench==='HALF'?'Half':bench;
+  var cls=bench==='H/C'?'hc':bench==='C/U'?'cu':bench==='F'?'fl':bench==='T'?'t':bench==='PTO'?'pto':bench==='SL'?'sl':bench==='OT'?'ot':bench==='IO'?'io':bench==='WFH'?'wfh':bench==='HALF'?'half':'';
+  var label=bench==='IO'?'\u2717':bench==='WFH'?'WFH':bench==='HALF'?'Half':bench;
   return'<span class="bench-chip '+cls+(isRec?' rec':'')+'" title="'+esc(bench)+'">'+esc(label)+'</span>';
 }
 
@@ -1216,14 +1215,14 @@ function renderWeek(){
     var dayAssigns=schedEntries.filter(function(e){return e.date===d.date;});
     dayAssigns.forEach(function(a){
       if(a.bench==='PTO')totalPTO++;
-      else if(a.bench==='CO')totalCO++;
+      else if(a.bench==='SL')totalCO++;
       else totalAssigned++;
     });
   });
   document.getElementById('weekStats').innerHTML=
     '<div class="stat-card"><div class="stat-label">Assignments</div><div class="stat-val">'+totalAssigned+'</div></div>'+
     '<div class="stat-card"><div class="stat-label">PTO</div><div class="stat-val" style="color:var(--amber)">'+totalPTO+'</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Callouts</div><div class="stat-val" style="color:var(--red)">'+totalCO+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Sick Leave</div><div class="stat-val" style="color:var(--red)">'+totalCO+'</div></div>'+
     '<div class="stat-card"><div class="stat-label">Coverage Gaps</div><div class="stat-val" style="color:'+(coverageGaps>0?'var(--red)':'var(--green)')+'">'+coverageGaps+'</div></div>';
 
   // Build grid
@@ -1232,7 +1231,7 @@ function renderWeek(){
     var shClass=shift.toLowerCase();
     var shTime=shift==='Morning'?'0700 - 1530':shift==='Evening'?'1500 - 2330':'2300 - 0730';
     var shId='shift-'+shClass;
-    html+='<div class="shift-section"><div class="shift-hdr '+shClass+'" onclick="toggleShiftSection(\''+shId+'\')" title="Click to collapse/expand"><span><strong>'+shift.toUpperCase()+'</strong> | '+shTime+'</span><span class="shift-toggle mi">expand_more</span></div>';
+    html+='<div class="shift-section"><div class="shift-hdr '+shClass+'" onclick="toggleShiftSection(\''+shId+'\')" title="Click to collapse/expand"><span><strong>'+shift.toUpperCase()+'</strong> | '+shTime+'</span><span class="shift-toggle" style="font-size:14px;font-weight:800;">\u25BC</span></div>';
     html+='<div class="shift-body" id="'+shId+'-body"><table class="sched-table"><thead><tr><th style="text-align:left;padding-left:12px;min-width:130px">Staff</th>';
     dates.forEach(function(d){
       html+='<th class="'+(d.isToday?'today':'')+(d.isWeekend?' weekend':'')+'">'+d.label+'</th>';
@@ -1254,7 +1253,8 @@ function renderWeek(){
         var assign=getAssignment(staff.ini,d.date,shift);
         var chip;
         if(assign){chip=benchChip(assign.bench,false);}
-        else if(isInTraining(staff,d.date)){chip=benchChip(getTrainingType(staff,d.date,shift),false);}
+        else if(isInTraining(staff,d.date)){chip=benchChip('T',false);}
+        else if(!staff.benchEligible&&ELEVATED_ROLES.indexOf(staff.role)>=0){chip=benchChip('IO',false);}
         else{chip=benchChip(null,false);}
         html+='<td class="'+tdClass+'" onclick="openAssignModal(\''+staff.ini+'\',\''+d.date+'\',\''+shift+'\')" style="cursor:pointer">'+chip+'</td>';
       });
@@ -1334,7 +1334,8 @@ function renderDay(){
         var assign=getAssignment(staff.ini,ds,shift);
         var chip;
         if(assign){chip=benchChip(assign.bench);}
-        else if(isInTraining(staff,ds)){chip=benchChip(getTrainingType(staff,ds,shift));}
+        else if(isInTraining(staff,ds)){chip=benchChip('T');}
+        else if(!staff.benchEligible&&ELEVATED_ROLES.indexOf(staff.role)>=0){chip=benchChip('IO');}
         else{chip=benchChip(null);}
         var notes=assign&&assign.notes?'<div style="font-size:10px;color:var(--g400);margin-top:2px;">'+esc(assign.notes)+'</div>':'';
         var trainingNote=(!assign&&isInTraining(staff,ds))?'<div style="font-size:10px;color:var(--purple);margin-top:2px;">Training period (auto)</div>':'';
@@ -1348,7 +1349,7 @@ function renderDay(){
   // Recommendations
   var recs=recommendAssignments(ds,'Morning');
   if(recs.length){
-    html+='<div class="daily-card"><div class="daily-card-hdr" style="background:var(--teal-bg);color:var(--teal);"><span class="mi">auto_awesome</span> Recommended Assignments</div><div class="daily-card-body">';
+    html+='<div class="daily-card"><div class="daily-card-hdr" style="background:var(--teal-bg);color:var(--teal);"><span class="mi">star</span> Recommended Assignments</div><div class="daily-card-body">';
     recs.forEach(function(r){
       if(r.isWarning){
         html+='<div class="daily-row"><div><div class="daily-name" style="color:var(--amber);">'+esc(r.name)+'</div><div class="daily-role" style="color:var(--red);">'+esc(r.reason)+'</div></div><span class="mi" style="color:var(--amber)">warning</span></div>';
@@ -1407,7 +1408,7 @@ function renderMonth(){
           if(shifts.length>1)html+='<span style="font-size:7px;font-weight:800;color:'+shColor+';min-width:12px;">'+shLabel+'</span>';
           if(assigns.length){
             assigns.forEach(function(a){
-              var mcls=a.bench==='H/C'?'hc':a.bench==='C/U'?'cu':a.bench==='F'?'fl':a.bench==='PTO'?'pto':a.bench==='CO'?'co':a.bench==='OT'?'ot':'tr';
+              var mcls=a.bench==='H/C'?'hc':a.bench==='C/U'?'cu':a.bench==='F'?'fl':a.bench==='PTO'?'pto':a.bench==='SL'?'sl':a.bench==='OT'?'ot':'tr';
               html+='<span class="month-mini bench-chip '+mcls+'" title="'+esc(a.userName)+': '+esc(a.bench)+' ('+sh+')">'+esc(a.userIni)+'</span>';
             });
           }else{
@@ -1428,7 +1429,7 @@ function renderMonth(){
           html+='<span class="month-cov" style="background:var(--green-bg);color:var(--green);">'+totalStaff+' staff</span>';
         }
         // Show PTO indicators
-        var ptoToday=schedEntries.filter(function(e){return e.date===ds&&(e.bench==='PTO'||e.bench==='CO');});
+        var ptoToday=schedEntries.filter(function(e){return e.date===ds&&(e.bench==='PTO'||e.bench==='SL');});
         if(ptoToday.length){
           html+='<span class="month-cov" style="background:var(--amber-bg);color:var(--amber);">'+ptoToday.length+' out</span>';
         }
@@ -1463,7 +1464,7 @@ function renderSwaps(){
   filtered.sort(function(a,b){return(b.requestDate||'').localeCompare(a.requestDate||'');});
 
   if(!filtered.length){
-    document.getElementById('swapList').innerHTML='<div class="empty"><span class="mi">swap_horiz</span><h3>No Swap Requests</h3><p>'+(filter?'No '+filter.toLowerCase()+' requests':'No swap requests yet')+'</p></div>';
+    document.getElementById('swapList').innerHTML='<div class="empty"><span class="mi">compare_arrows</span><h3>No Swap Requests</h3><p>'+(filter?'No '+filter.toLowerCase()+' requests':'No swap requests yet')+'</p></div>';
     return;
   }
 
@@ -1628,7 +1629,7 @@ async function saveAssignment(){
   var otherShifts=SHIFTS.filter(function(s){return s!==shift;});
   var hasOtherShift=otherShifts.some(function(os){
     var oa=getAssignment(userIni,dateStr,os);
-    return oa&&oa.bench&&oa.bench!=='PTO'&&oa.bench!=='CO';
+    return oa&&oa.bench&&oa.bench!=='PTO'&&oa.bench!=='SL';
   });
   if(hasOtherShift){
     if(!confirm(staff.name+' already has another shift on this date. This creates a double shift (OT). Continue?'))return;
@@ -1664,7 +1665,7 @@ function toggleRecPanel(){
 }
 function openRecPanel(){
   var ws=new Date(curWeekStart);
-  var html='<div class="rec-panel"><h3><span class="mi">auto_awesome</span> Weekly Recommendations</h3>';
+  var html='<div class="rec-panel"><h3><span class="mi">star</span> Weekly Recommendations</h3>';
   var anyRec=false;
   for(var i=0;i<7;i++){
     var dd=new Date(ws);dd.setDate(dd.getDate()+i);
@@ -1742,7 +1743,7 @@ function renderRoster(){
       '<td style="text-align:center;"><span class="cov-item '+statusCls+'" style="font-size:9px;">'+statusLabel+'</span></td>'+
       '<td style="text-align:center;">'+
         '<button class="tb-btn" style="padding:3px 8px;font-size:10px;" onclick="editRoster(\''+esc(s.ini)+'\')"><span class="mi mi-xs">edit</span></button> '+
-        (s.active!==false?'<button class="tb-btn" style="padding:3px 8px;font-size:10px;color:var(--red);" onclick="deactivateRoster(\''+esc(s.ini)+'\')"><span class="mi mi-xs">person_off</span></button>':'<button class="tb-btn" style="padding:3px 8px;font-size:10px;color:var(--green);" onclick="reactivateRoster(\''+esc(s.ini)+'\')"><span class="mi mi-xs">person</span></button>')+
+        (s.active!==false?'<button class="tb-btn" style="padding:3px 8px;font-size:10px;color:var(--red);" onclick="deactivateRoster(\''+esc(s.ini)+'\')"><span class="mi mi-xs">person_remove</span></button>':'<button class="tb-btn" style="padding:3px 8px;font-size:10px;color:var(--green);" onclick="reactivateRoster(\''+esc(s.ini)+'\')"><span class="mi mi-xs">person</span></button>')+
       '</td></tr>';
   }).join('');
 }
@@ -1927,14 +1928,14 @@ function exportScheduleCSV(data,from,to,scopeLabel,shiftF){
 
   // Summary
   rows.push([],['SUMMARY']);
-  var byBench={'H/C':0,'C/U':0,'F':0,'T':0,'TR':0,'PTO':0,'CO':0,'OT':0};
+  var byBench={'H/C':0,'C/U':0,'F':0,'T':0,'PTO':0,'SL':0,'OT':0};
   data.forEach(function(e){if(byBench.hasOwnProperty(e.bench))byBench[e.bench]++;});
   Object.keys(byBench).forEach(function(b){if(byBench[b])rows.push([b+' assignments',byBench[b]]);});
 
   // Per-staff breakdown
   rows.push([],['PER STAFF']);
   var byStaff={};data.forEach(function(e){if(!byStaff[e.userName])byStaff[e.userName]={total:0,'H/C':0,'C/U':0,'F':0,PTO:0,CO:0};byStaff[e.userName].total++;if(byStaff[e.userName].hasOwnProperty(e.bench))byStaff[e.userName][e.bench]++;});
-  rows.push(['Staff','Total','H/C','C/U','Float','PTO','Callout']);
+  rows.push(['Staff','Total','H/C','C/U','Float','PTO','Sick Leave']);
   Object.keys(byStaff).sort().forEach(function(name){var s=byStaff[name];rows.push([name,s.total,s['H/C'],s['C/U'],s['F'],s.PTO,s.CO]);});
 
   var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c==null?'':c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
@@ -1971,7 +1972,7 @@ function exportSchedulePDF(data,from,to,scopeLabel,shiftF){
     var dayName=DAYS[d.getDay()];
     var entries=byDate[dt];
     entries.forEach(function(e,i){
-      var benchCls=e.bench==='H/C'?'hc':e.bench==='C/U'?'cu':e.bench==='F'?'fl':e.bench==='PTO'?'pto':e.bench==='CO'?'co':'tr';
+      var benchCls=e.bench==='H/C'?'hc':e.bench==='C/U'?'cu':e.bench==='F'?'fl':e.bench==='PTO'?'pto':e.bench==='SL'?'sl':'tr';
       html+='<tr><td>'+(i===0?dt:'')+'</td><td>'+(i===0?dayName:'')+'</td><td>'+esc(e.userName)+'</td><td>'+esc(e.shift)+'</td><td><span class="bench '+benchCls+'">'+esc(e.bench)+'</span></td><td>'+esc(e.notes||'')+'</td></tr>';
     });
   });
@@ -2063,7 +2064,7 @@ function renderPTO(){
     '<div class="stat-card"><div class="stat-label">My Seniority</div><div class="stat-val">#'+getSeniorityRank(me?me.initials:'')+'</div></div>';
 
   if(!filtered.length){
-    document.getElementById('ptoList').innerHTML='<div class="empty"><span class="mi">event_busy</span><h3>No PTO Requests</h3><p>Click "New Request" to submit a PTO request</p></div>';
+    document.getElementById('ptoList').innerHTML='<div class="empty"><span class="mi">event</span><h3>No PTO Requests</h3><p>Click "New Request" to submit a PTO request</p></div>';
     return;
   }
 
@@ -2341,7 +2342,7 @@ function renderHolidays(){
   document.getElementById('holGrid').innerHTML=html;
 
   // Fairness overview
-  var fairHtml='<div class="rec-panel"><h3><span class="mi">balance</span> Holiday Fairness ('+year+')</h3>';
+  var fairHtml='<div class="rec-panel"><h3><span class="mi">account_balance</span> Holiday Fairness ('+year+')</h3>';
   activeStaff.forEach(function(s){
     var c=staffCounts[s.ini]||{major:0,minor:0,total:0};
     var target=Math.ceil(holidays.length/activeStaff.length);// ideal per person
@@ -2497,9 +2498,9 @@ function renderStats(){
   var activeStaff=STAFF.filter(function(s){return s.active!==false;});
 
   // Overview stats
-  var totalAssignments=inRange.filter(function(e){return e.bench&&e.bench!=='PTO'&&e.bench!=='CO';}).length;
+  var totalAssignments=inRange.filter(function(e){return e.bench&&e.bench!=='PTO'&&e.bench!=='SL';}).length;
   var totalPTO=inRange.filter(function(e){return e.bench==='PTO';}).length;
-  var totalCO=inRange.filter(function(e){return e.bench==='CO';}).length;
+  var totalCO=inRange.filter(function(e){return e.bench==='SL';}).length;
   var totalOT=inRange.filter(function(e){return e.bench==='OT';}).length;
 
   // Count workdays in range for coverage gap calculation
@@ -2511,7 +2512,7 @@ function renderStats(){
   document.getElementById('statsOverview').innerHTML=
     '<div class="stat-card"><div class="stat-label">Total Assignments</div><div class="stat-val">'+totalAssignments+'</div></div>'+
     '<div class="stat-card"><div class="stat-label">PTO Days Used</div><div class="stat-val" style="color:var(--amber)">'+totalPTO+'</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Callouts</div><div class="stat-val" style="color:var(--red)">'+totalCO+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Sick Leave</div><div class="stat-val" style="color:var(--red)">'+totalCO+'</div></div>'+
     '<div class="stat-card"><div class="stat-label">Overtime Shifts</div><div class="stat-val" style="color:var(--purple)">'+totalOT+'</div></div>'+
     '<div class="stat-card"><div class="stat-label">Workdays</div><div class="stat-val">'+workdays+'</div></div>';
 
@@ -2521,12 +2522,12 @@ function renderStats(){
   inRange.forEach(function(e){
     if(!shiftData[e.shift])return;
     if(e.bench==='PTO')shiftData[e.shift].pto++;
-    else if(e.bench==='CO')shiftData[e.shift].co++;
+    else if(e.bench==='SL')shiftData[e.shift].co++;
     else shiftData[e.shift].assignments++;
   });
 
-  var sbHtml='<div class="rec-panel"><h3><span class="mi">stacked_bar_chart</span> Per-Shift Breakdown</h3>';
-  sbHtml+='<table class="sched-table" style="min-width:auto;"><thead><tr><th style="text-align:left;padding-left:12px;">Shift</th><th>Assignments</th><th>PTO</th><th>Callouts</th></tr></thead><tbody>';
+  var sbHtml='<div class="rec-panel"><h3><span class="mi">bar_chart</span> Per-Shift Breakdown</h3>';
+  sbHtml+='<table class="sched-table" style="min-width:auto;"><thead><tr><th style="text-align:left;padding-left:12px;">Shift</th><th>Assignments</th><th>PTO</th><th>Sick Leave</th></tr></thead><tbody>';
   SHIFTS.forEach(function(sh){
     var d=shiftData[sh];
     sbHtml+='<tr><td style="text-align:left;padding-left:12px;font-weight:700;">'+esc(sh)+'</td>';
@@ -2545,19 +2546,19 @@ function renderStats(){
     var cu=mine.filter(function(e){return e.bench==='C/U';}).length;
     var fl=mine.filter(function(e){return e.bench==='F';}).length;
     var pto=mine.filter(function(e){return e.bench==='PTO';}).length;
-    var co=mine.filter(function(e){return e.bench==='CO';}).length;
+    var co=mine.filter(function(e){return e.bench==='SL';}).length;
     var ot=mine.filter(function(e){return e.bench==='OT';}).length;
-    var tr=mine.filter(function(e){return e.bench==='T'||e.bench==='TR';}).length;
+    var tr=mine.filter(function(e){return e.bench==='T';}).length;
     var io=mine.filter(function(e){return e.bench==='IO'||e.bench==='WFH'||e.bench==='HALF';}).length;
     var total=hc+cu+fl+ot+tr+io;
     staffStats.push({ini:s.ini,name:s.name,role:s.role,hc:hc,cu:cu,fl:fl,pto:pto,co:co,ot:ot,tr:tr,io:io,total:total});
   });
 
-  // Sort by callouts descending for visibility
+  // Sort by sick leaves descending for visibility
   staffStats.sort(function(a,b){return b.co-a.co;});
 
   var stHtml='<div class="rec-panel"><h3><span class="mi">person</span> Per-Staff Breakdown <span style="font-size:11px;font-weight:400;color:var(--g400);">(click a row for details)</span></h3>';
-  stHtml+='<div style="overflow-x:auto;"><table class="sched-table" style="min-width:750px;"><thead><tr><th style="text-align:left;padding-left:12px;">Staff</th><th style="text-align:left;">Role</th><th>H/C</th><th>C/U</th><th>Float</th><th>Training</th><th>Admin</th><th>OT</th><th style="color:var(--amber)">PTO</th><th style="color:var(--red)">Callouts</th><th>Total</th></tr></thead><tbody>';
+  stHtml+='<div style="overflow-x:auto;"><table class="sched-table" style="min-width:750px;"><thead><tr><th style="text-align:left;padding-left:12px;">Staff</th><th style="text-align:left;">Role</th><th>H/C</th><th>C/U</th><th>Float</th><th>Training</th><th>Admin</th><th>OT</th><th style="color:var(--amber)">PTO</th><th style="color:var(--red)">Sick Leave</th><th>Total</th></tr></thead><tbody>';
   staffStats.forEach(function(s){
     var coHighlight=s.co>=3?'background:var(--red-bg);':s.co>=2?'background:var(--amber-bg);':'';
     stHtml+='<tr onclick="showStaffDetail(\''+esc(s.ini)+'\')" style="cursor:pointer;'+coHighlight+'">';
@@ -2585,21 +2586,21 @@ function showStaffDetail(userIni){
 
   var mine=schedEntries.filter(function(e){return e.userIni===userIni&&e.date>=dr.start&&e.date<=dr.end;});
 
-  // Callout details
-  var callouts=mine.filter(function(e){return e.bench==='CO';}).sort(function(a,b){return a.date.localeCompare(b.date);});
+  // Sick Leave details
+  var sick leaves=mine.filter(function(e){return e.bench==='SL';}).sort(function(a,b){return a.date.localeCompare(b.date);});
   var ptos=mine.filter(function(e){return e.bench==='PTO';}).sort(function(a,b){return a.date.localeCompare(b.date);});
 
-  // Callout patterns
+  // Sick Leave patterns
   var coDays={Mon:0,Tue:0,Wed:0,Thu:0,Fri:0};
   var coShifts={};
-  callouts.forEach(function(c){
+  sick leaves.forEach(function(c){
     var d=new Date(c.date+'T12:00:00');
     var dayName=DAYS[d.getDay()];
     if(coDays.hasOwnProperty(dayName))coDays[dayName]++;
     coShifts[c.shift]=(coShifts[c.shift]||0)+1;
   });
 
-  // Find most frequent callout day
+  // Find most frequent sick leave day
   var maxDay='',maxDayCount=0;
   Object.keys(coDays).forEach(function(d){if(coDays[d]>maxDayCount){maxDayCount=coDays[d];maxDay=d;}});
 
@@ -2610,10 +2611,10 @@ function showStaffDetail(userIni){
   var benchTotal=hc+cu+fl;
   var ideal=benchTotal>0?Math.round(benchTotal/3):0;
 
-  // Historical callout trend (all time)
-  var allCallouts=schedEntries.filter(function(e){return e.userIni===userIni&&e.bench==='CO';});
+  // Historical sick leave trend (all time)
+  var allSick Leave=schedEntries.filter(function(e){return e.userIni===userIni&&e.bench==='SL';});
   var coByMonth={};
-  allCallouts.forEach(function(c){
+  allSick Leave.forEach(function(c){
     var key=c.date.slice(0,7);// YYYY-MM
     coByMonth[key]=(coByMonth[key]||0)+1;
   });
@@ -2621,9 +2622,9 @@ function showStaffDetail(userIni){
   var html='<div class="rec-panel" style="animation:modalScaleIn var(--dur-long) var(--me-decelerate);">';
   html+='<h3><span class="mi">person</span> '+esc(staff.name)+' <span style="font-size:11px;font-weight:400;color:var(--g400);">'+esc(staff.role)+' | Seniority #'+getSeniorityRank(userIni)+'</span> <button class="tb-btn" onclick="document.getElementById(\'statsStaffDetail\').innerHTML=\'\'" style="margin-left:auto;"><span class="mi mi-xs">close</span></button></h3>';
 
-  // Callout section
-  html+='<div style="margin-bottom:16px;"><div style="font-size:12px;font-weight:800;color:var(--red);margin-bottom:8px;display:flex;align-items:center;gap:6px;"><span class="mi mi-sm">warning</span> Callouts ('+callouts.length+' in period, '+allCallouts.length+' all-time)</div>';
-  if(callouts.length){
+  // Sick Leave section
+  html+='<div style="margin-bottom:16px;"><div style="font-size:12px;font-weight:800;color:var(--red);margin-bottom:8px;display:flex;align-items:center;gap:6px;"><span class="mi mi-sm">warning</span> Sick Leave ('+sick leaves.length+' in period, '+allSick Leave.length+' all-time)</div>';
+  if(sick leaves.length){
     html+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;">';
     html+='<div style="font-size:11px;"><strong>Most frequent day:</strong> '+(maxDay||'N/A')+' ('+maxDayCount+'x)</div>';
     html+='<div style="font-size:11px;"><strong>By shift:</strong> '+Object.keys(coShifts).map(function(s){return s+': '+coShifts[s];}).join(', ')+'</div>';
@@ -2632,15 +2633,15 @@ function showStaffDetail(userIni){
     // Day-of-week distribution
     html+='<div style="display:flex;gap:4px;margin-bottom:8px;">';
     ['Mon','Tue','Wed','Thu','Fri'].forEach(function(d){
-      var pct=callouts.length>0?Math.round(coDays[d]/callouts.length*100):0;
+      var pct=sick leaves.length>0?Math.round(coDays[d]/sick leaves.length*100):0;
       var h=Math.max(pct,4);
       html+='<div style="text-align:center;flex:1;"><div style="height:40px;display:flex;align-items:flex-end;justify-content:center;"><div style="width:100%;max-width:30px;height:'+h+'%;background:'+(coDays[d]===maxDayCount&&maxDayCount>0?'var(--red)':'var(--g200)')+';border-radius:3px 3px 0 0;"></div></div><div style="font-size:9px;font-weight:700;color:var(--g400);margin-top:2px;">'+d+'</div><div style="font-size:9px;font-weight:700;">'+coDays[d]+'</div></div>';
     });
     html+='</div>';
 
-    // Callout list
+    // Sick Leave list
     html+='<div style="max-height:150px;overflow-y:auto;">';
-    callouts.forEach(function(c){
+    sick leaves.forEach(function(c){
       var d=new Date(c.date+'T12:00:00');
       html+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--g50);font-size:11px;"><span>'+c.date+' ('+DAYS[d.getDay()]+')</span><span style="color:var(--g400);">'+esc(c.shift)+'</span><span style="color:var(--g400);">'+esc(c.notes||'')+'</span></div>';
     });
@@ -2659,12 +2660,12 @@ function showStaffDetail(userIni){
       html+='</div>';
     }
   }else{
-    html+='<div style="font-size:12px;color:var(--green);">No callouts in this period.</div>';
+    html+='<div style="font-size:12px;color:var(--green);">No sick leaves in this period.</div>';
   }
   html+='</div>';
 
   // PTO section
-  html+='<div style="margin-bottom:16px;"><div style="font-size:12px;font-weight:800;color:var(--amber);margin-bottom:6px;display:flex;align-items:center;gap:6px;"><span class="mi mi-sm">event_busy</span> PTO ('+ptos.length+' days)</div>';
+  html+='<div style="margin-bottom:16px;"><div style="font-size:12px;font-weight:800;color:var(--amber);margin-bottom:6px;display:flex;align-items:center;gap:6px;"><span class="mi mi-sm">event</span> PTO ('+ptos.length+' days)</div>';
   if(ptos.length){
     // Group consecutive PTO days
     var ptoRanges=[];var curRange=null;
@@ -2686,7 +2687,7 @@ function showStaffDetail(userIni){
   html+='</div>';
 
   // Bench balance
-  html+='<div><div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:6px;display:flex;align-items:center;gap:6px;"><span class="mi mi-sm">balance</span> Bench Balance</div>';
+  html+='<div><div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:6px;display:flex;align-items:center;gap:6px;"><span class="mi mi-sm">account_balance</span> Bench Balance</div>';
   html+='<div style="display:flex;gap:16px;">';
   [['H/C',hc,'hc'],['C/U',cu,'cu'],['Float',fl,'fl']].forEach(function(b){
     var pct=benchTotal>0?Math.round(b[1]/benchTotal*100):0;
