@@ -186,7 +186,13 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 .swap-actions{display:flex;gap:8px;margin-top:10px;}
 
 /* ═══ RECOMMENDATION PANEL ═══ */
-.rec-panel{background:var(--white);animation:modalScaleIn var(--dur-long) var(--me-decelerate);border-radius:var(--rl);box-shadow:var(--shadow-1);border:1px solid var(--g200);padding:16px;margin-bottom:16px;}
+.rec-panel{background:var(--white);border-radius:var(--rl);box-shadow:var(--shadow-1);border:1px solid var(--g200);padding:16px;margin-bottom:16px;}
+#recPanelWrap{position:fixed;bottom:0;right:20px;width:480px;z-index:80;pointer-events:none;}
+#recPanelWrap:empty{display:none;}
+#recPanelWrap .rec-panel{pointer-events:all;animation:recSlideUp var(--dur-long) var(--me-spring);box-shadow:0 -4px 32px rgba(0,0,0,.15),0 8px 24px rgba(0,0,0,.1);border:1px solid var(--g200);border-bottom:none;border-radius:var(--rl) var(--rl) 0 0;max-height:70vh;display:flex;flex-direction:column;margin-bottom:0;}
+#recPanelWrap .rec-panel .rec-body{overflow-y:auto;flex:1;scrollbar-width:none;-ms-overflow-style:none;}
+#recPanelWrap .rec-panel .rec-body::-webkit-scrollbar{display:none;}
+@keyframes recSlideUp{from{opacity:0;transform:translateY(100%);}to{opacity:1;transform:translateY(0);}}
 .rec-panel h3{font-size:14px;font-weight:800;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
 .rec-row{display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid var(--g50);}
 .rec-row:last-child{border-bottom:none;}
@@ -259,6 +265,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
   .stats-row{flex-direction:column;}
   .month-cell{min-height:50px;}
   .sched-table td.name-cell{min-width:90px;font-size:10px;}
+  #recPanelWrap{right:10px;left:10px;width:auto;}
 }
 </style>
 </head>
@@ -318,13 +325,13 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
         <button onclick="navWeek(1)" title="Next week"><span class="mi mi-sm">chevron_right</span></button>
       </div>
       <button onclick="navWeek(0)" class="tb-btn"><span class="mi mi-xs">today</span> Today</button>
-      <button class="tb-btn" onclick="toggleRecPanel()"><span class="mi mi-xs">star</span> Recommend</button>
+      <button class="tb-btn" onclick="toggleRecPanel()" id="recBtn" style="display:none"><span class="mi mi-xs">star</span> Recommend</button>
       <button class="tb-btn" onclick="openExportModal()"><span class="mi mi-xs">download</span> Export</button>
     </div>
   </div>
   <div id="weekStats" class="stats-row"></div>
   <div class="sched-grid" id="weekGrid"></div>
-  <div id="recPanelWrap" style="position:fixed;bottom:20px;right:20px;left:20px;max-width:600px;margin-left:auto;z-index:80;max-height:60vh;overflow-y:auto;"></div>
+  <div id="recPanelWrap"></div>
 </div>
 
 <!-- DAILY PAGE -->
@@ -1028,7 +1035,7 @@ async function loadAllData(){
       _lastSyncISO=new Date().toISOString();
     }
     // Show roster and holiday auto-assign for leads
-    if(isLead()){document.getElementById('navRoster').style.display='';document.getElementById('navStats').style.display='';document.getElementById('navAudit').style.display='';document.getElementById('holAutoBtn').style.display='';document.getElementById('holClearBtn').style.display='';if(me&&me.initials==='JM'){document.getElementById('auditClearBtn').style.display='';document.getElementById('navAdmin').style.display='';}}
+    if(isLead()){document.getElementById('navRoster').style.display='';document.getElementById('navStats').style.display='';document.getElementById('navAudit').style.display='';document.getElementById('holAutoBtn').style.display='';document.getElementById('holClearBtn').style.display='';document.getElementById('recBtn').style.display='';if(me&&me.initials==='JM'){document.getElementById('auditClearBtn').style.display='';document.getElementById('navAdmin').style.display='';}}
     document.getElementById('hdr-sync').innerHTML='<span class="mi mi-xs">sync</span> Synced '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
     return true;
   }catch(e){
@@ -1331,11 +1338,15 @@ function renderWeek(){
       else totalAssigned++;
     });
   });
-  document.getElementById('weekStats').innerHTML=
-    '<div class="stat-card"><div class="stat-label">Assignments</div><div class="stat-val">'+totalAssigned+'</div></div>'+
-    '<div class="stat-card"><div class="stat-label">PTO</div><div class="stat-val" style="color:var(--amber)">'+totalPTO+'</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Sick Leave</div><div class="stat-val" style="color:var(--red)">'+totalCO+'</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Coverage Gaps</div><div class="stat-val" style="color:'+(coverageGaps>0?'var(--red)':'var(--green)')+'">'+coverageGaps+'</div></div>';
+  if(isLead()){
+    document.getElementById('weekStats').innerHTML=
+      '<div class="stat-card"><div class="stat-label">Assignments</div><div class="stat-val">'+totalAssigned+'</div></div>'+
+      '<div class="stat-card"><div class="stat-label">PTO</div><div class="stat-val" style="color:var(--amber)">'+totalPTO+'</div></div>'+
+      '<div class="stat-card"><div class="stat-label">Sick Leave</div><div class="stat-val" style="color:var(--red)">'+totalCO+'</div></div>'+
+      '<div class="stat-card"><div class="stat-label">Coverage Gaps</div><div class="stat-val" style="color:'+(coverageGaps>0?'var(--red)':'var(--green)')+'">'+coverageGaps+'</div></div>';
+  }else{
+    document.getElementById('weekStats').innerHTML='';
+  }
 
   // Build grid
   var html='';
@@ -1380,21 +1391,24 @@ function renderWeek(){
     });
     html+='</tbody></table></div>';
 
-    // Coverage bar for weekdays
-    var hasShiftStaff=shiftStaff.length>0;
-    html+='<div class="coverage-bar" id="'+shId+'-cov">';
-    if(!hasShiftStaff){
-      html+='<span class="cov-item" style="color:var(--g400);background:var(--g100);"><span class="mi mi-xs">info</span> No staff assigned to this shift yet</span>';
-    }else{
-      dates.forEach(function(d){
-        if(d.isWeekend)return;
-        var cov=getCoverage(d.date,shift);
-        var cls=cov.missing.length===0?'cov-ok':cov.missing.length===1?'cov-warn':'cov-miss';
-        var label=cov.missing.length===0?'OK':cov.missing.join(', ');
-        html+='<span class="cov-item '+cls+'" title="'+d.label+': '+(cov.missing.length?'Missing '+label:'All covered')+'"><span class="mi mi-xs">'+(cov.missing.length===0?'check_circle':'warning')+'</span> '+d.label.split(' ')[1]+'</span>';
-      });
+    // Coverage bar for weekdays (leads only)
+    if(isLead()){
+      var hasShiftStaff=shiftStaff.length>0;
+      html+='<div class="coverage-bar" id="'+shId+'-cov">';
+      if(!hasShiftStaff){
+        html+='<span class="cov-item" style="color:var(--g400);background:var(--g100);"><span class="mi mi-xs">info</span> No staff assigned to this shift yet</span>';
+      }else{
+        dates.forEach(function(d){
+          if(d.isWeekend)return;
+          var cov=getCoverage(d.date,shift);
+          var cls=cov.missing.length===0?'cov-ok':cov.missing.length===1?'cov-warn':'cov-miss';
+          var label=cov.missing.length===0?'OK':cov.missing.join(', ');
+          html+='<span class="cov-item '+cls+'" title="'+d.label+': '+(cov.missing.length?'Missing '+label:'All covered')+'"><span class="mi mi-xs">'+(cov.missing.length===0?'check_circle':'warning')+'</span> '+d.label.split(' ')[1]+'</span>';
+        });
+      }
+      html+='</div>';
     }
-    html+='</div></div>';
+    html+='</div>';
   });
   document.getElementById('weekGrid').innerHTML=html;
   // Re-apply collapsed state
@@ -1469,11 +1483,12 @@ function renderDay(){
         html+='<div class="daily-row" onclick="openAssignModal(\''+staff.ini+'\',\''+ds+'\',\''+shift+'\')" style="cursor:pointer"><div><div class="daily-name">'+esc(staff.name)+'</div><div class="daily-role">'+esc(staff.role)+notes+trainingNote+'</div></div>'+chip+'</div>';
       });
     }
-    html+='<div style="padding:8px 0;border-top:1px solid var(--g100);margin-top:4px;">'+covHtml+'</div>';
+    if(isLead())html+='<div style="padding:8px 0;border-top:1px solid var(--g100);margin-top:4px;">'+covHtml+'</div>';
     html+='</div></div>';
   });
 
-  // Recommendations
+  // Recommendations (leads only)
+  if(isLead()){
   var recs=recommendAssignments(ds,'Morning');
   if(recs.length){
     html+='<div class="daily-card"><div class="daily-card-hdr" style="background:var(--teal-bg);color:var(--teal);"><span class="mi">star</span> Recommended Assignments</div><div class="daily-card-body">';
@@ -1486,6 +1501,7 @@ function renderDay(){
     });
     html+='</div></div>';
   }
+  }// end isLead recommendations
 
   document.getElementById('dayStats').innerHTML='';
   document.getElementById('dayCards').innerHTML=html;
@@ -1565,12 +1581,14 @@ function renderMonth(){
           totalGaps+=cov.missing.length;
           totalStaff+=cov.staffCount;
         });
-        if(totalGaps>0){
-          html+='<span class="month-cov" style="background:var(--red-bg);color:var(--red);">'+totalGaps+' gap'+(totalGaps>1?'s':'')+'</span>';
-        }else if(totalStaff>0){
-          html+='<span class="month-cov" style="background:var(--green-bg);color:var(--green);">'+totalStaff+' staff</span>';
+        if(isLead()){
+          if(totalGaps>0){
+            html+='<span class="month-cov" style="background:var(--red-bg);color:var(--red);">'+totalGaps+' gap'+(totalGaps>1?'s':'')+'</span>';
+          }else if(totalStaff>0){
+            html+='<span class="month-cov" style="background:var(--green-bg);color:var(--green);">'+totalStaff+' staff</span>';
+          }
         }
-        // Show PTO indicators
+        // PTO/SL out indicators visible to everyone
         var ptoToday=schedEntries.filter(function(e){return e.date===ds&&(e.bench==='PTO'||e.bench==='SL');});
         if(ptoToday.length){
           html+='<span class="month-cov" style="background:var(--amber-bg);color:var(--amber);">'+ptoToday.length+' out</span>';
@@ -1809,7 +1827,8 @@ function toggleRecPanel(){
 }
 function openRecPanel(){
   var ws=new Date(curWeekStart);
-  var html='<div class="rec-panel" style="box-shadow:0 8px 32px rgba(0,0,0,.2);border:1px solid var(--g200);"><h3 style="display:flex;align-items:center;justify-content:space-between;"><span><span class="mi">star</span> Weekly Recommendations</span><button onclick="toggleRecPanel()" style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--g400);">&times;</button></h3>';
+  var allRecs=[];// collect all for Apply All
+  var bodyHtml='';
   var anyRec=false;
   for(var i=0;i<7;i++){
     var dd=new Date(ws);dd.setDate(dd.getDate()+i);
@@ -1821,18 +1840,32 @@ function openRecPanel(){
       var unassigned=recs.filter(function(r){return!r.isWarning;});
       if(!unassigned.length)return;
       anyRec=true;
-      html+='<div style="font-size:11px;font-weight:800;color:var(--g500);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.04em;">'+dayLabel+' - '+shift+'</div>';
+      bodyHtml+='<div style="font-size:11px;font-weight:800;color:var(--g500);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.04em;">'+dayLabel+' - '+shift+'</div>';
       unassigned.forEach(function(r){
-        html+='<div class="rec-row"><span class="rec-name">'+esc(r.name)+'</span><span class="rec-assign">'+benchChip(r.bench,true)+'</span><span class="rec-reason">'+esc(r.reason)+'</span><button class="rec-accept" onclick="applyRec(\''+r.ini+'\',\''+ds+'\',\''+shift+'\',\''+r.bench+'\')">Apply</button></div>';
+        allRecs.push({ini:r.ini,date:ds,shift:shift,bench:r.bench});
+        bodyHtml+='<div class="rec-row"><span class="rec-name">'+esc(r.name)+'</span><span class="rec-assign">'+benchChip(r.bench,true)+'</span><span class="rec-reason">'+esc(r.reason)+'</span><button class="rec-accept" onclick="applyRec(\''+r.ini+'\',\''+ds+'\',\''+shift+'\',\''+r.bench+'\')">Apply</button></div>';
       });
-      // Show warnings
       recs.filter(function(r){return r.isWarning;}).forEach(function(r){
-        html+='<div class="rec-row" style="background:var(--amber-bg);border-radius:6px;padding:4px 8px;"><span class="rec-name" style="color:var(--amber);">'+esc(r.name)+'</span><span class="rec-reason" style="color:var(--red);">'+esc(r.reason)+'</span></div>';
+        bodyHtml+='<div class="rec-row" style="background:var(--amber-bg);border-radius:6px;padding:4px 8px;"><span class="rec-name" style="color:var(--amber);">'+esc(r.name)+'</span><span class="rec-reason" style="color:var(--red);">'+esc(r.reason)+'</span></div>';
       });
     });
   }
-  if(!anyRec)html+='<div class="empty"><span class="mi">check_circle</span><h3>All Set</h3><p>All positions are filled for this week</p></div>';
-  html+='</div>';
+  // Store recs for Apply All
+  window._pendingRecs=allRecs;
+
+  var html='<div class="rec-panel">';
+  // Header
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--g100);">';
+  html+='<h3 style="margin:0;display:flex;align-items:center;gap:6px;"><span class="mi">star</span> Weekly Recommendations</h3>';
+  html+='<div style="display:flex;align-items:center;gap:6px;">';
+  if(anyRec&&allRecs.length)html+='<button onclick="applyAllRecs()" class="btn primary" style="font-size:11px;padding:4px 12px;"><span class="mi mi-xs">done_all</span> Apply All ('+allRecs.length+')</button>';
+  html+='<button onclick="toggleRecPanel()" style="border:none;background:none;cursor:pointer;font-size:20px;color:var(--g400);line-height:1;">&times;</button>';
+  html+='</div></div>';
+  // Body with hidden scrollbar
+  html+='<div class="rec-body">';
+  if(!anyRec)html+='<div class="empty" style="padding:20px 0;"><span class="mi" style="font-size:28px;color:var(--green);">check_circle</span><h3 style="margin:6px 0 2px;">All Set</h3><p style="font-size:12px;color:var(--g400);">All positions are filled for this week</p></div>';
+  else html+=bodyHtml;
+  html+='</div></div>';
   document.getElementById('recPanelWrap').innerHTML=html;
 }
 
@@ -1850,6 +1883,33 @@ async function applyRec(userIni,dateStr,shift,bench){
   toast(staff.name+' assigned to '+bench);
   openRecPanel();// refresh
   renderWeek();
+}
+
+async function applyAllRecs(){
+  var recs=window._pendingRecs;
+  if(!recs||!recs.length)return;
+  if(!confirm('Apply all '+recs.length+' recommendations for this week?'))return;
+  showLoad('Applying '+recs.length+' assignments...');
+  var promises=[];
+  recs.forEach(function(r){
+    var staff=STAFF.find(function(s){return s.ini===r.ini;});
+    var existing=getAssignment(r.ini,r.date,r.shift);
+    if(existing){
+      existing.bench=r.bench;existing.status='Confirmed';
+      (function(ex){promises.push(spGet('ScheduleEntries',"Title eq '"+ex.id+"'").then(function(sp){if(sp.length)return spUpdate('ScheduleEntries',sp[0].Id,schedToSP(ex));}).catch(function(e){}));})(existing);
+    }else{
+      var entry={id:gid(),userIni:r.ini,userName:staff?staff.name:'',date:r.date,shift:r.shift,bench:r.bench,notes:'Auto-recommended',status:'Confirmed',createdBy:'SYS'};
+      schedEntries.push(entry);
+      promises.push(spAdd('ScheduleEntries',schedToSP(entry)).catch(function(e){}));
+    }
+  });
+  await Promise.all(promises);
+  logAudit('add','assignment','Applied all '+recs.length+' weekly recommendations','');
+  hideLoad();
+  window._pendingRecs=[];
+  openRecPanel();
+  renderWeek();
+  toast('Applied '+recs.length+' assignments');
 }
 
 // ═══════════════════════════════════════════
