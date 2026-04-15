@@ -138,10 +138,17 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 .blk.empty:hover{border-color:var(--teal);color:var(--teal);}
 .blk-sep{grid-column:1/-1;height:0.5px;background:var(--g100);margin:1px 0;}
 .ds-badge{position:absolute;top:-5px;right:-2px;font-size:7px;font-weight:700;background:#f57f17;color:#fff;padding:1px 4px;border-radius:3px;line-height:1;white-space:nowrap;}
-.sw-badge{position:absolute;bottom:-4px;left:-2px;font-size:8px;font-weight:700;background:#1565c0;color:#fff;padding:1px 3px;border-radius:3px;line-height:1;}
-.assign-legend{display:flex;flex-wrap:wrap;gap:6px;padding:8px 16px;border-top:1px solid var(--g100);font-size:9px;align-items:center;}
+.sw-stripe{height:12px;background:#bbdefb;color:#0d47a1;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;gap:1px;line-height:1;}
+.blk.sw-split{height:36px;overflow:hidden;display:flex;flex-direction:column;padding:0;}
+.blk.sw-split .sw-main{flex:1;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+.swap-pill{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;color:#1565c0;background:#e3f2fd;border-radius:999px;padding:3px 8px;white-space:nowrap;}
+.swap-pill .sp-av{width:16px;height:16px;border-radius:50%;background:#1565c0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;flex-shrink:0;overflow:hidden;}
+.swap-pill .sp-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.assign-legend{display:flex;flex-wrap:wrap;gap:4px 12px;padding:10px 16px;border-top:1px solid var(--g100);font-size:9px;align-items:center;}
 .legend-item{display:flex;align-items:center;gap:3px;}
-.legend-swatch{width:14px;height:14px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;}
+.legend-swatch{min-width:24px;height:14px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;padding:0 3px;white-space:nowrap;}
+.legend-grp{display:flex;align-items:center;gap:4px;}
+.legend-div{width:0.5px;height:14px;background:var(--g200);margin:0 2px;}
 /* All shifts condensed */
 .all-section{margin:0 0 14px;}
 .all-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:4px 0 6px;display:flex;align-items:center;gap:6px;}
@@ -154,6 +161,9 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 .blk-grid.sm .blk-name-n{font-size:10px;}
 .blk-grid.sm .blk-name-r{font-size:7px;}
 .blk-grid.sm .blk{height:28px;font-size:10px;border-radius:6px;}
+.blk-grid.sm .blk.sw-split{height:28px;}
+.blk-grid.sm .blk.sw-split .sw-main{font-size:10px;}
+.blk-grid.sm .sw-stripe{height:9px;font-size:6px;}
 .blk-grid.sm .blk-hdr{font-size:8px;padding:3px 0;}
 .blk-grid.sm{grid-template-columns:120px repeat(var(--day-cols,5),1fr);gap:2px;}
 
@@ -217,6 +227,9 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 .month-row{display:flex;align-items:center;gap:2px;}
 .month-ini{font-size:7px;font-weight:700;color:var(--g500);min-width:12px;}
 .month-mini-blk{flex:1;height:14px;border-radius:3px;font-size:7px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.month-mini-blk.sw-split{height:20px;padding:0;overflow:hidden;flex-direction:column;}
+.month-mini-blk.sw-split .sw-main{flex:1;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;width:100%;}
+.month-mini-blk.sw-split .sw-stripe{height:8px;font-size:5px;width:100%;}
 .month-cov{font-size:8px;font-weight:700;padding:1px 4px;border-radius:3px;margin-top:auto;}
 
 /* ═══ SWAP REQUESTS ═══ */
@@ -381,8 +394,16 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
   .blk-name-n{font-size:10px;}
   .blk-name-r{font-size:7px;}
   .blk{height:30px;font-size:10px;border-radius:6px;}
+  .blk.sw-split{height:30px;}
+  .blk.sw-split .sw-main{font-size:10px;}
+  .sw-stripe{height:10px;font-size:6px;}
+  .swap-pill{font-size:8px;padding:2px 6px;}
+  .swap-pill .sp-av{width:14px;height:14px;font-size:6px;}
   .blk-grid.sm{grid-template-columns:90px repeat(var(--day-cols,5),1fr);}
   .blk-grid.sm .blk{height:24px;font-size:9px;}
+  .blk-grid.sm .blk.sw-split{height:24px;}
+  .blk-grid.sm .blk.sw-split .sw-main{font-size:9px;}
+  .blk-grid.sm .sw-stripe{height:8px;font-size:5px;}
   .blk-grid.sm .blk-name{padding:1px 4px 1px 1px;gap:3px;min-height:24px;}
   .blk-grid.sm .blk-name .av{width:18px;height:18px;font-size:7px;}
   .blk-grid.sm .blk-name-n{font-size:9px;}
@@ -403,6 +424,9 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
   .month-day{font-size:9px;}
   .month-cov{font-size:7px;padding:1px 3px;}
   .month-mini-blk{height:12px;font-size:6px;border-radius:2px;}
+  .month-mini-blk.sw-split{height:17px;}
+  .month-mini-blk.sw-split .sw-main{font-size:6px;}
+  .month-mini-blk.sw-split .sw-stripe{height:7px;font-size:4px;}
   .month-ini{font-size:6px;min-width:9px;}
   .month-row{gap:1px;}
   .month-staff{gap:0px;}
@@ -1713,25 +1737,63 @@ function isSwappedAssignment(userIni,dateStr){
   });
 }
 
-function renderLegend(){
-  var items=[
-    {cls:'hc',label:'H/C',desc:'Heme/Coag'},
-    {cls:'cu',label:'C/U',desc:'Chem/UA'},
-    {cls:'fl',label:'F',desc:'Float'},
-    {cls:'t',label:'T',desc:'Training'},
-    {cls:'io',label:'X',desc:'In Office'},
-    {cls:'pto',label:'PTO',desc:'Paid Time Off'},
-    {cls:'sl',label:'SL',desc:'Sick Leave'},
-    {cls:'ot',label:'OT',desc:'Overtime'},
-    {cls:'wfh',label:'WFH',desc:'Work from Home'},
-    {cls:'half',label:'Half',desc:'Partial Day'},
-    {cls:'off',label:'OFF',desc:'Off'}
-  ];
-  var html='<div class="assign-legend">';
-  items.forEach(function(i){
-    html+='<div class="legend-item"><div class="legend-swatch blk '+i.cls+'" style="min-width:28px;padding:0 3px;white-space:nowrap;">'+i.label+'</div><span>'+i.desc+'</span></div>';
+function getSwapPartner(userIni,dateStr,shift){
+  // Try notes field first: [SWAP] with FullName
+  var a=getAssignment(userIni,dateStr,shift);
+  if(a&&a.notes){
+    var m=a.notes.match(/\[SWAP\] with (.+?)(?:;|$)/);
+    if(m){
+      var partnerName=m[1].trim();
+      var partnerStaff=STAFF.find(function(s){return s.name===partnerName;});
+      if(partnerStaff)return{ini:partnerStaff.ini,firstName:partnerName.split(' ')[0],name:partnerName,staff:partnerStaff};
+      return{ini:partnerName.split(' ').map(function(w){return w[0];}).join('').toUpperCase().substring(0,2),firstName:partnerName.split(' ')[0],name:partnerName,staff:null};
+    }
+  }
+  // Fallback: check approved SwapRequests
+  var sw=swapRequests.find(function(s){
+    if(s.status!=='Approved')return false;
+    return(s.requestBy===userIni&&s.requestDate===dateStr)||(s.swapWith===userIni&&(s.targetDate===dateStr||s.requestDate===dateStr));
   });
-  html+='<div class="legend-item"><div class="legend-swatch" style="min-width:28px;padding:0 3px;background:#e3f2fd;color:#1565c0;font-size:10px;font-weight:700;">\u21C4</div><span>Swapped</span></div>';
+  if(sw){
+    var isRequester=sw.requestBy===userIni;
+    var pIni=isRequester?sw.swapWith:sw.requestBy;
+    var pName=isRequester?sw.swapWithName:sw.requestByName;
+    var pStaff=STAFF.find(function(s){return s.ini===pIni;});
+    return{ini:pIni,firstName:pName.split(' ')[0],name:pName,staff:pStaff};
+  }
+  return null;
+}
+
+function renderLegend(){
+  var html='<div class="assign-legend">';
+  // Bench assignments
+  html+='<div class="legend-grp">';
+  html+='<div class="legend-item"><div class="legend-swatch blk hc">H/C</div><span>Heme/Coag</span></div>';
+  html+='<div class="legend-item"><div class="legend-swatch blk cu">C/U</div><span>Chem/UA</span></div>';
+  html+='<div class="legend-item"><div class="legend-swatch blk fl">F</div><span>Float</span></div>';
+  html+='<div class="legend-item"><div class="legend-swatch blk t">T</div><span>Training</span></div>';
+  html+='</div>';
+  html+='<div class="legend-div"></div>';
+  // Admin / schedule modifiers
+  html+='<div class="legend-grp">';
+  html+='<div class="legend-item"><div class="legend-swatch blk io">X</div><span>In Office</span></div>';
+  html+='<div class="legend-item"><div class="legend-swatch blk wfh">WFH</div></div>';
+  html+='<div class="legend-item"><div class="legend-swatch blk half">Half</div></div>';
+  html+='<div class="legend-item"><div class="legend-swatch blk ot">OT</div><span>Overtime</span></div>';
+  html+='</div>';
+  html+='<div class="legend-div"></div>';
+  // Leave / absence
+  html+='<div class="legend-grp">';
+  html+='<div class="legend-item"><div class="legend-swatch blk pto">PTO</div><span>Paid Time Off</span></div>';
+  html+='<div class="legend-item"><div class="legend-swatch blk sl">SL</div><span>Sick Leave</span></div>';
+  html+='<div class="legend-item"><div class="legend-swatch blk off">OFF</div></div>';
+  html+='</div>';
+  html+='<div class="legend-div"></div>';
+  // Indicators
+  html+='<div class="legend-grp">';
+  html+='<div class="legend-item"><div class="legend-swatch" style="min-width:24px;height:14px;padding:0;overflow:hidden;display:flex;flex-direction:column;border-radius:4px;"><div style="flex:1;background:#e3f2fd;"></div><div style="height:6px;background:#bbdefb;color:#0d47a1;display:flex;align-items:center;justify-content:center;font-size:5px;font-weight:700;">\u21C4</div></div><span>Swapped</span></div>';
+  html+='<div class="legend-item"><div class="legend-swatch" style="position:relative;background:#e3f2fd;color:#0d47a1;">H/C<div style="position:absolute;top:-4px;right:-4px;font-size:5px;font-weight:700;background:#f57f17;color:#fff;padding:0px 2px;border-radius:2px;line-height:1.2;">+EVE</div></div><span>Double shift</span></div>';
+  html+='</div>';
   html+='</div>';
   return html;
 }
@@ -1930,10 +1992,13 @@ function renderSingleShiftGrid(shift,dates,compact){
         });
       }
       var emptyDisplay=isDoubleShift&&!bench?'-':label;
-      // Swap badge
-      var swBadge='';
-      if(isSwappedAssignment(staff.ini,d.date))swBadge='<div class="sw-badge">\u21C4</div>';
-      html+='<div class="blk '+cls+'" onclick="openAssignModal(\''+staff.ini+'\',\''+d.date+'\',\''+shift+'\')" title="'+esc(staff.name)+': '+label+'">'+emptyDisplay+badge+swBadge+'</div>';
+      // Swap: split block with partner stripe
+      var swapPartner=getSwapPartner(staff.ini,d.date,shift);
+      if(swapPartner&&bench){
+        html+='<div class="blk sw-split '+cls+'" onclick="openAssignModal(\''+staff.ini+'\',\''+d.date+'\',\''+shift+'\')" title="'+esc(staff.name)+': '+label+' (swapped with '+esc(swapPartner.name)+')"><div class="sw-main">'+emptyDisplay+badge+'</div><div class="sw-stripe">\u21C4 '+esc(swapPartner.ini)+'</div></div>';
+      }else{
+        html+='<div class="blk '+cls+'" onclick="openAssignModal(\''+staff.ini+'\',\''+d.date+'\',\''+shift+'\')" title="'+esc(staff.name)+': '+label+'">'+emptyDisplay+badge+'</div>';
+      }
     });
   });
   html+='</div>';
@@ -2041,8 +2106,20 @@ function renderDay(){
         var cleanNotes=assign&&assign.notes?assign.notes.replace(/\[SWAP\][^;]*(;|$)/g,'').trim():'';
         var notes=cleanNotes?' - '+esc(cleanNotes):'';
         var trainingNote=(!assign&&isInTraining(staff,ds))?' - Training (auto)':'';
-        var swapInfo=isSwapped?' <span style="font-size:9px;color:#1565c0;font-weight:700;">\u21C4 Swapped</span>':'';
-        html+='<div class="daily-row" onclick="openAssignModal(\''+staff.ini+'\',\''+ds+'\',\''+shift+'\')"><div class="daily-info">'+staffAvatar(staff,32)+'<div><div class="daily-name">'+esc(staff.name)+swapInfo+'</div><div class="daily-role">'+esc(staff.role)+notes+trainingNote+'</div></div></div><div class="daily-blk blk '+cls+'">'+label+'</div></div>';
+        var swapPillHtml='';
+        if(isSwapped){
+          var sp=getSwapPartner(staff.ini,ds,shift);
+          if(sp){
+            var spAvContent='';
+            if(sp.staff&&sp.staff.picture){spAvContent='<img src="'+sp.staff.picture+'">';}
+            else if(sp.staff&&sp.staff.nickname){spAvContent=esc(sp.staff.nickname);}
+            else{spAvContent=esc(sp.ini);}
+            swapPillHtml='<div class="swap-pill">\u21C4 <div class="sp-av">'+spAvContent+'</div> '+esc(sp.firstName)+'</div>';
+          }else{
+            swapPillHtml='<div class="swap-pill">\u21C4 Swapped</div>';
+          }
+        }
+        html+='<div class="daily-row" onclick="openAssignModal(\''+staff.ini+'\',\''+ds+'\',\''+shift+'\')"><div class="daily-info">'+staffAvatar(staff,32)+'<div><div class="daily-name">'+esc(staff.name)+'</div><div class="daily-role">'+esc(staff.role)+notes+trainingNote+'</div></div></div><div style="display:flex;align-items:center;gap:6px;">'+swapPillHtml+'<div class="daily-blk blk '+cls+'">'+label+'</div></div></div>';
       });
       html+='</div>';
     }
@@ -2135,7 +2212,12 @@ function renderMonth(){
               if(!bench)return;
               var blkCls=getBlkClass(bench);
               var label=bench==='IO'?'X':bench;
-              html+='<div class="month-row"><span class="month-ini">'+esc(s.ini)+'</span><div class="month-mini-blk blk '+blkCls+'" title="'+esc(s.name)+': '+label+'">'+label+'</div></div>';
+              var mSwap=getSwapPartner(s.ini,ds,sh);
+              if(mSwap){
+                html+='<div class="month-row"><span class="month-ini">'+esc(s.ini)+'</span><div class="month-mini-blk blk sw-split '+blkCls+'" title="'+esc(s.name)+': '+label+' (swapped with '+esc(mSwap.name)+')"><div class="sw-main">'+label+'</div><div class="sw-stripe" style="height:9px;font-size:6px;">\u21C4 '+esc(mSwap.ini)+'</div></div></div>';
+              }else{
+                html+='<div class="month-row"><span class="month-ini">'+esc(s.ini)+'</span><div class="month-mini-blk blk '+blkCls+'" title="'+esc(s.name)+': '+label+'">'+label+'</div></div>';
+              }
             });
           });
           html+='</div>';
@@ -2159,8 +2241,12 @@ function renderMonth(){
           if(bench){
             var blkCls=getBlkClass(bench);
             var fullLabel=bench==='H/C'?'H/C':bench==='C/U'?'C/U':bench==='F'?'Float':bench==='T'?'Train':bench==='PTO'?'PTO':bench==='SL'?'Sick':bench==='IO'?'Office':bench==='OT'?'OT':bench==='WFH'?'WFH':bench;
-            var monthSwap=isSwappedAssignment(myIni,ds)?' <span style="font-size:8px;">\u21C4</span>':'';
-            html+='<div class="blk '+blkCls+'" style="flex:1;min-height:32px;border-radius:6px;margin-top:3px;font-size:11px;font-weight:700;">'+fullLabel+monthSwap+'</div>';
+            var techSwap=getSwapPartner(myIni,ds,myShift);
+            if(techSwap){
+              html+='<div class="blk sw-split '+blkCls+'" style="flex:1;min-height:32px;border-radius:6px;margin-top:3px;padding:0;"><div class="sw-main" style="font-size:11px;font-weight:700;">'+fullLabel+'</div><div class="sw-stripe" style="height:10px;font-size:7px;">\u21C4 '+esc(techSwap.ini)+'</div></div>';
+            }else{
+              html+='<div class="blk '+blkCls+'" style="flex:1;min-height:32px;border-radius:6px;margin-top:3px;font-size:11px;font-weight:700;">'+fullLabel+'</div>';
+            }
           }
           // PTO traffic indicator
           var dayPTOCount=ptoRequests.filter(function(p){return p.status!=='Denied'&&p.startDate<=ds&&p.endDate>=ds;}).length;
