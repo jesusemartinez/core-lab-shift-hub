@@ -138,6 +138,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
 .blk.empty:hover{border-color:var(--teal);color:var(--teal);}
 .blk-sep{grid-column:1/-1;height:0.5px;background:var(--g100);margin:1px 0;}
 .ds-badge{position:absolute;top:-5px;right:-2px;font-size:7px;font-weight:700;background:#f57f17;color:#fff;padding:1px 4px;border-radius:3px;line-height:1;white-space:nowrap;}
+.sw-badge{position:absolute;bottom:-4px;left:-2px;font-size:8px;font-weight:700;background:#1565c0;color:#fff;padding:1px 3px;border-radius:3px;line-height:1;}
 .assign-legend{display:flex;flex-wrap:wrap;gap:6px;padding:8px 16px;border-top:1px solid var(--g100);font-size:9px;align-items:center;}
 .legend-item{display:flex;align-items:center;gap:3px;}
 .legend-swatch{width:14px;height:14px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;}
@@ -1716,6 +1717,7 @@ function renderLegend(){
   items.forEach(function(i){
     html+='<div class="legend-item"><div class="legend-swatch blk '+i.cls+'" style="min-width:28px;padding:0 3px;white-space:nowrap;">'+i.label+'</div><span>'+i.desc+'</span></div>';
   });
+  html+='<div class="legend-item"><div class="legend-swatch" style="min-width:28px;padding:0 3px;background:#e3f2fd;color:#1565c0;font-size:10px;font-weight:700;">\u21C4</div><span>Swapped</span></div>';
   html+='</div>';
   return html;
 }
@@ -1914,7 +1916,10 @@ function renderSingleShiftGrid(shift,dates,compact){
         });
       }
       var emptyDisplay=isDoubleShift&&!bench?'-':label;
-      html+='<div class="blk '+cls+'" onclick="openAssignModal(\''+staff.ini+'\',\''+d.date+'\',\''+shift+'\')" title="'+esc(staff.name)+': '+label+'">'+emptyDisplay+badge+'</div>';
+      // Swap badge
+      var swBadge='';
+      if(assign&&assign.notes&&assign.notes.indexOf('[SWAP]')>=0)swBadge='<div class="sw-badge">\u21C4</div>';
+      html+='<div class="blk '+cls+'" onclick="openAssignModal(\''+staff.ini+'\',\''+d.date+'\',\''+shift+'\')" title="'+esc(staff.name)+': '+label+'">'+emptyDisplay+badge+swBadge+'</div>';
     });
   });
   html+='</div>';
@@ -2018,9 +2023,12 @@ function renderDay(){
         else if(isElev){bench='IO';}
         var cls=getBlkClass(bench);
         var label=getBlkLabel(bench);
-        var notes=assign&&assign.notes?' - '+esc(assign.notes):'';
+        var isSwapped=assign&&assign.notes&&assign.notes.indexOf('[SWAP]')>=0;
+        var cleanNotes=assign&&assign.notes?assign.notes.replace(/\[SWAP\][^;]*(;|$)/g,'').trim():'';
+        var notes=cleanNotes?' - '+esc(cleanNotes):'';
         var trainingNote=(!assign&&isInTraining(staff,ds))?' - Training (auto)':'';
-        html+='<div class="daily-row" onclick="openAssignModal(\''+staff.ini+'\',\''+ds+'\',\''+shift+'\')"><div class="daily-info">'+staffAvatar(staff,32)+'<div><div class="daily-name">'+esc(staff.name)+'</div><div class="daily-role">'+esc(staff.role)+notes+trainingNote+'</div></div></div><div class="daily-blk blk '+cls+'">'+label+'</div></div>';
+        var swapInfo=isSwapped?' <span style="font-size:9px;color:#1565c0;font-weight:700;">\u21C4 Swapped</span>':'';
+        html+='<div class="daily-row" onclick="openAssignModal(\''+staff.ini+'\',\''+ds+'\',\''+shift+'\')"><div class="daily-info">'+staffAvatar(staff,32)+'<div><div class="daily-name">'+esc(staff.name)+swapInfo+'</div><div class="daily-role">'+esc(staff.role)+notes+trainingNote+'</div></div></div><div class="daily-blk blk '+cls+'">'+label+'</div></div>';
       });
       html+='</div>';
     }
@@ -2137,7 +2145,8 @@ function renderMonth(){
           if(bench){
             var blkCls=getBlkClass(bench);
             var fullLabel=bench==='H/C'?'H/C':bench==='C/U'?'C/U':bench==='F'?'Float':bench==='T'?'Train':bench==='PTO'?'PTO':bench==='SL'?'Sick':bench==='IO'?'Office':bench==='OT'?'OT':bench==='WFH'?'WFH':bench;
-            html+='<div class="blk '+blkCls+'" style="flex:1;min-height:32px;border-radius:6px;margin-top:3px;font-size:11px;font-weight:700;">'+fullLabel+'</div>';
+            var monthSwap=a&&a.notes&&a.notes.indexOf('[SWAP]')>=0?' <span style="font-size:8px;">\u21C4</span>':'';
+            html+='<div class="blk '+blkCls+'" style="flex:1;min-height:32px;border-radius:6px;margin-top:3px;font-size:11px;font-weight:700;">'+fullLabel+monthSwap+'</div>';
           }
           // PTO traffic indicator
           var dayPTOCount=ptoRequests.filter(function(p){return p.status!=='Denied'&&p.startDate<=ds&&p.endDate>=ds;}).length;
@@ -2339,6 +2348,9 @@ async function approveSwap(id){
   if(a1&&a2){
     var tempBench=a1.bench;a1.bench=a2.bench;a2.bench=tempBench;
     var tempNotes=a1.notes;a1.notes=a2.notes;a2.notes=tempNotes;
+    // Mark both as swapped
+    a1.notes=(a1.notes?a1.notes+'; ':'')+'[SWAP] with '+s.swapWithName;
+    a2.notes=(a2.notes?a2.notes+'; ':'')+'[SWAP] with '+s.requestByName;
     try{
       var existing1=await spGet('ScheduleEntries',"Title eq '"+a1.id+"'");
       if(existing1.length)await spUpdate('ScheduleEntries',existing1[0].Id,schedToSP(a1));
@@ -3923,14 +3935,36 @@ function renderNotifList(){
     return;
   }
   var sorted=notifications.slice().sort(function(a,b){return(b.created||'').localeCompare(a.created||'');});
+  var now=new Date();
+  var sevenDaysAgo=new Date(now);sevenDaysAgo.setDate(sevenDaysAgo.getDate()-7);
+  var sevenDayStr=sevenDaysAgo.toISOString();
+
+  var recent=sorted.filter(function(n){return(n.created||'')>=sevenDayStr;});
+  var older=sorted.filter(function(n){return(n.created||'')<sevenDayStr;});
+
   var html='';
-  sorted.slice(0,30).forEach(function(n){
-    var iconCls=n.notifType==='swap-partner'||n.notifType==='swap-status'?'swap':n.notifType==='pto-status'?'pto':'info';
-    var iconName=iconCls==='swap'?'compare_arrows':iconCls==='pto'?'event':'info';
-    var timeAgo=getTimeAgo(n.created);
-    html+='<div class="notif-item'+(n.isRead?'':' unread')+'" onclick="handleNotifClick(\''+n.id+'\',\''+esc(n.relatedTab)+'\')"><div class="notif-icon '+iconCls+'"><span class="mi">'+iconName+'</span></div><div class="notif-body"><div class="notif-msg">'+esc(n.message)+'</div><div class="notif-time">'+timeAgo+'</div></div></div>';
-  });
+  var shown=recent.slice(0,20);
+  shown.forEach(function(n){html+=renderNotifItem(n);});
+
+  if(recent.length>20){
+    html+='<div style="text-align:center;padding:8px;"><span style="font-size:11px;color:var(--g400);">'+(recent.length-20)+' more recent</span></div>';
+  }
+
+  if(older.length){
+    html+='<div style="padding:6px 16px;"><div style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.04em;" onclick="var b=this.nextElementSibling;b.style.display=b.style.display===\'none\'?\'\':\'none\';this.querySelector(\'.shift-toggle\').style.transform=b.style.display===\'none\'?\'rotate(-90deg)\':\'\'">Older ('+older.length+')<span class="shift-toggle" style="font-size:10px;color:var(--g300);transform:rotate(-90deg);">\u25BC</span></div><div style="display:none;">';
+    older.slice(0,20).forEach(function(n){html+=renderNotifItem(n);});
+    if(older.length>20)html+='<div style="text-align:center;padding:8px;font-size:10px;color:var(--g400);">'+(older.length-20)+' more older notifications</div>';
+    html+='</div></div>';
+  }
+
   list.innerHTML=html;
+}
+
+function renderNotifItem(n){
+  var iconCls=n.notifType==='swap-partner'||n.notifType==='swap-status'?'swap':n.notifType==='pto-status'?'pto':'info';
+  var iconName=iconCls==='swap'?'compare_arrows':iconCls==='pto'?'event':'info';
+  var timeAgo=getTimeAgo(n.created);
+  return'<div class="notif-item'+(n.isRead?'':' unread')+'" onclick="handleNotifClick(\''+n.id+'\',\''+esc(n.relatedTab)+'\')"><div class="notif-icon '+iconCls+'"><span class="mi">'+iconName+'</span></div><div class="notif-body"><div class="notif-msg">'+esc(n.message)+'</div><div class="notif-time">'+timeAgo+'</div></div></div>';
 }
 
 function getTimeAgo(isoStr){
