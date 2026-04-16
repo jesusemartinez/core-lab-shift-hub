@@ -437,9 +437,23 @@ tr.row-selected td{background:rgba(224,242,241,.6);}
   animation:sectionIn var(--dur-med) var(--me-decelerate) both;}
 @keyframes sectionIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-/* During an auto-sync rebuild, suppress entrance animations so the log doesn't flicker every minute.
-   Only applies while body.syncing is set — cleared after render completes. */
-body.syncing .section,body.syncing .ann-bar,body.syncing .aud-day{animation:none!important;}
+/* During an auto-sync rebuild or a filter/sort/dept/page change, suppress entrance
+   animations so the log doesn't flicker. Targets the specific entrance keyframes used
+   by log sections, announcement bars, audit days, the monthly review banner, stat
+   cards, mobile cards, and CAP expansion rows. Ongoing animations like spinners and
+   pulses are unaffected. */
+body.syncing .section,
+body.syncing .ann-bar,
+body.syncing .aud-day,
+body.syncing .msr-banner,
+body.syncing .stat-card,
+body.syncing .mob-log-card,
+body.syncing .cap-detail-row td,
+body.syncing .aud-snapshot,
+body.syncing .aud-changes,
+body.syncing .page.active{
+  animation:none!important;
+}
 .sec-hdr{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;transition:background var(--dur-short) var(--me-standard),filter var(--dur-short) var(--me-standard);}
 .sec-hdr:hover{filter:brightness(.97);}
 .sec-hdr h3{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;}
@@ -1282,9 +1296,9 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 <!-- NAV TABS -->
 <div class="nav">
   <div class="nav-tab active" id="navAnn" onclick="switchPage('ann')"><span class="mi mi-sm">campaign</span> Announcements</div>
-  <div class="nav-tab" id="navStats" onclick="switchPage('stats')" style="display:none"><span class="mi mi-sm">insights</span> Stats</div>
   <div class="nav-tab" id="navLog" onclick="switchPage('log')"><span class="mi mi-sm">assignment</span> Shift Log</div>
   <div class="nav-tab" id="navNotifs" onclick="switchPage('notifs')"><span class="mi mi-sm">notifications</span> Notifications<span class="nav-badge" id="notifsNavBadge" style="display:none;margin-left:6px;background:var(--red);color:#fff;font-size:9px;font-weight:800;border-radius:8px;padding:1px 6px;">0</span></div>
+  <div class="nav-tab" id="navStats" onclick="switchPage('stats')" style="display:none"><span class="mi mi-sm">insights</span> Stats</div>
   <div class="nav-tab" id="navAudit" onclick="switchPage('audit')"><span class="mi mi-sm">history</span> Audit</div>
   <div class="nav-tab" id="navAdmin" onclick="switchPage('admin')" style="display:none"><span class="mi mi-sm">admin_panel_settings</span> Admin</div>
 </div>
@@ -1315,7 +1329,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
       <div class="shstats-section-hdr"><h3><span class="mi mi-sm">health_and_safety</span> Operational Health</h3><span class="sec-sub" id="opsSub"></span></div>
       <div class="shstats-grid">
         <div class="sh-card c4" id="shSlaScorecard"><div class="sh-card-hdr"><h4><span class="mi mi-sm">alarm_on</span> Escalation SLA Scorecard</h4><span class="sh-card-sub">lifetime</span></div><div class="sh-card-body" id="shSlaScorecardBody"></div></div>
-        <div class="sh-card c8" id="shAtRisk"><div class="sh-card-hdr"><h4><span class="mi mi-sm">report_problem</span> At-Risk Items</h4><span class="sh-card-sub" id="atRiskSub">click any item to jump</span></div><div class="sh-card-body" id="shAtRiskBody"></div></div>
+        <div class="sh-card c8" id="shAtRisk"><div class="sh-card-hdr"><h4><span class="mi mi-sm">report_problem</span> At-Risk Items</h4><span class="sh-card-sub" id="atRiskSub">click any item to jump</span><div style="margin-left:auto;display:flex;gap:2px;background:var(--g100);border-radius:999px;padding:2px;" id="atRiskScopeToggle"><button class="at-scope-btn active" data-scope="all" onclick="setAtRiskScope('all')" style="border:none;background:var(--white);color:var(--navy);font-size:9px;font-weight:700;padding:3px 10px;border-radius:999px;cursor:pointer;box-shadow:var(--shadow-1);">All periods</button><button class="at-scope-btn" data-scope="period" onclick="setAtRiskScope('period')" style="border:none;background:transparent;color:var(--g500);font-size:9px;font-weight:700;padding:3px 10px;border-radius:999px;cursor:pointer;">Current month</button></div></div><div class="sh-card-body" id="shAtRiskBody"></div></div>
         <div class="sh-card c12"><div class="sh-card-hdr"><h4><span class="mi mi-sm">show_chart</span> Daily Entry Volume</h4><span class="sh-card-sub">12-week rolling</span></div><div class="sh-card-body"><div class="chart-box"><canvas id="shchartDailyVol"></canvas></div></div></div>
       </div>
     </div>
@@ -1451,6 +1465,18 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   <!-- ADMIN -->
   <div class="page" id="pageAdmin">
     <h2 style="font-size:16px;font-weight:800;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:6px;"><span class="mi">admin_panel_settings</span> User Administration</h2>
+    <!-- SHAREPOINT HEALTH WIDGET -->
+    <div class="sph-health" id="sphHealth" style="background:var(--white);border-radius:var(--rl);border:1px solid var(--g200);padding:14px;box-shadow:var(--shadow-1);margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span class="mi mi-sm" style="color:var(--teal);">monitor_heart</span>
+        <h3 style="font-size:13px;font-weight:800;color:var(--navy);">SharePoint Health</h3>
+        <span style="font-size:10px;color:var(--g400);margin-left:auto;" id="sphHealthUpdated">updated just now</span>
+        <button class="btn btn-s" style="padding:2px 8px;font-size:9px;" onclick="renderSpHealth()" title="Refresh"><span class="mi mi-xs">refresh</span></button>
+      </div>
+      <p style="font-size:10px;color:var(--g500);margin-bottom:12px;line-height:1.5;">SharePoint lists can hold millions of items technically, but performance degrades past the <strong>5,000-item view threshold</strong>. Warnings appear at 4,000 items to give a safe buffer to archive before hitting it.</p>
+      <div id="sphHealthGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;"></div>
+      <div id="sphHealthRecommend" style="margin-top:12px;display:none;"></div>
+    </div>
     <div style="background:var(--white);border-radius:var(--rl);border:1px solid var(--g200);padding:14px;box-shadow:var(--shadow-1);" id="adminList"></div>
     <div class="backup-box"><h4><span class="mi mi-sm">cloud_done</span> SharePoint Connection</h4>
       <p style="font-size:10px;color:var(--g500);margin-bottom:8px;">Data syncs from SharePoint every 60 seconds. Use the buttons below for manual operations.</p>
@@ -1556,6 +1582,18 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   <div class="form-divider" id="resDivider" style="display:none"></div>
   <div class="form-item" id="resByWrap" style="display:none"><label>Resolved By</label><select id="eResBy"><option value="">Select...</option></select></div>
   <div class="form-item" id="resDateWrap" style="display:none"><label>Resolution Date</label><input type="date" id="eResDate"></div>
+  <!-- ENTRY HISTORY — only populated when editing existing entries with audit records -->
+  <div class="form-item full" id="entryHistoryWrap" style="display:none;margin-top:4px;">
+    <div id="entryHistoryHeader" onclick="toggleEntryHistory()" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--g50);border:1px solid var(--g200);border-radius:var(--r);cursor:pointer;">
+      <span class="mi mi-sm" style="color:var(--navy);">history</span>
+      <div style="flex:1;">
+        <div style="font-size:11px;font-weight:800;color:var(--navy);letter-spacing:.04em;">ENTRY HISTORY</div>
+        <div style="font-size:10px;color:var(--g500);" id="entryHistoryCount">0 changes</div>
+      </div>
+      <span class="mi mi-sm" id="entryHistoryChevron" style="color:var(--g500);transition:transform .2s;">expand_more</span>
+    </div>
+    <div id="entryHistoryBody" style="display:none;border:1px solid var(--g200);border-top:none;border-radius:0 0 var(--r) var(--r);background:var(--white);max-height:300px;overflow-y:auto;"></div>
+  </div>
 </div></div>
 <div class="modal-ftr"><button class="btn btn-s" onclick="closeEntryModal()">Cancel</button><button class="btn btn-p" id="entrySaveBtn" onclick="saveEntry()">Save</button></div>
 </div></div>
@@ -1576,6 +1614,20 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   </div>
 </div>
 <div class="modal-ftr"><button class="btn btn-s" onclick="closeAnnModal()">Cancel</button><button class="btn btn-p" id="annPostBtn" onclick="postAnnouncement()"><span class="mi mi-xs">campaign</span> Post</button></div>
+</div></div>
+
+<!-- EDIT ANNOUNCEMENT MODAL — replaces chained prompt() dialogs -->
+<div class="modal-bg" id="annEditModalBg" onclick="if(event.target===this)closeAnnEditModal()">
+<div class="modal" style="width:500px;"><div class="modal-hdr"><h3><span class="mi mi-sm" style="color:var(--teal);">edit</span> Edit Announcement</h3><button class="modal-close" onclick="closeAnnEditModal()"><span class="mi mi-sm">close</span></button></div>
+<div class="modal-body">
+  <div id="annEditTypeBadge" style="font-size:10px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;display:flex;align-items:center;gap:6px;"></div>
+  <div class="form-grid">
+    <div class="form-item full" id="annEditTextWrap"><label>Message *</label><textarea id="annEditText" style="min-height:80px;"></textarea></div>
+    <div class="form-item" id="annEditNameWrap" style="display:none;"><label>Name *</label><input type="text" id="annEditName" placeholder="e.g., Alexander Fleming"></div>
+    <div class="form-item" id="annEditRoleWrap" style="display:none;"><label>Role</label><input type="text" id="annEditRole" placeholder="e.g., MLS1, Hematology"></div>
+  </div>
+</div>
+<div class="modal-ftr"><button class="btn btn-s" onclick="closeAnnEditModal()">Cancel</button><button class="btn btn-p" onclick="saveAnnEdit()"><span class="mi mi-xs">save</span> Save Changes</button></div>
 </div></div>
 
 <div class="modal-bg" id="profModalBg" onclick="if(event.target===this)closeProfile()">
@@ -2270,10 +2322,18 @@ function _dataHash(){
 // nothing meaningful has changed visually — the animation would look like a flicker.
 function _renderLogNoAnim(){
   document.body.classList.add('syncing');
-  try{renderLog();}finally{
+  try{
+    renderLog();
+    // Mobile log rebuilds cards separately after a 50ms setTimeout in switchPage,
+    // but when called directly from a filter change we trigger it synchronously here
+    // so all renders happen under the syncing flag.
+    if(window.innerWidth<=600&&typeof renderMobileLog==='function')renderMobileLog();
+  }finally{
+    // Hold the class for two frames to also cover any microtask-delayed rebuilds
     requestAnimationFrame(function(){
-      // Only clear the class if no other sync is active (avoid race with the 60s tick)
-      if(!_syncInProgress)document.body.classList.remove('syncing');
+      requestAnimationFrame(function(){
+        if(!_syncInProgress)document.body.classList.remove('syncing');
+      });
     });
   }
 }
@@ -2281,7 +2341,9 @@ function _renderAnnNoAnim(){
   document.body.classList.add('syncing');
   try{renderAnn();}finally{
     requestAnimationFrame(function(){
-      if(!_syncInProgress)document.body.classList.remove('syncing');
+      requestAnimationFrame(function(){
+        if(!_syncInProgress)document.body.classList.remove('syncing');
+      });
     });
   }
 }
@@ -3560,7 +3622,101 @@ function removeProfPic(){users[me.initials].picture='';spSaveUser(me.initials,us
 function saveProfile(){var nick=$('profNick').value.trim().slice(0,12);users[me.initials].nickname=nick;spSaveUser(me.initials,users[me.initials]).catch(function(e){console.error(e);});uHA();renderAll();closeProfile();toast('Profile saved');}
 
 // === ADMIN ===
-function renderAdmin(){const l=$('adminList'),ua=Object.entries(users).sort((a,b)=>a[1].fullName.localeCompare(b[1].fullName));l.innerHTML=ua.map(([ini,u])=>{const isMe=me&&ini===me.initials;return'<div class="admin-row">'+avH(ini,26)+'<div class="admin-name">'+esc(u.fullName)+' <span style="font-size:9px;color:var(--g400);">('+ini+')</span>'+(u.isAdmin?' <span style="font-size:8px;background:var(--teal);color:var(--white);padding:1px 5px;border-radius:3px;">ADMIN</span>':'')+'</div><select style="font-size:10px;padding:3px 6px;" onchange="chgRole(\''+escJS(ini)+'\',this.value)"'+(isMe?' disabled':'')+'><option value="MLS1"'+(u.role==='MLS1'?' selected':'')+'>MLS1</option><option value="MLS2"'+(u.role==='MLS2'?' selected':'')+'>MLS2</option><option value="MLS Lead"'+(u.role==='MLS Lead'?' selected':'')+'>MLS Lead</option><option value="Lab Manager"'+(u.role==='Lab Manager'?' selected':'')+'>Lab Manager</option></select></div>';}).join('');}
+function renderAdmin(){const l=$('adminList'),ua=Object.entries(users).sort((a,b)=>a[1].fullName.localeCompare(b[1].fullName));l.innerHTML=ua.map(([ini,u])=>{const isMe=me&&ini===me.initials;return'<div class="admin-row">'+avH(ini,26)+'<div class="admin-name">'+esc(u.fullName)+' <span style="font-size:9px;color:var(--g400);">('+ini+')</span>'+(u.isAdmin?' <span style="font-size:8px;background:var(--teal);color:var(--white);padding:1px 5px;border-radius:3px;">ADMIN</span>':'')+'</div><select style="font-size:10px;padding:3px 6px;" onchange="chgRole(\''+escJS(ini)+'\',this.value)"'+(isMe?' disabled':'')+'><option value="MLS1"'+(u.role==='MLS1'?' selected':'')+'>MLS1</option><option value="MLS2"'+(u.role==='MLS2'?' selected':'')+'>MLS2</option><option value="MLS Lead"'+(u.role==='MLS Lead'?' selected':'')+'>MLS Lead</option><option value="Lab Manager"'+(u.role==='Lab Manager'?' selected':'')+'>Lab Manager</option></select></div>';}).join('');renderSpHealth();}
+
+// ═══ SHAREPOINT HEALTH WIDGET ═══
+// Lightweight dashboard showing list-item counts vs the 5,000 List View Threshold.
+// Counts are computed from in-memory data (fetched on last sync), so they match what the
+// app has loaded. Warnings at 4,000 (80%) give a safe buffer to archive before the hard limit.
+var SPH_SOFT_LIMIT=5000;
+var SPH_WARN=4000;
+
+function renderSpHealth(){
+  var grid=$('sphHealthGrid');if(!grid)return;
+  var ts=$('sphHealthUpdated');if(ts)ts.textContent='updated '+(lastSyncTime?_relativeTime(lastSyncTime):'just now');
+  var counts={
+    entries:{
+      label:'Shift Entries',
+      icon:'assignment',
+      count:(entries||[]).filter(function(e){return !e.isDeleted;}).length,
+      list:'ShiftEntries'
+    },
+    announcements:{
+      label:'Announcements',
+      icon:'campaign',
+      count:(announcements||[]).filter(function(a){return !a.isDeleted;}).length,
+      list:'Announcements'
+    },
+    audit:{
+      label:'Audit Records',
+      icon:'history',
+      count:(hist||[]).length,
+      list:'AuditLog',
+      note:'in-memory cap 2,000 · SP holds all'
+    },
+    users:{
+      label:'Hub Users',
+      icon:'group',
+      count:Object.keys(users||{}).length,
+      list:'HubUsers'
+    }
+  };
+  var recommendations=[];
+  grid.innerHTML=Object.keys(counts).map(function(k){
+    var c=counts[k];
+    var pct=Math.min(100,Math.round(c.count/SPH_SOFT_LIMIT*100));
+    var sev='ok';
+    if(c.count>=SPH_SOFT_LIMIT)sev='critical';
+    else if(c.count>=SPH_WARN)sev='warn';
+    else if(c.count>=SPH_WARN*0.75)sev='mild';// 3,000 = mild caution
+    var barColor={ok:'var(--green)',mild:'var(--teal)',warn:'#f59e0b',critical:'var(--red)'}[sev];
+    var bgColor={ok:'var(--green-bg)',mild:'var(--teal-bg)',warn:'#fef3c7',critical:'var(--red-bg)'}[sev];
+    var badgeText={ok:'Healthy',mild:'Healthy',warn:'Approaching limit',critical:'At threshold'}[sev];
+    var badgeColor={ok:'var(--green)',mild:'var(--teal)',warn:'#92400e',critical:'var(--red)'}[sev];
+    if(sev==='warn'||sev==='critical'){
+      recommendations.push({sev:sev,list:c.label,count:c.count,key:k});
+    }
+    return '<div style="background:'+bgColor+';border:1px solid '+barColor+'33;border-radius:var(--r);padding:10px 12px;">'+
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span class="mi mi-sm" style="color:'+barColor+';">'+c.icon+'</span><span style="font-size:10px;font-weight:700;color:var(--navy);flex:1;">'+esc(c.label)+'</span><span style="font-size:8px;font-weight:700;color:'+badgeColor+';background:'+(sev==='ok'||sev==='mild'?'transparent':bgColor)+';text-transform:uppercase;letter-spacing:.04em;">'+badgeText+'</span></div>'+
+      '<div style="font-size:22px;font-weight:800;color:var(--navy);line-height:1;">'+c.count.toLocaleString()+' <span style="font-size:10px;font-weight:500;color:var(--g400);">/ '+SPH_SOFT_LIMIT.toLocaleString()+'</span></div>'+
+      '<div style="margin-top:6px;height:4px;background:var(--g100);border-radius:2px;overflow:hidden;"><div style="height:100%;background:'+barColor+';width:'+pct+'%;transition:width .3s;"></div></div>'+
+      (c.note?'<div style="font-size:9px;color:var(--g400);margin-top:4px;">'+esc(c.note)+'</div>':'')+
+      '</div>';
+  }).join('');
+  // Recommendations panel
+  var recHost=$('sphHealthRecommend');if(!recHost)return;
+  if(!recommendations.length){
+    recHost.style.display='none';
+  }else{
+    recHost.style.display='';
+    recHost.innerHTML=recommendations.map(function(r){
+      var icon=r.sev==='critical'?'error':'warning';
+      var color=r.sev==='critical'?'var(--red)':'#92400e';
+      var bg=r.sev==='critical'?'var(--red-bg)':'#fef3c7';
+      var bdr=r.sev==='critical'?'var(--red-bdr)':'#fbbf24';
+      var action=r.key==='entries'?'<button class="btn btn-s" style="font-size:10px;padding:4px 10px;" onclick="openArchiveModal()"><span class="mi mi-xs">archive</span> Archive Now</button>':'';
+      var msg=r.sev==='critical'?
+        r.list+' is at or past the 5,000 SharePoint soft-limit. Archive old records immediately to avoid query failures on unindexed views.':
+        r.list+' has '+r.count.toLocaleString()+' items and is approaching the 5,000 soft-limit. Plan to archive records older than the retention floor (7 years by policy, 2 years by CAP/CLIA minimum).';
+      return '<div style="background:'+bg+';border:1px solid '+bdr+';border-left:4px solid '+color+';border-radius:var(--r);padding:10px 12px;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px;">'+
+        '<span class="mi mi-sm" style="color:'+color+';flex-shrink:0;margin-top:1px;">'+icon+'</span>'+
+        '<div style="flex:1;min-width:0;">'+
+          '<div style="font-size:11px;font-weight:700;color:'+color+';margin-bottom:2px;">'+(r.sev==='critical'?'Action required':'Action recommended')+'</div>'+
+          '<div style="font-size:10px;color:var(--g600);line-height:1.5;">'+esc(msg)+'</div>'+
+        '</div>'+
+        (action?'<div style="flex-shrink:0;">'+action+'</div>':'')+
+        '</div>';
+    }).join('');
+  }
+}
+
+function _relativeTime(d){
+  var diff=Date.now()-(d instanceof Date?d.getTime():d);
+  if(diff<60000)return 'just now';
+  if(diff<3600000)return Math.floor(diff/60000)+'m ago';
+  if(diff<86400000)return Math.floor(diff/3600000)+'h ago';
+  return Math.floor(diff/86400000)+'d ago';
+}
 function chgRole(i,r){users[i].role=r;spSaveUser(i,users[i]).catch(function(e){console.error(e);});addH('edit','Role change: '+users[i].fullName+' -> '+r,'');renderAdmin();toast(users[i].fullName+' is now '+r);}
 
 async function manualSync(){
@@ -4748,6 +4904,84 @@ function _inferShift(totalMin){
   return 'Night';// 23:30+ or before 07:00
 }
 
+// ═══ ENTRY EDIT HISTORY ═══
+// Filters hist[] for records matching this entry's id and renders a reverse-chronological
+// timeline inside the edit modal. Only shows on edit (not new entries).
+function renderEntryHistory(entryId){
+  var wrap=$('entryHistoryWrap');if(!wrap)return;
+  if(!entryId){wrap.style.display='none';return;}
+  var records=(hist||[]).filter(function(h){return h.entryId===entryId;});
+  // Sort reverse-chronological (most recent first)
+  records.sort(function(a,b){return(b.timestamp||'').localeCompare(a.timestamp||'');});
+  if(!records.length){wrap.style.display='none';return;}
+  wrap.style.display='';
+  var cnt=$('entryHistoryCount');
+  if(cnt)cnt.textContent=records.length+' change'+(records.length===1?'':'s');
+  var body=$('entryHistoryBody');if(!body)return;
+  body.innerHTML=records.map(function(h){return _entryHistoryRow(h);}).join('');
+}
+
+function _entryHistoryRow(h){
+  var when=_formatHistTime(h.timestamp);
+  var who=h.userName||ln(h.user)||h.user||'Unknown';
+  var iconInfo=_historyTypeIcon(h.type);
+  var changes='';
+  if(h.changedFields&&h.changedFields.length){
+    changes='<div style="margin-top:4px;display:flex;flex-direction:column;gap:3px;">'+h.changedFields.map(function(c){
+      var from=(c.from||'').toString(),to=(c.to||'').toString();
+      if(from.length>40)from=from.slice(0,40)+'...';
+      if(to.length>40)to=to.slice(0,40)+'...';
+      return '<div style="font-size:10px;line-height:1.5;"><strong style="color:var(--navy);">'+esc(c.field)+':</strong> <span style="color:var(--g500);text-decoration:line-through;">'+esc(from||'(empty)')+'</span> <span class="mi mi-xs" style="color:var(--g400);font-size:10px;vertical-align:middle;">arrow_forward</span> <span style="color:var(--navy);font-weight:600;">'+esc(to||'(empty)')+'</span></div>';
+    }).join('')+'</div>';
+  }else if(h.detail){
+    changes='<div style="margin-top:4px;font-size:10px;color:var(--g500);line-height:1.5;">'+esc(h.detail.slice(0,140))+'</div>';
+  }
+  return '<div style="padding:10px 12px;border-bottom:1px solid var(--g100);display:flex;gap:8px;align-items:flex-start;">'+
+    '<span class="mi mi-sm" style="color:'+iconInfo.color+';flex-shrink:0;margin-top:1px;">'+iconInfo.icon+'</span>'+
+    '<div style="flex:1;min-width:0;">'+
+      '<div style="display:flex;align-items:center;gap:6px;font-size:11px;">'+
+        '<span style="font-weight:700;color:var(--navy);">'+esc(who)+'</span>'+
+        '<span style="color:var(--g400);font-size:9px;">'+esc(h.userRole||'')+'</span>'+
+        '<span style="margin-left:auto;color:var(--g400);font-size:9px;font-family:\'JetBrains Mono\',monospace;">'+esc(when)+'</span>'+
+      '</div>'+
+      '<div style="font-size:11px;color:var(--g600);margin-top:2px;">'+esc(h.text||'')+'</div>'+
+      changes+
+    '</div>'+
+    '</div>';
+}
+
+function _historyTypeIcon(t){
+  if(t==='add')return{icon:'add_circle',color:'var(--green)'};
+  if(t==='edit')return{icon:'edit',color:'var(--teal)'};
+  if(t==='delete')return{icon:'delete',color:'var(--red)'};
+  if(t==='restore')return{icon:'restore',color:'var(--amber)'};
+  return{icon:'history',color:'var(--g500)'};
+}
+
+function _formatHistTime(iso){
+  if(!iso)return '';
+  var d=new Date(iso);if(isNaN(d.getTime()))return '';
+  var now=new Date(),diff=now-d;
+  if(diff<60000)return 'just now';
+  if(diff<3600000)return Math.floor(diff/60000)+'m ago';
+  var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var day=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  var t=d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  if(day.getTime()===today.getTime())return t+' today';
+  var y=new Date(today);y.setDate(y.getDate()-1);
+  if(day.getTime()===y.getTime())return 'Yesterday '+t;
+  if(d.getFullYear()===now.getFullYear())return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+t;
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+function toggleEntryHistory(){
+  var body=$('entryHistoryBody'),chev=$('entryHistoryChevron');
+  if(!body)return;
+  var willOpen=body.style.display==='none';
+  body.style.display=willOpen?'':'none';
+  if(chev)chev.style.transform=willOpen?'rotate(180deg)':'';
+}
+
 // ═══ CAPA SECTION TOGGLE ═══
 function toggleCapSection(forceOpen){
   var body=$('capSectionBody');
@@ -5107,7 +5341,62 @@ function renderStdAnn(){var z=$('annZone'),myD=me?(dismissed[me.initials]||[]):[
 function renderResolvedAnn(){var z=$('resAnnZone');if(!z)return;var rs=announcements.filter(a=>a.resolved);if(!rs.length){z.innerHTML='';return;}var o=secOpen.resAnn;var items=rs.map(a=>{var tl=a.annType==='mandatory'?'MANDATORY':a.annType==='welcome'?'WELCOME':'UPDATE',tc=a.annType||'standard';var ab='';if(isLead()){ab+='<button class="btn btn-s" style="padding:2px 6px;font-size:9px;" onclick="editAnn(\''+a.id+'\')"><span class="mi mi-xs">edit</span></button> ';ab+='<button class="btn btn-s" style="padding:2px 6px;font-size:9px;color:var(--amber);" onclick="unresolveAnn(\''+a.id+'\')"><span class="mi mi-xs">undo</span> Reopen</button> ';}if(isAdm()){ab+='<button class="btn btn-d" style="padding:2px 6px;font-size:9px;" onclick="deleteAnn(\''+a.id+'\')"><span class="mi mi-xs">delete</span></button>';}var h='<div style="padding:12px 14px;background:var(--white);border-bottom:1px solid var(--g100);"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div style="display:flex;align-items:center;gap:6px;"><span class="ann-type-tag '+tc+'">'+tl+'</span><span class="badge b-resolved" style="font-size:8px;">Resolved '+fd(a.resolvedDate||'')+'</span></div><div style="display:flex;align-items:center;gap:4px;">'+ab+'</div></div>';if(a.annType==='welcome'){var c=a.comments||[],cH=c.map(x=>'<div class="wc-item"><b>'+esc(x.author)+':</b> <span>'+esc(x.text)+'</span></div>').join('');h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="mi" style="font-size:24px;color:#00796B;">celebration</span><div style="font-size:14px;font-weight:800;color:#004D40;">Welcome, '+esc(a.welcomeName||'')+'!</div></div><div style="font-size:10px;color:#00695C;margin-bottom:4px;">'+(a.welcomeRole?esc(a.welcomeRole)+' &middot; ':'')+'Posted by '+esc(a.postedBy)+' &middot; '+fd(a.date)+'</div>'+(a.text?'<div style="font-size:12px;color:#1a3a3a;line-height:1.4;margin-bottom:6px;">'+esc(a.text)+'</div>':'')+'<div class="wc-area"><h5>Welcome Messages ('+c.length+')</h5><div class="wc-list" style="max-height:200px;">'+cH+'</div></div>';}else if(a.annType==='mandatory'){var ack=a.acknowledged||[],all=Object.keys(users),na=all.filter(i=>!ack.includes(i));h+='<div style="font-size:12px;color:var(--g900);line-height:1.5;margin-bottom:4px;">'+esc(a.text)+'</div><div style="font-size:10px;color:var(--g500);">'+fd(a.date)+' &middot; '+esc(a.postedBy)+' &middot; '+ack.length+'/'+all.length+'</div><div style="margin-top:6px;font-size:10px;">'+(ack.length?'<div style="margin-bottom:3px;"><span style="font-weight:600;color:var(--green);">Acknowledged ('+ack.length+'):</span> '+ack.map(i=>'<span style="display:inline-block;background:var(--green-bg);color:var(--green);padding:1px 5px;border-radius:3px;margin:1px;font-weight:600;">'+esc(ln(i))+'</span>').join('')+'</div>':'')+(na.length?'<div><span style="font-weight:600;color:var(--red);">Did not ('+na.length+'):</span> '+na.map(i=>'<span style="display:inline-block;background:var(--red-bg);color:var(--red);padding:1px 5px;border-radius:3px;margin:1px;font-weight:600;">'+esc(ln(i))+'</span>').join('')+'</div>':'')+'</div>';}else{h+='<div style="font-size:12px;color:var(--g900);line-height:1.5;">'+esc(a.text)+'</div><div style="font-size:10px;color:var(--g500);margin-top:2px;">'+fd(a.date)+' &middot; '+esc(a.postedBy)+'</div>';}h+='</div>';return h;}).join('');z.innerHTML='<div class="ann-bar" style="border-color:var(--green-bdr);margin-top:14px;"><div class="ann-bar-hdr '+(o?'':'collapsed')+'" style="background:var(--green-bg);border-bottom-color:var(--green-bdr);" onclick="secOpen.resAnn=!secOpen.resAnn;renderResolvedAnn()"><h3 style="color:var(--green);"><span class="mi mi-sm">check_circle</span> Resolved Announcements <span class="ann-cnt" style="background:rgba(18,132,90,.12);color:var(--green);">'+rs.length+'</span></h3><span class="mi mi-sm" style="color:var(--green);">expand_more</span></div><div class="ann-list '+(o?'':'collapsed')+'">'+items+'</div></div>';}
 function dismissAnn(id){if(!me)return;if(!dismissed[me.initials])dismissed[me.initials]=[];dismissed[me.initials].push(id);saveAll();renderAnn();}
 function addWC(aid){var input=$('wci_'+aid);if(!input)return;var t=input.value.trim();if(!t)return;var a=announcements.find(x=>x.id===aid);if(!a)return;if(!a.comments)a.comments=[];a.comments.push({author:me?me.fullName:'',text:t,timestamp:new Date().toISOString()});var _wca=announcements.find(function(x){return x.id===aid;});if(_wca)spSaveAnn(_wca).catch(function(e){console.error(e);});input.value='';renderAnn();}
-function editAnn(aid){if(!isLead()&&!isAdm()){toast('Leads+ only');return;}var a=announcements.find(x=>x.id===aid);if(!a)return;if(a.annType==='welcome'){var n=prompt('Name:',a.welcomeName||'');if(n===null)return;var r=prompt('Role:',a.welcomeRole||'');if(r===null)return;var t=prompt('Message:',a.text||'');if(t===null)return;a.welcomeName=n;a.welcomeRole=r;a.text=t;addH('edit','Edited welcome for '+n,'');}else{var t2=prompt('Text:',a.text||'');if(t2===null)return;a.text=t2;addH('edit','Edited '+(a.annType||'announcement')+': "'+t2.slice(0,30)+'..."','');}var _ea=announcements.find(function(x){return x.id===aid;});if(_ea)spSaveAnn(_ea).catch(function(e){console.error(e);});renderAnn();toast('Updated');}
+var _editingAnnId=null;
+function editAnn(aid){
+  if(!isLead()&&!isAdm()){toast('Leads+ only');return;}
+  var a=announcements.find(function(x){return x.id===aid;});
+  if(!a)return;
+  _editingAnnId=aid;
+  // Populate modal based on announcement type
+  var badge=$('annEditTypeBadge');
+  var typeInfo={standard:{icon:'campaign',label:'Standard Announcement',color:'var(--teal)'},welcome:{icon:'celebration',label:'Welcome Announcement',color:'#00796B'},mandatory:{icon:'priority_high',label:'Mandatory Read',color:'var(--red)'}}[a.annType||'standard'];
+  if(badge)badge.innerHTML='<span class="mi mi-xs" style="color:'+typeInfo.color+';">'+typeInfo.icon+'</span><span style="color:'+typeInfo.color+';">'+typeInfo.label+'</span>';
+  // Show/hide name + role fields based on type
+  var isWelcome=a.annType==='welcome';
+  $('annEditNameWrap').style.display=isWelcome?'':'none';
+  $('annEditRoleWrap').style.display=isWelcome?'':'none';
+  $('annEditName').value=a.welcomeName||'';
+  $('annEditRole').value=a.welcomeRole||'';
+  // Relabel the text field appropriately
+  var textLabel=$('annEditTextWrap').querySelector('label');
+  if(textLabel)textLabel.textContent=isWelcome?'Welcome Message (optional)':'Message *';
+  $('annEditText').value=a.text||'';
+  openSheet('annEditModalBg');
+  setTimeout(function(){var f=isWelcome?$('annEditName'):$('annEditText');if(f)f.focus();},100);
+}
+
+function closeAnnEditModal(){
+  closeSheet('annEditModalBg');
+  _editingAnnId=null;
+}
+
+function saveAnnEdit(){
+  if(!_editingAnnId)return;
+  var a=announcements.find(function(x){return x.id===_editingAnnId;});
+  if(!a){closeAnnEditModal();return;}
+  var txt=($('annEditText').value||'').trim();
+  var isWelcome=a.annType==='welcome';
+  if(isWelcome){
+    var name=($('annEditName').value||'').trim();
+    if(!name){toast('Name is required for a welcome');return;}
+    var changes=[];
+    if(a.welcomeName!==name)changes.push('Name: '+(a.welcomeName||'(empty)')+' → '+name);
+    var role=($('annEditRole').value||'').trim();
+    if((a.welcomeRole||'')!==role)changes.push('Role: '+(a.welcomeRole||'(empty)')+' → '+(role||'(empty)'));
+    if((a.text||'')!==txt)changes.push('Message updated');
+    a.welcomeName=name;a.welcomeRole=role;a.text=txt;
+    addH('edit','Edited welcome for '+name,changes.join('; '),{annId:a.id});
+  }else{
+    if(!txt){toast('Message cannot be empty');return;}
+    var summary=(a.text||'')!==txt?'Message updated':'No changes';
+    a.text=txt;
+    addH('edit','Edited '+(a.annType||'announcement')+': "'+txt.slice(0,30)+'..."',summary,{annId:a.id});
+  }
+  spSaveAnn(a).catch(function(e){console.error(e);});
+  closeAnnEditModal();
+  renderAnn();
+  toast('Announcement updated');
+}
 function resolveAnn(aid){if(!isLead()&&!isAdm()){toast('Leads+ only');return;}var a=announcements.find(x=>x.id===aid);if(!a)return;if(!confirm('Resolve this? Moves to resolved section.'))return;a.resolved=true;a.resolvedDate=new Date().toISOString().split('T')[0];a.resolvedBy=me.initials;addH('edit','Resolved: "'+(a.text||a.welcomeName||'').slice(0,30)+'..."','');var _ra=announcements.find(function(x){return x.id===aid;});if(_ra)spSaveAnn(_ra).catch(function(e){console.error(e);});renderAnn();toast('Resolved');}
 function unresolveAnn(aid){if(!isLead()&&!isAdm()){toast('Leads+ only');return;}var a=announcements.find(x=>x.id===aid);if(!a)return;if(!confirm('Reopen this?'))return;a.resolved=false;delete a.resolvedDate;delete a.resolvedBy;addH('edit','Reopened: "'+(a.text||a.welcomeName||'').slice(0,30)+'..."','');var _ua=announcements.find(function(x){return x.id===aid;});if(_ua)spSaveAnn(_ua).catch(function(e){console.error(e);});renderAnn();toast('Reopened');}
 function deleteAnn(aid){
@@ -5453,7 +5742,7 @@ function openEntryModal(id){editId=id||null;attachments=[];$('entryModalTitle').
 _checkDraftRestore();}
 // Reset any user-toggled state on the CAPA section so it re-auto-expands appropriately
 var _capWrap=$('capSectionWrap');if(_capWrap)delete _capWrap.dataset.userToggled;
-updateCapRequired();_syncActionChipState();rAP();openSheet('entryModalBg');_startDraftAutosave();}
+updateCapRequired();_syncActionChipState();renderEntryHistory(editId);rAP();openSheet('entryModalBg');_startDraftAutosave();}
 
 // ═══ DRAFT AUTOSAVE ═══
 // Saves unsaved new-entry form state to localStorage every 2s while modal is open.
@@ -6295,12 +6584,39 @@ function _renderShSlaScorecard(all){
 }
 
 var SH_AT_RISK_DAYS=14;
+var _atRiskScope='all';// 'all' or 'period'
+function setAtRiskScope(scope){
+  _atRiskScope=scope;
+  // Update toggle visual state
+  document.querySelectorAll('.at-scope-btn').forEach(function(b){
+    var active=b.getAttribute('data-scope')===scope;
+    b.classList.toggle('active',active);
+    b.style.background=active?'var(--white)':'transparent';
+    b.style.color=active?'var(--navy)':'var(--g500)';
+    b.style.boxShadow=active?'var(--shadow-1)':'none';
+  });
+  // Re-render with same data
+  var all=entries.filter(function(e){return !e.isDeleted;});
+  _renderShAtRisk(all);
+}
+
 function _renderShAtRisk(all){
   var body=$('shAtRiskBody');if(!body)return;
+  // If "Current month" scope, restrict to entries dated in the currently-selected month/year
+  var pool=all;
+  if(_atRiskScope==='period'){
+    var monthStart=new Date(curYear,curMonth,1);
+    var monthEnd=new Date(curYear,curMonth+1,1);
+    pool=all.filter(function(e){
+      if(!e.date)return false;
+      var d=new Date(e.date+'T00:00:00');
+      return d>=monthStart&&d<monthEnd;
+    });
+  }
   var now=Date.now();
   var items=[];
   // Category 1: escalated + unresponded (SLA overdue)
-  all.filter(function(e){return e.status==='Escalated';}).forEach(function(e){
+  pool.filter(function(e){return e.status==='Escalated';}).forEach(function(e){
     var s=escalationSlaState(e,now);
     if(s.state==='overdue'){
       items.push({id:e.id,sev:'red',icon:'warning',title:'SLA Overdue: '+(e.category||'—'),desc:(e.description||'').slice(0,80),val:fmtDuration(s.remainingMs)});
@@ -6310,17 +6626,17 @@ function _renderShAtRisk(all){
   });
   // Category 2: open > N days
   var nDaysAgo=new Date(now-SH_AT_RISK_DAYS*86400000).toISOString().split('T')[0];
-  all.filter(function(e){return(e.status==='Open'||e.status==='In Progress')&&e.date&&e.date<nDaysAgo;}).forEach(function(e){
+  pool.filter(function(e){return(e.status==='Open'||e.status==='In Progress')&&e.date&&e.date<nDaysAgo;}).forEach(function(e){
     var daysOpen=Math.floor((now-Date.parse(e.date+'T00:00:00'))/86400000);
     items.push({id:e.id,sev:daysOpen>30?'red':'amber',icon:'schedule',title:'Open '+daysOpen+'d: '+(e.category||'—'),desc:(e.description||'').slice(0,80),val:daysOpen+' days'});
   });
   // Category 3: effectiveness reviews overdue
-  all.filter(function(e){return e.effReviewDate&&!e.effVerified&&new Date(e.effReviewDate+'T00:00:00')<=new Date();}).forEach(function(e){
+  pool.filter(function(e){return e.effReviewDate&&!e.effVerified&&new Date(e.effReviewDate+'T00:00:00')<=new Date();}).forEach(function(e){
     var daysOverdue=Math.floor((now-Date.parse(e.effReviewDate+'T00:00:00'))/86400000);
     items.push({id:e.id,sev:daysOverdue>30?'red':'amber',icon:'fact_check',title:'Eff. Review overdue',desc:(e.category||'—')+': '+(e.description||'').slice(0,60),val:daysOverdue+'d overdue'});
   });
   // Category 4: CAP-incomplete (regulatory gap)
-  all.filter(function(e){return capIsRequired(e)&&capIncompleteReasons(e).length>0;}).forEach(function(e){
+  pool.filter(function(e){return capIsRequired(e)&&capIncompleteReasons(e).length>0;}).forEach(function(e){
     var reasons=capIncompleteReasons(e);
     // Severity: High priority always red; Resolved + missing eff review = red; otherwise amber
     var sev=(e.priority==='High'||(e.status==='Resolved'&&reasons.indexOf('Eff. Review Date')>=0))?'red':'amber';
@@ -6328,9 +6644,10 @@ function _renderShAtRisk(all){
   });
   // Sort by severity then value
   items.sort(function(a,b){if(a.sev!==b.sev)return a.sev==='red'?-1:1;return 0;});
-  $('atRiskSub').textContent=items.length+' at-risk item'+(items.length===1?'':'s');
+  var scopeLabel=_atRiskScope==='period'?' in '+MONTHS[curMonth]:'';
+  $('atRiskSub').textContent=items.length+' at-risk item'+(items.length===1?'':'s')+scopeLabel;
   if(!items.length){
-    body.innerHTML='<div class="sh-risk-empty"><span class="mi" style="font-size:28px;display:block;margin-bottom:6px;color:var(--green);">check_circle</span>No at-risk items — nice work</div>';
+    body.innerHTML='<div class="sh-risk-empty"><span class="mi" style="font-size:28px;display:block;margin-bottom:6px;color:var(--green);">check_circle</span>No at-risk items'+(scopeLabel||'')+' — nice work</div>';
     return;
   }
   var html='<div class="sh-risk-list">';
@@ -7647,14 +7964,14 @@ refreshUI=function(){
   <button class="mob-nav-btn active" id="mobAnn" onclick="switchPage('ann')">
     <span class="mi">campaign</span>Feed
   </button>
-  <button class="mob-nav-btn" id="mobStats" onclick="switchPage('stats')" style="display:none">
-    <span class="mi">insights</span>Stats
-  </button>
   <button class="mob-nav-btn" id="mobLog" onclick="switchPage('log')">
     <span class="mi">assignment</span>Log
   </button>
   <button class="mob-nav-btn" id="mobNotifs" onclick="switchPage('notifs')">
     <span class="mi">notifications</span>Alerts
+  </button>
+  <button class="mob-nav-btn" id="mobStats" onclick="switchPage('stats')" style="display:none">
+    <span class="mi">insights</span>Stats
   </button>
   <button class="mob-nav-btn" id="mobAudit" onclick="switchPage('audit')">
     <span class="mi">history</span>Audit
