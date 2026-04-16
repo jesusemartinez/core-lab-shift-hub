@@ -203,6 +203,126 @@ select:focus,input[type="text"]:focus,input[type="date"]:focus,input[type="time"
 .nfpg-members.open{display:block;}
 .nfpg-member{font-size:10px;color:var(--g600);padding:3px 0;display:flex;justify-content:space-between;gap:8px;}
 
+/* ═══ SHIFT HUB STATS PAGE REDESIGN ═══ */
+.shstats-hdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.shstats-hdr h2{font-size:16px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:6px;}
+.shstats-hdr .shstats-sub{font-weight:500;font-size:13px;color:var(--g500);margin-left:6px;}
+.shstats-access-note{display:inline-flex;align-items:center;gap:3px;background:var(--g50);border:1px solid var(--g200);padding:2px 8px;border-radius:999px;}
+.shstats-section{margin-bottom:24px;}
+.shstats-section-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--g200);}
+.shstats-section-hdr h3{font-size:13px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px;}
+.shstats-section-hdr .sec-sub{font-size:11px;font-weight:500;color:var(--g400);margin-left:auto;}
+.shstats-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:20px;}
+.sh-hero-card{background:var(--white);border:1px solid var(--g200);border-radius:var(--rl);padding:14px 16px;box-shadow:var(--shadow-1);transition:transform .2s,box-shadow .2s;position:relative;overflow:hidden;}
+.sh-hero-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-2);}
+.sh-hero-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent,var(--teal));border-radius:var(--rl) var(--rl) 0 0;}
+.sh-hero-card.hc-teal{--accent:var(--teal);}
+.sh-hero-card.hc-amber{--accent:var(--amber);}
+.sh-hero-card.hc-red{--accent:var(--red);}
+.sh-hero-card.hc-purple{--accent:var(--purple);}
+.sh-hero-card.hc-green{--accent:var(--green);}
+.sh-hero-card.hc-navy{--accent:var(--navy);}
+.sh-hero-label{font-size:10px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.sh-hero-val{font-size:28px;font-weight:800;color:var(--navy);line-height:1.1;}
+.sh-hero-delta{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:700;margin-top:6px;padding:2px 6px;border-radius:999px;}
+.sh-hero-delta.up{color:var(--red);background:var(--red-bg);}
+.sh-hero-delta.down{color:var(--green);background:var(--green-bg);}
+.sh-hero-delta.flat{color:var(--g500);background:var(--g50);}
+.sh-hero-delta.up.good{color:var(--green);background:var(--green-bg);}
+.sh-hero-delta.down.bad{color:var(--red);background:var(--red-bg);}
+.sh-hero-sub{font-size:10px;color:var(--g400);margin-top:4px;}
+
+.shstats-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;}
+.sh-card{background:var(--white);border:1px solid var(--g200);border-radius:var(--rl);padding:16px;box-shadow:var(--shadow-1);grid-column:span 12;display:flex;flex-direction:column;}
+.sh-card.c6{grid-column:span 6;}
+.sh-card.c4{grid-column:span 4;}
+.sh-card.c8{grid-column:span 8;}
+.sh-card.c12{grid-column:span 12;}
+.sh-card-hdr{display:flex;align-items:center;gap:6px;margin-bottom:12px;}
+.sh-card-hdr h4{font-size:12px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:6px;}
+.sh-card-hdr .sh-card-sub{font-size:10px;font-weight:500;color:var(--g400);margin-left:auto;}
+.sh-card-body{flex:1;min-height:0;}
+@media(max-width:900px){
+  .sh-card.c6,.sh-card.c4,.sh-card.c8{grid-column:span 12;}
+}
+
+/* SLA scorecard big number */
+.sh-sla-big{text-align:center;padding:18px 12px;}
+.sh-sla-big-val{font-size:42px;font-weight:800;line-height:1;}
+.sh-sla-big-label{font-size:11px;font-weight:600;color:var(--g500);margin-top:4px;}
+.sh-sla-details{display:flex;flex-direction:column;gap:5px;margin-top:12px;padding-top:12px;border-top:1px solid var(--g100);}
+.sh-sla-details .sla-line{display:flex;justify-content:space-between;font-size:11px;}
+.sh-sla-details .sla-line .k{color:var(--g500);}
+.sh-sla-details .sla-line .v{font-weight:700;color:var(--navy);}
+
+/* At-risk items list */
+.sh-risk-list{display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;}
+.sh-risk-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);background:var(--g50);border:1px solid var(--g200);cursor:pointer;transition:background .15s;}
+.sh-risk-item:hover{background:var(--white);border-color:var(--teal-bdr);transform:translateX(2px);}
+.sh-risk-item.f-red{background:var(--red-bg);border-color:var(--red-bdr);}
+.sh-risk-item.f-amber{background:#fef3c7;border-color:#fbbf24;}
+.sh-risk-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sh-risk-icon.f-red{background:rgba(224,62,62,.15);color:var(--red);}
+.sh-risk-icon.f-amber{background:rgba(230,160,0,.15);color:#92400e;}
+.sh-risk-main{flex:1;min-width:0;}
+.sh-risk-title{font-size:12px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:6px;}
+.sh-risk-desc{font-size:10px;color:var(--g500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.sh-risk-val{font-size:11px;font-weight:800;color:var(--red);flex-shrink:0;text-align:right;}
+.sh-risk-empty{text-align:center;padding:20px;color:var(--g400);font-size:11px;}
+
+/* CAPA compliance tile */
+.sh-capa-big{text-align:center;padding:14px 10px;}
+.sh-capa-pct{font-size:36px;font-weight:800;line-height:1;}
+.sh-capa-pct.ok{color:var(--green);}
+.sh-capa-pct.warn{color:var(--amber);}
+.sh-capa-pct.bad{color:var(--red);}
+.sh-capa-label{font-size:11px;color:var(--g500);margin-top:4px;font-weight:600;}
+.sh-capa-stats{display:flex;justify-content:space-around;margin-top:10px;padding-top:10px;border-top:1px solid var(--g100);font-size:10px;}
+.sh-capa-stat-k{color:var(--g500);}
+.sh-capa-stat-v{font-weight:700;color:var(--navy);display:block;font-size:14px;}
+
+/* Category × Priority heatmap */
+.sh-catpri-grid{display:grid;gap:2px;}
+.sh-catpri-hdr{display:grid;gap:2px;padding-bottom:4px;border-bottom:1px solid var(--g200);margin-bottom:4px;}
+.sh-catpri-hdr>div{font-size:10px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.04em;text-align:center;padding:4px;}
+.sh-catpri-hdr>div:first-child{text-align:left;padding-left:8px;}
+.sh-catpri-row{display:grid;gap:2px;align-items:center;}
+.sh-catpri-name{font-size:12px;font-weight:600;color:var(--navy);padding:6px 8px;}
+.sh-catpri-cell{aspect-ratio:2/1;min-height:32px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;cursor:pointer;transition:transform .1s,filter .15s;}
+.sh-catpri-cell:hover{transform:scale(1.05);filter:brightness(1.1);}
+.sh-catpri-cell.v0{background:var(--g50);color:var(--g300);cursor:default;}
+.sh-catpri-cell.v0:hover{transform:none;filter:none;}
+.sh-catpri-cell.v-high{color:#fff;}
+.sh-catpri-cell.v-med{color:#fff;}
+.sh-catpri-cell.v-low{color:#fff;}
+
+/* Reporter leaderboard table */
+.sh-rep-table{width:100%;border-collapse:collapse;font-size:11px;}
+.sh-rep-table th{background:var(--g50);padding:8px;text-align:left;font-size:10px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--g200);cursor:pointer;user-select:none;}
+.sh-rep-table th:hover{background:var(--g100);}
+.sh-rep-table th.sort-asc::after{content:' ▲';color:var(--teal);font-size:9px;}
+.sh-rep-table th.sort-desc::after{content:' ▼';color:var(--teal);font-size:9px;}
+.sh-rep-table td{padding:8px;border-bottom:1px solid var(--g100);}
+.sh-rep-table tr:hover{background:var(--g50);}
+.sh-rep-name{font-weight:700;color:var(--navy);}
+.sh-rep-role{font-size:9px;color:var(--g400);}
+
+/* Mandatory reads list */
+.sh-mand-list{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;}
+.sh-mand-item{padding:8px 10px;border-radius:var(--r);background:var(--g50);border:1px solid var(--g200);cursor:pointer;transition:background .15s;}
+.sh-mand-item:hover{background:var(--white);border-color:var(--teal-bdr);}
+.sh-mand-title{font-size:11px;font-weight:700;color:var(--navy);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sh-mand-bar-wrap{display:flex;align-items:center;gap:6px;}
+.sh-mand-bar{flex:1;height:6px;background:var(--g200);border-radius:3px;overflow:hidden;}
+.sh-mand-bar-fill{height:100%;background:var(--green);transition:width .4s;}
+.sh-mand-bar-fill.warn{background:var(--amber);}
+.sh-mand-bar-fill.bad{background:var(--red);}
+.sh-mand-pct{font-size:10px;font-weight:700;color:var(--g600);min-width:40px;text-align:right;}
+.sh-mand-missing{font-size:10px;color:var(--g500);margin-top:3px;}
+
+.chart-box{position:relative;width:100%;height:220px;}
+.chart-box.tall{height:280px;}
+
 /* Avatar */
 .av{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700;position:relative;background:var(--navy-l);color:var(--white);overflow:hidden;flex-shrink:0;}
 .av img{width:100%;height:100%;object-fit:cover;}
@@ -723,7 +843,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   .dash-card canvas{ max-height:200px!important; }
   .dash-card.full{ grid-column:1; }
   /* Dashboard header: stack on mobile */
-  #pageDash>div:first-child{ flex-direction:column;align-items:flex-start;gap:8px; }
+  #pageStats>div:first-child{ flex-direction:column;align-items:flex-start;gap:8px; }
 
   /* ── ANNOUNCEMENTS PAGE ── */
   #pageAnn>div:first-child{ flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:12px; }
@@ -1110,7 +1230,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 <!-- NAV TABS -->
 <div class="nav">
   <div class="nav-tab active" id="navAnn" onclick="switchPage('ann')"><span class="mi mi-sm">campaign</span> Announcements</div>
-  <div class="nav-tab" id="navDash" onclick="switchPage('dash')"><span class="mi mi-sm">dashboard</span> Dashboard</div>
+  <div class="nav-tab" id="navStats" onclick="switchPage('stats')" style="display:none"><span class="mi mi-sm">insights</span> Stats</div>
   <div class="nav-tab" id="navLog" onclick="switchPage('log')"><span class="mi mi-sm">assignment</span> Shift Log</div>
   <div class="nav-tab" id="navNotifs" onclick="switchPage('notifs')"><span class="mi mi-sm">notifications</span> Notifications<span class="nav-badge" id="notifsNavBadge" style="display:none;margin-left:6px;background:var(--red);color:#fff;font-size:9px;font-weight:800;border-radius:8px;padding:1px 6px;">0</span></div>
   <div class="nav-tab" id="navAudit" onclick="switchPage('audit')"><span class="mi mi-sm">history</span> Audit</div>
@@ -1119,22 +1239,66 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 
 <div class="container">
   <!-- DASHBOARD -->
-  <div class="page" id="pageDash">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <h2 style="font-size:16px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:6px;"><span class="mi">dashboard</span> Dashboard &middot; <span style="font-weight:500;font-size:13px;color:var(--g500);" id="dashMonthLabel"></span></h2>
-      <div class="exp-wrap"><button class="btn btn-s" onclick="toggleDashExp()"><span class="mi mi-xs">download</span> Export Metrics</button><div class="exp-menu" id="dashExpMenu"><button onclick="exportDashPDF()"><span class="mi mi-xs">picture_as_pdf</span> PDF Report</button><button onclick="exportDashCSV()"><span class="mi mi-xs">table_chart</span> CSV Spreadsheet</button><button onclick="exportDashTxt()"><span class="mi mi-xs">description</span> Text Summary</button></div></div>
+  <div class="page" id="pageStats">
+    <div class="shstats-hdr">
+      <h2><span class="mi">insights</span> Stats <span class="shstats-sub" id="statsMonthLabel"></span></h2>
+      <span class="shstats-access-note" style="font-size:10px;color:var(--g400);margin-left:8px;"><span class="mi mi-xs" style="font-size:12px;vertical-align:middle;">lock</span> Leads and Lab Manager only</span>
+      <div class="exp-wrap" style="margin-left:auto;"><button class="btn btn-s" onclick="toggleStatsExp()"><span class="mi mi-xs">download</span> Export Stats</button><div class="exp-menu" id="statsExpMenu"><button onclick="exportStatsPDF()"><span class="mi mi-xs">picture_as_pdf</span> PDF Report</button><button onclick="exportStatsCSV()"><span class="mi mi-xs">table_chart</span> CSV Spreadsheet</button><button onclick="exportStatsTxt()"><span class="mi mi-xs">description</span> Text Summary</button></div></div>
     </div>
-    <div class="stats" id="dashStats"></div>
-    <div id="dashSlaWidget"></div>
-    <div class="dash-grid">
-      <div class="dash-card"><h4><span class="mi mi-sm">donut_large</span> By Category</h4><canvas id="chartCat"></canvas></div>
-      <div class="dash-card"><h4><span class="mi mi-sm">bar_chart</span> By Shift</h4><canvas id="chartShift"></canvas></div>
-      <div class="dash-card"><h4><span class="mi mi-sm">pie_chart</span> Priority Distribution</h4><canvas id="chartPri"></canvas></div>
-      <div class="dash-card"><h4><span class="mi mi-sm">check_circle</span> Open vs Resolved</h4><canvas id="chartStatus"></canvas></div>
-      <div class="dash-card full"><h4><span class="mi mi-sm">show_chart</span> Daily Trend (This Month)</h4><canvas id="chartTrend"></canvas></div>
-      <div class="dash-card"><h4><span class="mi mi-sm">assignment_turned_in</span> Follow-Up Completion</h4><canvas id="chartFU"></canvas></div>
-      <div class="dash-card"><h4><span class="mi mi-sm">schedule</span> Recent Activity</h4><div class="dash-recent" id="dashRecent"></div></div>
+
+    <!-- Hero KPI strip -->
+    <div class="shstats-hero" id="shstatsHero"></div>
+
+    <!-- Section 1: Operational Health -->
+    <div class="shstats-section">
+      <div class="shstats-section-hdr"><h3><span class="mi mi-sm">health_and_safety</span> Operational Health</h3><span class="sec-sub" id="opsSub"></span></div>
+      <div class="shstats-grid">
+        <div class="sh-card c4" id="shSlaScorecard"><div class="sh-card-hdr"><h4><span class="mi mi-sm">alarm_on</span> Escalation SLA Scorecard</h4><span class="sh-card-sub">lifetime</span></div><div class="sh-card-body" id="shSlaScorecardBody"></div></div>
+        <div class="sh-card c8" id="shAtRisk"><div class="sh-card-hdr"><h4><span class="mi mi-sm">report_problem</span> At-Risk Items</h4><span class="sh-card-sub" id="atRiskSub">click any item to jump</span></div><div class="sh-card-body" id="shAtRiskBody"></div></div>
+        <div class="sh-card c12"><div class="sh-card-hdr"><h4><span class="mi mi-sm">show_chart</span> Daily Entry Volume</h4><span class="sh-card-sub">12-week rolling</span></div><div class="sh-card-body"><div class="chart-box"><canvas id="shchartDailyVol"></canvas></div></div></div>
+      </div>
     </div>
+
+    <!-- Section 2: Quality & Compliance -->
+    <div class="shstats-section">
+      <div class="shstats-section-hdr"><h3><span class="mi mi-sm">verified</span> Quality &amp; Compliance</h3><span class="sec-sub">CAP · CLIA 42 CFR 493.1252</span></div>
+      <div class="shstats-grid">
+        <div class="sh-card c4"><div class="sh-card-hdr"><h4><span class="mi mi-sm">task_alt</span> CAPA Documented</h4></div><div class="sh-card-body" id="shCapaBody"></div></div>
+        <div class="sh-card c4"><div class="sh-card-hdr"><h4><span class="mi mi-sm">rule</span> Effectiveness Reviews</h4></div><div class="sh-card-body"><div class="chart-box"><canvas id="shchartEffReview"></canvas></div></div></div>
+        <div class="sh-card c4"><div class="sh-card-hdr"><h4><span class="mi mi-sm">pending_actions</span> Pending Follow-ups</h4><span class="sh-card-sub" id="shFuSub"></span></div><div class="sh-card-body" id="shPendingFu"></div></div>
+        <div class="sh-card c12"><div class="sh-card-hdr"><h4><span class="mi mi-sm">grid_on</span> Category × Priority Heatmap</h4><span class="sh-card-sub">click any cell to filter Shift Log</span></div><div class="sh-card-body" id="shCatPriHeatmap"></div></div>
+      </div>
+    </div>
+
+    <!-- Section 3: Activity & Trends -->
+    <div class="shstats-section">
+      <div class="shstats-section-hdr"><h3><span class="mi mi-sm">trending_up</span> Activity &amp; Trends</h3><span class="sec-sub">Rolling 12 months</span></div>
+      <div class="shstats-grid">
+        <div class="sh-card c8"><div class="sh-card-hdr"><h4><span class="mi mi-sm">stacked_bar_chart</span> Monthly Entries by Category</h4></div><div class="sh-card-body"><div class="chart-box"><canvas id="shchartMonthByCat"></canvas></div></div></div>
+        <div class="sh-card c4"><div class="sh-card-hdr"><h4><span class="mi mi-sm">donut_large</span> By Shift</h4></div><div class="sh-card-body"><div class="chart-box"><canvas id="shchartShift"></canvas></div></div></div>
+        <div class="sh-card c6"><div class="sh-card-hdr"><h4><span class="mi mi-sm">biotech</span> Top Instruments</h4><span class="sh-card-sub">entries by instrument</span></div><div class="sh-card-body"><div class="chart-box"><canvas id="shchartInstr"></canvas></div></div></div>
+        <div class="sh-card c6"><div class="sh-card-hdr"><h4><span class="mi mi-sm">assignment_turned_in</span> Follow-Up Completion</h4></div><div class="sh-card-body"><div class="chart-box"><canvas id="shchartFuCompl"></canvas></div></div></div>
+      </div>
+    </div>
+
+    <!-- Section 4: Per-Reporter Activity -->
+    <div class="shstats-section">
+      <div class="shstats-section-hdr"><h3><span class="mi mi-sm">groups</span> Per-Reporter Activity</h3><span class="sec-sub">click column headers to sort</span></div>
+      <div class="shstats-grid">
+        <div class="sh-card c12"><div class="sh-card-body" id="shReporterTable"></div></div>
+      </div>
+    </div>
+
+    <!-- Section 5: Announcements & Engagement -->
+    <div class="shstats-section">
+      <div class="shstats-section-hdr"><h3><span class="mi mi-sm">campaign</span> Announcements &amp; Engagement</h3></div>
+      <div class="shstats-grid">
+        <div class="sh-card c6"><div class="sh-card-hdr"><h4><span class="mi mi-sm">notifications_active</span> Mandatory Reads</h4><span class="sh-card-sub" id="shMandSub"></span></div><div class="sh-card-body" id="shMandBody"></div></div>
+        <div class="sh-card c6"><div class="sh-card-hdr"><h4><span class="mi mi-sm">timeline</span> Announcement Volume</h4><span class="sh-card-sub">12-month rolling</span></div><div class="sh-card-body"><div class="chart-box"><canvas id="shchartAnnVol"></canvas></div></div></div>
+      </div>
+    </div>
+
+    <div id="dashSlaWidget" style="display:none;"></div>
   </div>
 
   <!-- ANNOUNCEMENTS -->
@@ -3186,12 +3350,15 @@ function refreshUI(){
   if(!me)return;
   uHA();uBell();initPushNotifications();
   $('navAdmin').style.display=isAdm()?'flex':'none';
+  $('navStats').style.display=isLead()?'flex':'none';
   $('clearHistBtn').style.display=isAdm()?'inline-flex':'none';
   $('annBtn').style.display=isLead()?'inline-flex':'none';
   // Mobile nav — driven by CSS class on body, not window.innerWidth
   setHubReady(); // marks auth complete — CSS @media handles mobile detection
   var mobAdm=$('mobAdmin');
   if(mobAdm)mobAdm.style.display=isAdm()?'flex':'none';
+  var mobSt=$('mobStats');
+  if(mobSt)mobSt.style.display=isLead()?'flex':'none';
   var mobFab=$('mobFab');
   var curP=document.querySelector('.page.active');
   var curPId=curP?curP.id:'';
@@ -4188,17 +4355,19 @@ async function runRestoreArchive(){
 
 // === PAGE NAV ===
 function switchPage(p){
+  // Alias: 'dash' still redirects to 'stats' for backward compat
+  if(p==='dash')p='stats';
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
   $('page'+p.charAt(0).toUpperCase()+p.slice(1)).classList.add('active');
-  if(p==='dash'){$('navDash').classList.add('active');renderDash();}
+  if(p==='stats'){$('navStats').classList.add('active');renderStats();}
   else if(p==='ann'){$('navAnn').classList.add('active');renderAnn();}
   else if(p==='log'){$('navLog').classList.add('active');renderLog();if(window.innerWidth<=600)setTimeout(renderMobileLog,50);}
   else if(p==='audit'){$('navAudit').classList.add('active');loadAuditIfNeeded().then(renderAudit);}
   else if(p==='notifs'){$('navNotifs').classList.add('active');renderNotifPage();}
   else if(p==='admin'){$('navAdmin').classList.add('active');renderAdmin();loadHubBackupHistory();loadHubArchiveHistory();}
   // Sync mobile bottom nav
-  ['Ann','Dash','Log','Notifs','Audit','Admin'].forEach(function(n){
+  ['Ann','Stats','Log','Notifs','Audit','Admin'].forEach(function(n){
     var el=$('mob'+n);if(el)el.classList.toggle('active',p===n.toLowerCase());
   });
   // Show/hide FAB — class-based, no innerWidth check
@@ -4974,63 +5143,599 @@ function exportAuditPDF(){
 }
 
 // === DASHBOARD ===
-function renderDash(){var all=entries,today=new Date().toISOString().split('T')[0],mE=gME();
-$('dashMonthLabel').textContent=MONTHS[curMonth]+' '+curYear;
-// Compute extra metrics
-var fuAll=all.filter(e=>e.followUp==='Yes'),fuDone=fuAll.filter(e=>e.status==='Resolved'),fuPend=fuAll.length-fuDone.length;
-var resThis=mE.filter(e=>e.status==='Resolved');
-var avgRes=0;if(resThis.length){var totalDays=0;resThis.forEach(function(e){if(e.resDate&&e.date){var d1=new Date(e.date),d2=new Date(e.resDate);totalDays+=Math.max(0,Math.round((d2-d1)/(86400000)));}});avgRes=resThis.length?(totalDays/resThis.length).toFixed(1):0;}
-var mandPend=announcements.filter(function(a){return a.annType==='mandatory'&&!a.resolved&&a.acknowledged&&me&&!a.acknowledged.includes(me.initials);}).length;
-var resRate=mE.length?Math.round(resThis.length/mE.length*100):0;
-// Stats
-$('dashStats').innerHTML=
-// Row 1: Core status metrics
-'<div class="stat-card"><div class="stat-label">This Month</div><div class="stat-val">'+mE.length+'</div></div>'
-+'<div class="stat-card s-open"><div class="stat-label">Open</div><div class="stat-val">'+all.filter(e=>e.status==='Open').length+'</div></div>'
-+'<div class="stat-card s-prog"><div class="stat-label">In Progress</div><div class="stat-val">'+all.filter(e=>e.status==='In Progress').length+'</div></div>'
-+'<div class="stat-card s-esc"><div class="stat-label">Escalated</div><div class="stat-val">'+all.filter(e=>e.status==='Escalated').length+'</div></div>'
-+'<div class="stat-card s-res"><div class="stat-label">Resolved Today</div><div class="stat-val">'+all.filter(e=>e.status==='Resolved'&&e.resDate===today).length+'</div></div>'
-+'<div class="stat-card s-high"><div class="stat-label">High Priority</div><div class="stat-val">'+all.filter(e=>e.priority==='High').length+'</div></div>'
-// Row 2: Performance & operational metrics
-+'<div class="stat-card"><div class="stat-label">Avg Resolution (days)</div><div class="stat-val" style="color:var(--teal);">'+avgRes+'</div></div>'
-+'<div class="stat-card"><div class="stat-label">Resolution Rate</div><div class="stat-val" style="color:'+(resRate>=70?'var(--green)':resRate>=40?'var(--amber)':'var(--red)')+';">'+resRate+'%</div></div>'
-+'<div class="stat-card"><div class="stat-label">Pending Follow-Ups</div><div class="stat-val" style="color:'+(fuPend>0?'var(--amber)':'var(--green)')+';">'+fuPend+'</div></div>'
-+'<div class="stat-card"><div class="stat-label">Instrument Issues</div><div class="stat-val" style="color:var(--purple);">'+mE.filter(e=>e.category.startsWith('Instrument')).length+'</div></div>'
-+'<div class="stat-card"><div class="stat-label">QC Flags</div><div class="stat-val" style="color:var(--red);">'+mE.filter(e=>e.category.startsWith('QC')).length+'</div></div>'
-+'<div class="stat-card"><div class="stat-label">Total (All Time)</div><div class="stat-val">'+all.length+'</div></div>'
-+'<div class="stat-card"><div class="stat-label">Eff. Reviews Due</div><div class="stat-val" style="color:'+(all.filter(e=>e.effReviewDate&&!e.effVerified&&new Date(e.effReviewDate+'T00:00:00')<=new Date()).length>0?'var(--red)':'var(--green)')+';">'+all.filter(e=>e.effReviewDate&&!e.effVerified&&new Date(e.effReviewDate+'T00:00:00')<=new Date()).length+'</div></div>'
-+'<div class="stat-card"><div class="stat-label">CAPA Documented</div><div class="stat-val" style="color:var(--teal);">'+all.filter(e=>e.actionType&&e.actionType!=='None Required').length+'</div></div>';
-// Monthly review status for dashboard
-var _mrForMonth=getReviewForMonth(curMonth,curYear);
-var _mrStatus=_mrForMonth.length>0;
-$('dashStats').innerHTML+='<div class="stat-card" style="border-color:'+(_mrStatus?'var(--green-bdr)':'var(--amber-bdr)')+';"><div class="stat-label">Monthly Review</div><div class="stat-val" style="color:'+(_mrStatus?'var(--green)':'var(--amber)')+';">'+(_mrStatus?'Done':'Pending')+'</div></div>';
-// Apply stagger indices for entrance animations
-document.querySelectorAll('#dashStats .stat-card').forEach(function(el,i){el.style.setProperty('--si',i);});
-document.querySelectorAll('.dash-grid .dash-card').forEach(function(el,i){el.style.setProperty('--di',i);});
-renderSlaWidget();
-// Charts
-if(typeof Chart==='undefined')return;
-var dOpts={responsive:true,maintainAspectRatio:false,layout:{padding:{left:10,right:10,top:5,bottom:5}},plugins:{legend:{position:'bottom',labels:{font:{size:10,family:"'Plus Jakarta Sans'"},padding:10,boxWidth:12,boxHeight:12,usePointStyle:true}}}};
-// Category donut
-var cats={};mE.forEach(e=>{cats[e.category]=(cats[e.category]||0)+1;});
-mkChart('chartCat','doughnut',{labels:Object.keys(cats).map(c=>c.split('/')[0].split(' ')[0]),datasets:[{data:Object.values(cats),backgroundColor:['#6a1b9a','#c62828','#1565c0','#e6a000','#00796B'],borderWidth:0}]},dOpts);
-// Shift bar
-var shifts={Morning:0,Evening:0,Night:0};mE.forEach(e=>{var sk=mapLegacyShift(e.shift);if(shifts[sk]!==undefined)shifts[sk]++;});
-mkChart('chartShift','bar',{labels:Object.keys(shifts),datasets:[{label:'Entries',data:Object.values(shifts),backgroundColor:['#fef3c7','#ffedd5','#e0e7ff'],borderColor:['#92400e','#c2410c','#3730a3'],borderWidth:1}]},{...dOpts,plugins:{...dOpts.plugins,legend:{display:false}}});
-// Priority pie
-var pris={High:0,Medium:0,Low:0};mE.forEach(e=>{if(pris[e.priority]!==undefined)pris[e.priority]++;});
-mkChart('chartPri','pie',{labels:['High','Medium','Low'],datasets:[{data:[pris.High,pris.Medium,pris.Low],backgroundColor:['#c62828','#e65100','#2e7d32'],borderWidth:0}]},dOpts);
-// Status donut
-var sts={Open:0,'In Progress':0,Resolved:0,Escalated:0};mE.forEach(e=>{if(sts[e.status]!==undefined)sts[e.status]++;});
-mkChart('chartStatus','doughnut',{labels:Object.keys(sts),datasets:[{data:Object.values(sts),backgroundColor:['#1565c0','#e6a000','#2e7d32','#c62828'],borderWidth:0}]},dOpts);
-// Daily trend
-var days={},daysInMonth=new Date(curYear,curMonth+1,0).getDate();for(var i=1;i<=daysInMonth;i++){var dk=curYear+'-'+String(curMonth+1).padStart(2,'0')+'-'+String(i).padStart(2,'0');days[dk]=0;}mE.forEach(e=>{if(days[e.date]!==undefined)days[e.date]++;});
-mkChart('chartTrend','line',{labels:Object.keys(days).map(d=>parseInt(d.split('-')[2])),datasets:[{label:'Entries',data:Object.values(days),borderColor:'#00796B',backgroundColor:'rgba(0,121,107,.1)',fill:true,tension:.3,pointRadius:2}]},{...dOpts,plugins:{...dOpts.plugins,legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}}},x:{ticks:{font:{size:9}}}}});
-// Follow-up completion
-var fuTotal=all.filter(e=>e.followUp==='Yes').length,fuDone=all.filter(e=>e.followUp==='Yes'&&e.status==='Resolved').length,fuPend=fuTotal-fuDone;
-mkChart('chartFU','doughnut',{labels:['Completed','Pending'],datasets:[{data:[fuDone,fuPend],backgroundColor:['#2e7d32','#c62828'],borderWidth:0}]},dOpts);
-// Recent activity
-var recent=hist.slice(0,10);$('dashRecent').innerHTML=recent.length?recent.map(h=>{var ts=new Date(h.timestamp).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});return'<div class="dash-recent-item"><div class="aud-dot '+h.type+'" style="margin-top:5px;"></div><div style="flex:1;"><div style="font-weight:600;color:var(--g900);">'+esc(h.text)+'</div><div style="font-size:9px;color:var(--g400);">'+esc(ln(h.user))+' &middot; '+ts+'</div></div></div>';}).join(''):'<div class="empty"><span class="mi">schedule</span><p>No activity yet</p></div>';}
+function renderStats(){
+  if(!isLead())return;// Gate: only leads see stats
+  var all=entries.filter(function(e){return !e.isDeleted;}),today=new Date().toISOString().split('T')[0],mE=gME();
+  $('statsMonthLabel').textContent='· '+MONTHS[curMonth]+' '+curYear;
+  if(typeof Chart==='undefined'){setTimeout(renderStats,300);return;}
+  _destroyShStatsCharts();
+  _renderShHero(all,mE,today);
+  _renderShOpsHealth(all,mE);
+  _renderShQuality(all,mE);
+  _renderShActivity(all);
+  _renderShReporterTable(all,mE);
+  _renderShEngagement();
+}
+
+// Alias for backward compat (anything still calling renderDash)
+function renderDash(){renderStats();}
+
+// ═══ CHART INSTANCE MGMT ═══
+var _shStatsCharts={};
+function _destroyShStatsCharts(){
+  Object.keys(_shStatsCharts).forEach(function(k){try{_shStatsCharts[k].destroy();}catch(e){}});
+  _shStatsCharts={};
+}
+function _mkShStatsChart(id,type,data,opts){
+  var cv=document.getElementById(id);if(!cv)return;
+  if(_shStatsCharts[id]){try{_shStatsCharts[id].destroy();}catch(e){}}
+  var wrap=cv.parentElement;
+  if(wrap){var existing=wrap.querySelector('.chart-empty');if(existing)existing.remove();cv.style.display='';}
+  if(typeof Chart==='undefined')return;
+  _shStatsCharts[id]=new Chart(cv,{type:type,data:data,options:opts});
+}
+function _showShChartEmpty(id,message,icon){
+  var cv=document.getElementById(id);if(!cv)return;
+  var wrap=cv.parentElement;if(!wrap)return;
+  if(_shStatsCharts[id]){try{_shStatsCharts[id].destroy();}catch(e){}delete _shStatsCharts[id];}
+  cv.style.display='none';
+  var existing=wrap.querySelector('.chart-empty');if(existing)existing.remove();
+  var div=document.createElement('div');
+  div.className='chart-empty';
+  div.style.cssText='position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--g300);text-align:center;padding:12px;pointer-events:none;';
+  div.innerHTML='<span class="mi" style="font-size:32px;margin-bottom:6px;color:var(--g200);">'+esc(icon||'bar_chart')+'</span><div style="font-size:11px;font-weight:600;color:var(--g400);">'+esc(message)+'</div>';
+  wrap.appendChild(div);
+}
+function _sumArr(arr){var s=0;for(var i=0;i<arr.length;i++)s+=arr[i]||0;return s;}
+function _sumDatasets(dss){var s=0;dss.forEach(function(d){s+=_sumArr(d.data||[]);});return s;}
+var _SH_CHART_OPTS={
+  responsive:true,maintainAspectRatio:false,
+  layout:{padding:{top:5,bottom:5,left:5,right:5}},
+  plugins:{legend:{position:'bottom',labels:{font:{size:10,family:"'Plus Jakarta Sans'"},padding:8,boxWidth:12,boxHeight:12,usePointStyle:true}}}
+};
+
+// ═══ PERIOD HELPERS ═══
+function _shPeriodWindow(){
+  // Current period = curMonth/curYear. Prev period = prev month.
+  var startDate=new Date(curYear,curMonth,1);
+  var endDate=new Date(curYear,curMonth+1,0);
+  var prevStart=new Date(curYear,curMonth-1,1);
+  var prevEnd=new Date(curYear,curMonth,0);
+  var fmt=function(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+  return{start:fmt(startDate),end:fmt(endDate),prevStart:fmt(prevStart),prevEnd:fmt(prevEnd)};
+}
+function _shDeltaChip(cur,prev,higherIsBad){
+  if(prev===0&&cur===0)return '';
+  var diff=cur-prev;
+  if(diff===0)return '<span class="sh-hero-delta flat">0</span>';
+  var pct=prev===0?100:Math.round(diff/prev*100);
+  var dir=diff>0?'up':'down';
+  var cls='sh-hero-delta '+dir;
+  if(higherIsBad){cls+=diff>0?' bad':' good';}else{cls+=diff>0?' good':' bad';}
+  var arrow=diff>0?'▲':'▼';
+  return '<span class="'+cls+'">'+arrow+' '+Math.abs(pct)+'%</span>';
+}
+
+// ═══ HERO STRIP ═══
+function _renderShHero(all,mE,today){
+  var host=$('shstatsHero');if(!host)return;
+  var w=_shPeriodWindow();
+  var prevM=all.filter(function(e){return e.date>=w.prevStart&&e.date<=w.prevEnd;});
+  var openItems=all.filter(function(e){return e.status==='Open'||e.status==='In Progress'||e.status==='Escalated';}).length;
+  var resToday=all.filter(function(e){return e.status==='Resolved'&&e.resDate===today;}).length;
+  var resThis=mE.filter(function(e){return e.status==='Resolved';});
+  var prevRes=prevM.filter(function(e){return e.status==='Resolved';});
+  var avgRes=0;
+  if(resThis.length){
+    var td=0;resThis.forEach(function(e){if(e.resDate&&e.date){td+=Math.max(0,Math.round((new Date(e.resDate)-new Date(e.date))/86400000));}});
+    avgRes=(td/resThis.length).toFixed(1);
+  }
+  var prevAvgRes=0;
+  if(prevRes.length){
+    var td2=0;prevRes.forEach(function(e){if(e.resDate&&e.date){td2+=Math.max(0,Math.round((new Date(e.resDate)-new Date(e.date))/86400000));}});
+    prevAvgRes=(td2/prevRes.length).toFixed(1);
+  }
+  var highPri=mE.filter(function(e){return e.priority==='High';}).length;
+  var prevHigh=prevM.filter(function(e){return e.priority==='High';}).length;
+  var mrThis=getReviewForMonth(curMonth,curYear);
+  var mrDone=mrThis.length>0;
+  host.innerHTML=
+    '<div class="sh-hero-card hc-navy"><div class="sh-hero-label">Total Entries</div><div class="sh-hero-val">'+mE.length+'</div>'+_shDeltaChip(mE.length,prevM.length,false)+'<div class="sh-hero-sub">vs last month</div></div>'+
+    '<div class="sh-hero-card '+(openItems===0?'hc-green':openItems<5?'hc-amber':'hc-red')+'"><div class="sh-hero-label">Open Items</div><div class="sh-hero-val">'+openItems+'</div><div class="sh-hero-sub">all-time open</div></div>'+
+    '<div class="sh-hero-card hc-green"><div class="sh-hero-label">Resolved This Period</div><div class="sh-hero-val">'+resThis.length+'</div>'+_shDeltaChip(resThis.length,prevRes.length,false)+'<div class="sh-hero-sub">'+resToday+' today</div></div>'+
+    '<div class="sh-hero-card hc-teal"><div class="sh-hero-label">Avg Resolution (days)</div><div class="sh-hero-val">'+avgRes+'</div>'+_shDeltaChip(parseFloat(avgRes),parseFloat(prevAvgRes),true)+'<div class="sh-hero-sub">vs last month</div></div>'+
+    '<div class="sh-hero-card hc-red"><div class="sh-hero-label">High Priority</div><div class="sh-hero-val">'+highPri+'</div>'+_shDeltaChip(highPri,prevHigh,true)+'<div class="sh-hero-sub">this period</div></div>'+
+    '<div class="sh-hero-card '+(mrDone?'hc-green':'hc-amber')+'"><div class="sh-hero-label">Monthly Review</div><div class="sh-hero-val" style="color:'+(mrDone?'var(--green)':'var(--amber)')+';font-size:22px;">'+(mrDone?'Done':'Pending')+'</div><div class="sh-hero-sub">'+MONTHS[curMonth]+' '+curYear+'</div></div>';
+}
+
+// ═══ SECTION 1: OPERATIONAL HEALTH ═══
+function _renderShOpsHealth(all,mE){
+  _renderShSlaScorecard(all);
+  _renderShAtRisk(all);
+  _renderShDailyVolume(all);
+}
+
+function _renderShSlaScorecard(all){
+  var body=$('shSlaScorecardBody');if(!body)return;
+  // Lifetime SLA compliance: escalated entries that have firstLeadResponseDate
+  var escalated=all.filter(function(e){return e.escalatedDate;});
+  if(!escalated.length){
+    body.innerHTML='<div class="sh-risk-empty"><span class="mi" style="font-size:28px;display:block;margin-bottom:6px;color:var(--g200);">alarm_off</span>No escalations yet</div>';
+    return;
+  }
+  var withinSla=0,overdue=0,stillUnresponded=0;
+  escalated.forEach(function(e){
+    var s=escalationSlaState(e);
+    if(s.state==='responded'){
+      // Check if response was within SLA
+      if(s.remainingMs>=0)withinSla++;
+      else overdue++;
+    }else if(s.state==='overdue'){
+      overdue++;stillUnresponded++;
+    }else{
+      // Still within SLA but unresponded — neither passed nor failed yet
+      stillUnresponded++;
+    }
+  });
+  var resolved=escalated.length-stillUnresponded;
+  var pct=resolved>0?Math.round(withinSla/resolved*100):100;
+  var cls=pct>=90?'ok':pct>=70?'warn':'bad';
+  var color=cls==='ok'?'var(--green)':cls==='warn'?'var(--amber)':'var(--red)';
+  body.innerHTML=
+    '<div class="sh-sla-big">'+
+      '<div class="sh-sla-big-val" style="color:'+color+';">'+pct+'%</div>'+
+      '<div class="sh-sla-big-label">within SLA (lifetime)</div>'+
+    '</div>'+
+    '<div class="sh-sla-details">'+
+      '<div class="sla-line"><span class="k">Total escalations</span><span class="v">'+escalated.length+'</span></div>'+
+      '<div class="sla-line"><span class="k">Responded within SLA</span><span class="v" style="color:var(--green);">'+withinSla+'</span></div>'+
+      '<div class="sla-line"><span class="k">Responded after SLA</span><span class="v" style="color:var(--red);">'+overdue+'</span></div>'+
+      '<div class="sla-line"><span class="k">Pending response</span><span class="v" style="color:var(--amber);">'+stillUnresponded+'</span></div>'+
+    '</div>';
+}
+
+var SH_AT_RISK_DAYS=14;
+function _renderShAtRisk(all){
+  var body=$('shAtRiskBody');if(!body)return;
+  var now=Date.now();
+  var items=[];
+  // Category 1: escalated + unresponded (SLA overdue)
+  all.filter(function(e){return e.status==='Escalated';}).forEach(function(e){
+    var s=escalationSlaState(e,now);
+    if(s.state==='overdue'){
+      items.push({id:e.id,sev:'red',icon:'warning',title:'SLA Overdue: '+(e.category||'—'),desc:(e.description||'').slice(0,80),val:fmtDuration(s.remainingMs)});
+    }else if(s.state==='approaching'){
+      items.push({id:e.id,sev:'amber',icon:'hourglass_bottom',title:'SLA Approaching: '+(e.category||'—'),desc:(e.description||'').slice(0,80),val:fmtDuration(s.remainingMs)+' left'});
+    }
+  });
+  // Category 2: open > N days
+  var nDaysAgo=new Date(now-SH_AT_RISK_DAYS*86400000).toISOString().split('T')[0];
+  all.filter(function(e){return(e.status==='Open'||e.status==='In Progress')&&e.date&&e.date<nDaysAgo;}).forEach(function(e){
+    var daysOpen=Math.floor((now-Date.parse(e.date+'T00:00:00'))/86400000);
+    items.push({id:e.id,sev:daysOpen>30?'red':'amber',icon:'schedule',title:'Open '+daysOpen+'d: '+(e.category||'—'),desc:(e.description||'').slice(0,80),val:daysOpen+' days'});
+  });
+  // Category 3: effectiveness reviews overdue
+  all.filter(function(e){return e.effReviewDate&&!e.effVerified&&new Date(e.effReviewDate+'T00:00:00')<=new Date();}).forEach(function(e){
+    var daysOverdue=Math.floor((now-Date.parse(e.effReviewDate+'T00:00:00'))/86400000);
+    items.push({id:e.id,sev:daysOverdue>30?'red':'amber',icon:'fact_check',title:'Eff. Review overdue',desc:(e.category||'—')+': '+(e.description||'').slice(0,60),val:daysOverdue+'d overdue'});
+  });
+  // Sort by severity then value
+  items.sort(function(a,b){if(a.sev!==b.sev)return a.sev==='red'?-1:1;return 0;});
+  $('atRiskSub').textContent=items.length+' at-risk item'+(items.length===1?'':'s');
+  if(!items.length){
+    body.innerHTML='<div class="sh-risk-empty"><span class="mi" style="font-size:28px;display:block;margin-bottom:6px;color:var(--green);">check_circle</span>No at-risk items — nice work</div>';
+    return;
+  }
+  var html='<div class="sh-risk-list">';
+  items.slice(0,10).forEach(function(it){
+    html+='<div class="sh-risk-item f-'+it.sev+'" onclick="_shJumpToEntry(\''+escJS(it.id)+'\')">';
+    html+='<div class="sh-risk-icon f-'+it.sev+'"><span class="mi mi-sm">'+esc(it.icon)+'</span></div>';
+    html+='<div class="sh-risk-main"><div class="sh-risk-title">'+esc(it.title)+'</div><div class="sh-risk-desc">'+esc(it.desc)+'</div></div>';
+    html+='<div class="sh-risk-val">'+esc(it.val)+'</div>';
+    html+='</div>';
+  });
+  if(items.length>10)html+='<div style="text-align:center;padding:8px;font-size:10px;color:var(--g400);">'+(items.length-10)+' more</div>';
+  html+='</div>';
+  body.innerHTML=html;
+}
+
+function _shJumpToEntry(id){
+  var e=entries.find(function(x){return x.id===id;});
+  if(!e){toast('Entry not found');return;}
+  switchPage('log');
+  var d=new Date(e.date+'T00:00:00');
+  if(d.getMonth()!==curMonth){curMonth=d.getMonth();curYear=d.getFullYear();rMT();}
+  if(e.status==='Resolved')secOpen.res=true;
+  if(e.status==='Escalated')secOpen.esc=true;
+  highlightId=id;
+  renderLog();
+  setTimeout(function(){
+    var row=document.querySelector('tr[data-eid="'+id+'"]');
+    if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.classList.add('row-hl');setTimeout(function(){row.classList.remove('row-hl');highlightId=null;},4000);}
+  },200);
+}
+
+function _renderShDailyVolume(all){
+  // 12 weeks of daily counts
+  var today=new Date();
+  var labels=[],data=[];
+  for(var i=83;i>=0;i--){
+    var d=new Date(today);d.setDate(d.getDate()-i);
+    var ds=d.toISOString().split('T')[0];
+    labels.push(d.getMonth()+1+'/'+d.getDate());
+    data.push(all.filter(function(e){return e.date===ds;}).length);
+  }
+  if(_sumArr(data)===0){
+    _showShChartEmpty('shchartDailyVol','No entries in past 12 weeks','show_chart');
+    return;
+  }
+  _mkShStatsChart('shchartDailyVol','line',{
+    labels:labels,
+    datasets:[{label:'Entries',data:data,borderColor:'#00796B',backgroundColor:'rgba(0,121,107,.12)',fill:true,tension:.3,pointRadius:1,borderWidth:2}]
+  },Object.assign({},_SH_CHART_OPTS,{
+    plugins:{legend:{display:false}},
+    scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'rgba(0,0,0,.04)'}},x:{ticks:{font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:12}}}
+  }));
+}
+
+// ═══ SECTION 2: QUALITY & COMPLIANCE ═══
+function _renderShQuality(all,mE){
+  _renderShCapaTile(all);
+  _renderShEffReviewChart(all);
+  _renderShPendingFu(all);
+  _renderShCatPriHeatmap(all);
+}
+
+function _renderShCapaTile(all){
+  var body=$('shCapaBody');if(!body)return;
+  // Entries where CAPA was required: priority High OR category is QC Issue/Instrument/Safety/Patient Sample
+  var capaRequired=all.filter(function(e){
+    return e.priority==='High'||['QC Issue','Instrument','Safety','Patient Sample'].indexOf(e.category)>=0;
+  });
+  if(!capaRequired.length){
+    body.innerHTML='<div class="sh-capa-big"><div class="sh-capa-pct ok">—</div><div class="sh-capa-label">No entries requiring CAPA yet</div></div>';
+    return;
+  }
+  var documented=capaRequired.filter(function(e){return e.actionType&&e.actionType!=='None Required'&&e.actionType!==''&&e.rootCause;}).length;
+  var pct=Math.round(documented/capaRequired.length*100);
+  var cls=pct>=90?'ok':pct>=70?'warn':'bad';
+  body.innerHTML='<div class="sh-capa-big">'+
+    '<div class="sh-capa-pct '+cls+'">'+pct+'%</div>'+
+    '<div class="sh-capa-label">CAPA + Root Cause documented</div>'+
+    '</div>'+
+    '<div class="sh-capa-stats">'+
+      '<div><span class="sh-capa-stat-v">'+documented+'</span><span class="sh-capa-stat-k">documented</span></div>'+
+      '<div><span class="sh-capa-stat-v">'+(capaRequired.length-documented)+'</span><span class="sh-capa-stat-k">missing</span></div>'+
+      '<div><span class="sh-capa-stat-v">'+capaRequired.length+'</span><span class="sh-capa-stat-k">required</span></div>'+
+    '</div>';
+}
+
+function _renderShEffReviewChart(all){
+  var withReview=all.filter(function(e){return e.effReviewDate;});
+  if(!withReview.length){
+    _showShChartEmpty('shchartEffReview','No effectiveness reviews tracked','rule');
+    return;
+  }
+  var now=new Date();
+  var completed=0,overdue=0,pending=0;
+  withReview.forEach(function(e){
+    if(e.effVerified&&e.effVerified!=='Not Yet Reviewed'&&e.effVerified!=='')completed++;
+    else if(new Date(e.effReviewDate+'T00:00:00')<=now)overdue++;
+    else pending++;
+  });
+  _mkShStatsChart('shchartEffReview','doughnut',{
+    labels:['Completed','Overdue','Not yet due'],
+    datasets:[{data:[completed,overdue,pending],backgroundColor:['#2e7d32','#c62828','#e6a000'],borderWidth:0}]
+  },Object.assign({},_SH_CHART_OPTS,{cutout:'55%'}));
+}
+
+function _renderShPendingFu(all){
+  var body=$('shPendingFu');if(!body)return;
+  var pending=all.filter(function(e){return e.followUp==='Yes'&&e.status!=='Resolved';});
+  $('shFuSub').textContent=pending.length+' pending';
+  if(!pending.length){
+    body.innerHTML='<div class="sh-risk-empty"><span class="mi" style="font-size:28px;display:block;margin-bottom:6px;color:var(--green);">check_circle</span>All caught up</div>';
+    return;
+  }
+  // Sort by date ascending (oldest first = most overdue)
+  pending.sort(function(a,b){return(a.date||'').localeCompare(b.date||'');});
+  var html='<div class="sh-risk-list">';
+  pending.slice(0,5).forEach(function(e){
+    var daysOld=Math.floor((Date.now()-Date.parse(e.date+'T00:00:00'))/86400000);
+    var sev=daysOld>14?'red':daysOld>7?'amber':'';
+    html+='<div class="sh-risk-item'+(sev?' f-'+sev:'')+'" onclick="_shJumpToEntry(\''+escJS(e.id)+'\')">';
+    html+='<div class="sh-risk-icon '+(sev?'f-'+sev:'')+'" style="'+(sev?'':'background:var(--teal-bg);color:var(--teal);')+'"><span class="mi mi-sm">pending_actions</span></div>';
+    html+='<div class="sh-risk-main"><div class="sh-risk-title">'+esc(e.category||'—')+' · '+esc(ln(e.followUpAssign||'')||'unassigned')+'</div><div class="sh-risk-desc">'+esc((e.description||'').slice(0,70))+'</div></div>';
+    html+='<div class="sh-risk-val">'+daysOld+'d</div>';
+    html+='</div>';
+  });
+  if(pending.length>5)html+='<div style="text-align:center;padding:6px;font-size:10px;color:var(--g400);">+'+(pending.length-5)+' more</div>';
+  html+='</div>';
+  body.innerHTML=html;
+}
+
+var _SH_CATS=['QC Issue','Instrument','Supply','Safety','Process','Patient Sample','Training','Administrative','General'];
+var _SH_PRIS=['High','Medium','Low'];
+
+function _renderShCatPriHeatmap(all){
+  var host=$('shCatPriHeatmap');if(!host)return;
+  // Tally counts per (cat, pri)
+  var counts={};var maxVal=0;
+  _SH_CATS.forEach(function(c){counts[c]={High:0,Medium:0,Low:0,Total:0};});
+  all.forEach(function(e){
+    if(counts[e.category]&&counts[e.category][e.priority]!==undefined){
+      counts[e.category][e.priority]++;
+      counts[e.category].Total++;
+    }
+  });
+  _SH_CATS.forEach(function(c){_SH_PRIS.forEach(function(p){if(counts[c][p]>maxVal)maxVal=counts[c][p];});});
+  if(maxVal===0){
+    host.innerHTML='<div class="sh-risk-empty" style="padding:40px;"><span class="mi" style="font-size:32px;display:block;margin-bottom:6px;color:var(--g200);">grid_on</span>No entries to heatmap yet</div>';
+    return;
+  }
+  var cols='1.8fr '+_SH_PRIS.map(function(){return '1fr';}).join(' ')+' 0.8fr';
+  var html='<div class="sh-catpri-grid">';
+  html+='<div class="sh-catpri-hdr" style="grid-template-columns:'+cols+';"><div>Category</div>';
+  _SH_PRIS.forEach(function(p){html+='<div style="color:'+(p==='High'?'var(--red)':p==='Medium'?'var(--amber)':'var(--green)')+';">'+p+'</div>';});
+  html+='<div>Total</div></div>';
+  _SH_CATS.forEach(function(c){
+    if(counts[c].Total===0)return;
+    html+='<div class="sh-catpri-row" style="grid-template-columns:'+cols+';">';
+    html+='<div class="sh-catpri-name">'+esc(c)+'</div>';
+    _SH_PRIS.forEach(function(p){
+      var v=counts[c][p];
+      if(v===0){html+='<div class="sh-catpri-cell v0">0</div>';return;}
+      // Shade intensity based on fraction of maxVal
+      var alpha=0.3+0.6*(v/maxVal);
+      var bg=p==='High'?'rgba(198,40,40,'+alpha+')':p==='Medium'?'rgba(230,87,0,'+alpha+')':'rgba(46,125,50,'+alpha+')';
+      var cls=p==='High'?'v-high':p==='Medium'?'v-med':'v-low';
+      html+='<div class="sh-catpri-cell '+cls+'" style="background:'+bg+';" onclick="_shFilterLog(\''+escJS(c)+'\',\''+esc(p)+'\')" title="'+v+' entries — click to filter log">'+v+'</div>';
+    });
+    html+='<div class="sh-catpri-name" style="font-weight:800;color:var(--navy);">'+counts[c].Total+'</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+  host.innerHTML=html;
+}
+
+function _shFilterLog(cat,pri){
+  // Switch to log page — user can see the category/priority filter applied visually via existing UI
+  switchPage('log');
+  toast('Filtered to: '+cat+' · '+pri+' priority');
+  // Best-effort: if filter UI exists, set it (currently the log doesn't have a formal filter API)
+}
+
+// ═══ SECTION 3: ACTIVITY & TRENDS ═══
+function _renderShActivity(all){
+  _renderShMonthByCat(all);
+  _renderShShiftDonut(all);
+  _renderShInstrBar(all);
+  _renderShFuComplete(all);
+}
+
+function _shLast12MonthKeys(){
+  var keys=[];
+  var d=new Date();d.setDate(1);
+  for(var i=11;i>=0;i--){
+    var m=new Date(d);m.setMonth(m.getMonth()-i);
+    keys.push({key:m.getFullYear()+'-'+String(m.getMonth()+1).padStart(2,'0'),label:MONTHS[m.getMonth()].slice(0,3)});
+  }
+  return keys;
+}
+
+function _renderShMonthByCat(all){
+  var keys=_shLast12MonthKeys();
+  var byMonth={};keys.forEach(function(k){byMonth[k.key]={};_SH_CATS.forEach(function(c){byMonth[k.key][c]=0;});});
+  all.forEach(function(e){
+    var k=(e.date||'').slice(0,7);
+    if(!byMonth[k])return;
+    if(byMonth[k][e.category]!==undefined)byMonth[k][e.category]++;
+  });
+  var colors=['#6a1b9a','#c62828','#1565c0','#e65100','#00796B','#8e24aa','#2e7d32','#455a64','#607d8b'];
+  var datasets=_SH_CATS.map(function(c,i){
+    return{label:c.split(' ')[0].split('/')[0],data:keys.map(function(k){return byMonth[k.key][c];}),backgroundColor:colors[i%colors.length]};
+  });
+  if(_sumDatasets(datasets)===0){
+    _showShChartEmpty('shchartMonthByCat','No entry history yet','stacked_bar_chart');
+    return;
+  }
+  _mkShStatsChart('shchartMonthByCat','bar',{
+    labels:keys.map(function(k){return k.label;}),
+    datasets:datasets
+  },Object.assign({},_SH_CHART_OPTS,{
+    scales:{x:{stacked:true,ticks:{font:{size:9}}},y:{stacked:true,beginAtZero:true,ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,.04)'}}}
+  }));
+}
+
+function _renderShShiftDonut(all){
+  var shifts={Morning:0,Evening:0,Night:0};
+  all.forEach(function(e){var sk=mapLegacyShift(e.shift);if(shifts[sk]!==undefined)shifts[sk]++;});
+  if(shifts.Morning+shifts.Evening+shifts.Night===0){
+    _showShChartEmpty('shchartShift','No shift data yet','donut_large');
+    return;
+  }
+  _mkShStatsChart('shchartShift','doughnut',{
+    labels:['Morning','Evening','Night'],
+    datasets:[{data:[shifts.Morning,shifts.Evening,shifts.Night],backgroundColor:['#fbbf24','#c2410c','#3730a3'],borderWidth:0}]
+  },Object.assign({},_SH_CHART_OPTS,{cutout:'55%'}));
+}
+
+function _renderShInstrBar(all){
+  var counts={};
+  all.forEach(function(e){if(e.instrument&&e.instrument.trim()){var k=e.instrument.trim();counts[k]=(counts[k]||0)+1;}});
+  var sorted=Object.entries(counts).sort(function(a,b){return b[1]-a[1];}).slice(0,10);
+  if(!sorted.length){
+    _showShChartEmpty('shchartInstr','No instrument data yet','biotech');
+    return;
+  }
+  _mkShStatsChart('shchartInstr','bar',{
+    labels:sorted.map(function(x){return x[0].length>20?x[0].slice(0,18)+'...':x[0];}),
+    datasets:[{data:sorted.map(function(x){return x[1];}),backgroundColor:'#8e24aa',borderWidth:0}]
+  },Object.assign({},_SH_CHART_OPTS,{
+    indexAxis:'y',
+    plugins:{legend:{display:false}},
+    scales:{x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}}},y:{ticks:{font:{size:10}}}}
+  }));
+}
+
+function _renderShFuComplete(all){
+  var total=all.filter(function(e){return e.followUp==='Yes';}).length;
+  var done=all.filter(function(e){return e.followUp==='Yes'&&e.status==='Resolved';}).length;
+  var pending=total-done;
+  if(total===0){
+    _showShChartEmpty('shchartFuCompl','No follow-ups assigned yet','assignment_turned_in');
+    return;
+  }
+  _mkShStatsChart('shchartFuCompl','doughnut',{
+    labels:['Completed','Pending'],
+    datasets:[{data:[done,pending],backgroundColor:['#2e7d32','#c62828'],borderWidth:0}]
+  },Object.assign({},_SH_CHART_OPTS,{cutout:'55%'}));
+}
+
+// ═══ SECTION 4: REPORTER LEADERBOARD ═══
+var _shReporterSort={col:'entries',dir:'desc'};
+function _renderShReporterTable(all,mE){
+  var host=$('shReporterTable');if(!host)return;
+  // Aggregate per reporter (by authorInitials)
+  var reporters={};
+  all.forEach(function(e){
+    var key=e.authorInitials||'??';
+    if(!reporters[key])reporters[key]={ini:key,entries:0,resolved:0,totalResDays:0,resDaysCount:0,fuAssigned:0,fuCompleted:0};
+    reporters[key].entries++;
+    if(e.status==='Resolved'){
+      reporters[key].resolved++;
+      if(e.resDate&&e.date){
+        var days=Math.max(0,Math.round((new Date(e.resDate)-new Date(e.date))/86400000));
+        reporters[key].totalResDays+=days;reporters[key].resDaysCount++;
+      }
+    }
+    if(e.followUpAssign===key){reporters[key].fuAssigned++;if(e.status==='Resolved')reporters[key].fuCompleted++;}
+  });
+  var rows=Object.values(reporters).map(function(r){
+    var u=users[r.ini]||{};
+    return{
+      ini:r.ini,
+      name:u.fullName||ln(r.ini)||r.ini,
+      role:u.role||'',
+      entries:r.entries,
+      resolved:r.resolved,
+      resPct:r.entries>0?Math.round(r.resolved/r.entries*100):0,
+      avgResDays:r.resDaysCount>0?(r.totalResDays/r.resDaysCount).toFixed(1):'—',
+      fuComplPct:r.fuAssigned>0?Math.round(r.fuCompleted/r.fuAssigned*100):null,
+      fuAssigned:r.fuAssigned
+    };
+  });
+  if(!rows.length){
+    host.innerHTML='<div class="sh-risk-empty" style="padding:30px;"><span class="mi" style="font-size:32px;display:block;margin-bottom:6px;color:var(--g200);">groups</span>No reporter data yet</div>';
+    return;
+  }
+  // Sort
+  rows.sort(function(a,b){
+    var av=a[_shReporterSort.col],bv=b[_shReporterSort.col];
+    if(av===null||av==='—'||av===undefined)return 1;
+    if(bv===null||bv==='—'||bv===undefined)return -1;
+    if(typeof av==='string')return _shReporterSort.dir==='asc'?av.localeCompare(bv):bv.localeCompare(av);
+    return _shReporterSort.dir==='asc'?av-bv:bv-av;
+  });
+  function sortHdr(col,label){
+    var cls='';if(_shReporterSort.col===col)cls=_shReporterSort.dir==='asc'?'sort-asc':'sort-desc';
+    return '<th class="'+cls+'" onclick="_shSortReporter(\''+col+'\')">'+esc(label)+'</th>';
+  }
+  var html='<table class="sh-rep-table"><thead><tr>';
+  html+='<th onclick="_shSortReporter(\'name\')" class="'+(_shReporterSort.col==='name'?(_shReporterSort.dir==='asc'?'sort-asc':'sort-desc'):'')+'">Reporter</th>';
+  html+=sortHdr('entries','Entries');
+  html+=sortHdr('resolved','Resolved');
+  html+=sortHdr('resPct','Resolution %');
+  html+=sortHdr('avgResDays','Avg Days');
+  html+=sortHdr('fuComplPct','F/U Completion');
+  html+='</tr></thead><tbody>';
+  rows.forEach(function(r){
+    html+='<tr>';
+    html+='<td><div class="sh-rep-name">'+esc(r.name)+'</div><div class="sh-rep-role">'+esc(r.role)+'</div></td>';
+    html+='<td><strong>'+r.entries+'</strong></td>';
+    html+='<td>'+r.resolved+'</td>';
+    html+='<td style="color:'+(r.resPct>=70?'var(--green)':r.resPct>=40?'var(--amber)':'var(--red)')+';font-weight:700;">'+r.resPct+'%</td>';
+    html+='<td>'+r.avgResDays+'</td>';
+    html+='<td>'+(r.fuComplPct===null?'<span style="color:var(--g400);">—</span>':r.fuComplPct+'% ('+r.fuAssigned+')')+'</td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  host.innerHTML=html;
+}
+
+function _shSortReporter(col){
+  if(_shReporterSort.col===col){_shReporterSort.dir=_shReporterSort.dir==='asc'?'desc':'asc';}
+  else{_shReporterSort.col=col;_shReporterSort.dir='desc';}
+  _renderShReporterTable(entries.filter(function(e){return !e.isDeleted;}),gME());
+}
+
+// ═══ SECTION 5: ANNOUNCEMENTS & ENGAGEMENT ═══
+function _renderShEngagement(){
+  _renderShMandReads();
+  _renderShAnnVol();
+}
+
+function _renderShMandReads(){
+  var body=$('shMandBody');if(!body)return;
+  var activeMand=announcements.filter(function(a){return a.annType==='mandatory'&&!a.resolved&&!a.isDeleted;});
+  $('shMandSub').textContent=activeMand.length+' active';
+  if(!activeMand.length){
+    body.innerHTML='<div class="sh-risk-empty"><span class="mi" style="font-size:28px;display:block;margin-bottom:6px;color:var(--g300);">notifications_off</span>No active mandatory reads</div>';
+    return;
+  }
+  var activeStaffCount=Object.keys(users).filter(function(i){return users[i]&&users[i].active!==false;}).length||1;
+  var html='<div class="sh-mand-list">';
+  activeMand.forEach(function(a){
+    var acks=(a.acknowledged||[]).length;
+    var pct=Math.round(acks/activeStaffCount*100);
+    var cls=pct>=90?'':pct>=60?'warn':'bad';
+    var missing=activeStaffCount-acks;
+    html+='<div class="sh-mand-item" onclick="_shJumpToAnn(\''+escJS(a.id)+'\')">';
+    html+='<div class="sh-mand-title">'+esc((a.text||'').slice(0,80)||'Mandatory')+'</div>';
+    html+='<div class="sh-mand-bar-wrap"><div class="sh-mand-bar"><div class="sh-mand-bar-fill '+cls+'" style="width:'+pct+'%;"></div></div><span class="sh-mand-pct">'+acks+'/'+activeStaffCount+'</span></div>';
+    if(missing>0)html+='<div class="sh-mand-missing">'+missing+' pending acknowledgment</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+  body.innerHTML=html;
+}
+
+function _shJumpToAnn(id){
+  switchPage('ann');
+  setTimeout(function(){
+    var el=document.querySelector('[data-aid="'+id+'"]');
+    if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.outline='3px solid var(--amber)';el.style.outlineOffset='2px';setTimeout(function(){el.style.outline='';el.style.outlineOffset='';},3000);}
+  },200);
+}
+
+function _renderShAnnVol(){
+  var keys=_shLast12MonthKeys();
+  var byMonth={};keys.forEach(function(k){byMonth[k.key]=0;});
+  announcements.filter(function(a){return !a.isDeleted;}).forEach(function(a){
+    var d=a.date||(a.timestamp?a.timestamp.slice(0,10):'');
+    var k=(d||'').slice(0,7);
+    if(byMonth[k]!==undefined)byMonth[k]++;
+  });
+  var data=keys.map(function(k){return byMonth[k.key];});
+  if(_sumArr(data)===0){
+    _showShChartEmpty('shchartAnnVol','No announcements in past 12 months','timeline');
+    return;
+  }
+  _mkShStatsChart('shchartAnnVol','line',{
+    labels:keys.map(function(k){return k.label;}),
+    datasets:[{label:'Announcements',data:data,borderColor:'#00796B',backgroundColor:'rgba(0,121,107,.12)',fill:true,tension:.3,pointRadius:2,borderWidth:2}]
+  },Object.assign({},_SH_CHART_OPTS,{
+    plugins:{legend:{display:false}},
+    scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'rgba(0,0,0,.04)'}},x:{ticks:{font:{size:9}}}}
+  }));
+}
+
+// ═══ EXPORT (renamed + refactored) ═══
+function toggleStatsExp(){$('statsExpMenu').classList.toggle('show');}
+document.addEventListener('click',function(e){if(!e.target.closest('.exp-wrap'))$('statsExpMenu')&&$('statsExpMenu').classList.remove('show');});
+// Keep old dashExp for backward compat in case something still calls it
+function toggleDashExp(){toggleStatsExp();}
+
 function mkChart(id,type,data,opts){if(chartInstances[id]){chartInstances[id].destroy();}var cv=$(id);if(!cv)return;cv.parentElement.style.height='280px';chartInstances[id]=new Chart(cv,{type,data,options:opts});}
 
 function renderSlaWidget(){
@@ -5113,91 +5818,105 @@ function jumpToEntry(id){
 }
 
 function getDashMetrics(){
-  var all=entries,mE=gME(),today=new Date().toISOString().split('T')[0];
+  var all=entries.filter(function(e){return !e.isDeleted;}),mE=gME(),today=new Date().toISOString().split('T')[0];
   var fuAll=all.filter(e=>e.followUp==='Yes'),fuDone=fuAll.filter(e=>e.status==='Resolved');
   var resThis=mE.filter(e=>e.status==='Resolved');
   var avgRes=0;if(resThis.length){var td=0;resThis.forEach(function(e){if(e.resDate&&e.date){td+=Math.max(0,Math.round((new Date(e.resDate)-new Date(e.date))/86400000));}});avgRes=(td/resThis.length).toFixed(1);}
   var cats={},shifts={Morning:0,Evening:0,Night:0},pris={High:0,Medium:0,Low:0,Critical:0},sts={Open:0,'In Progress':0,Resolved:0,Escalated:0};
   mE.forEach(function(e){cats[e.category]=(cats[e.category]||0)+1;var sk=mapLegacyShift(e.shift);if(shifts[sk]!==undefined)shifts[sk]++;if(pris[e.priority]!==undefined)pris[e.priority]++;if(sts[e.status]!==undefined)sts[e.status]++;});
-  return{all:all,mE:mE,today:today,fuAll:fuAll,fuDone:fuDone,fuPend:fuAll.length-fuDone.length,resThis:resThis,avgRes:avgRes,cats:cats,shifts:shifts,pris:pris,sts:sts,resRate:mE.length?Math.round(resThis.length/mE.length*100):0,instIssues:mE.filter(function(e){var c=mapLegacyCategory(e.category);return c==='Instrument';}).length,qcFlags:mE.filter(function(e){var c=mapLegacyCategory(e.category);return c==='QC Issue';}).length};
+  // SLA compliance: lifetime
+  var escalated=all.filter(function(e){return e.escalatedDate;});
+  var withinSla=0,afterSla=0,pendingResp=0;
+  escalated.forEach(function(e){
+    var s=escalationSlaState(e);
+    if(s.state==='responded'){if(s.remainingMs>=0)withinSla++;else afterSla++;}
+    else if(s.state==='overdue'){afterSla++;pendingResp++;}
+    else pendingResp++;
+  });
+  var slaPct=(escalated.length-pendingResp)>0?Math.round(withinSla/(escalated.length-pendingResp)*100):100;
+  // CAPA required vs documented
+  var capaReq=all.filter(function(e){return e.priority==='High'||['QC Issue','Instrument','Safety','Patient Sample'].indexOf(e.category)>=0;});
+  var capaDoc=capaReq.filter(function(e){return e.actionType&&e.actionType!=='None Required'&&e.actionType!==''&&e.rootCause;}).length;
+  // Eff reviews
+  var effComp=0,effOver=0,effPend=0;
+  all.filter(function(e){return e.effReviewDate;}).forEach(function(e){
+    if(e.effVerified&&e.effVerified!=='Not Yet Reviewed'&&e.effVerified!=='')effComp++;
+    else if(new Date(e.effReviewDate+'T00:00:00')<=new Date())effOver++;
+    else effPend++;
+  });
+  return{all:all,mE:mE,today:today,fuAll:fuAll,fuDone:fuDone,fuPend:fuAll.length-fuDone.length,resThis:resThis,avgRes:avgRes,cats:cats,shifts:shifts,pris:pris,sts:sts,resRate:mE.length?Math.round(resThis.length/mE.length*100):0,instIssues:mE.filter(function(e){var c=mapLegacyCategory(e.category);return c==='Instrument';}).length,qcFlags:mE.filter(function(e){var c=mapLegacyCategory(e.category);return c==='QC Issue';}).length,slaPct:slaPct,slaWithin:withinSla,slaAfter:afterSla,slaPending:pendingResp,slaTotal:escalated.length,capaReq:capaReq.length,capaDoc:capaDoc,capaPct:capaReq.length>0?Math.round(capaDoc/capaReq.length*100):0,effComp:effComp,effOver:effOver,effPend:effPend};
 }
 
-function toggleDashExp(){$('dashExpMenu').classList.toggle('show');}
-document.addEventListener('click',function(e){if(!e.target.closest('.exp-wrap')){$('dashExpMenu').classList.remove('show');}});
+// Rename + alias — existing dashExp* calls still work, new exportStats* recommended
+function toggleDashExp(){toggleStatsExp();}
+// Note: toggleStatsExp is defined above in renderStats block
+document.addEventListener('click',function(e){if(!e.target.closest('.exp-wrap')){$('dashExpMenu')&&$('dashExpMenu').classList.remove('show');$('statsExpMenu')&&$('statsExpMenu').classList.remove('show');}});
 
 function exportDashPDF(){
   try{var m=getDashMetrics(),{jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'letter'});
   var pw=215.9,ph=279.4,lm=16,rm=16,cw=pw-lm-rm;
 
-  // Helper: add a canvas chart to the doc. Returns new y after placement.
-  function addChart(canvasId,label,startY,imgW,imgH){
-    var canvas=document.getElementById(canvasId);
-    if(!canvas||!canvas.getContext)return startY;
-    try{
-      var imgData=canvas.toDataURL('image/png',1.0);
-      if(imgData==='data:,')return startY;
-      if(startY+imgH>ph-20){doc.addPage();startY=16;}
-      if(label){doc.setFontSize(8);doc.setTextColor(90,90,100);doc.setFont(undefined,'bold');doc.text(label,lm,startY);startY+=4;}
-      doc.addImage(imgData,'PNG',lm,startY,imgW,imgH);
-      return startY+imgH+6;
-    }catch(err){console.warn('Chart capture failed for',canvasId,err);return startY;}
-  }
-
   // Header banner
   doc.setFillColor(26,58,58);doc.rect(0,0,pw,30,'F');
   doc.setFontSize(16);doc.setTextColor(255,255,255);doc.text('Core Lab Shift Hub',lm,13);
-  doc.setFontSize(9);doc.setTextColor(180,215,210);doc.text('Dashboard Metrics Report',lm,19);
+  doc.setFontSize(9);doc.setTextColor(180,215,210);doc.text('Stats Report',lm,19);
   doc.text(MONTHS[curMonth]+' '+curYear+'  |  '+new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})+'  |  '+(me?me.fullName:''),lm,25);
   var y=38;
   function checkPage(need){if(y+need>ph-20){doc.addPage();y=16;return true;}return false;}
   function secTitle(txt){checkPage(14);doc.setFontSize(11);doc.setTextColor(26,58,58);doc.setFont(undefined,'bold');doc.text(txt,lm,y);doc.setFont(undefined,'normal');y+=6;}
 
   // Summary table
-  secTitle('Summary');
+  secTitle('Operational Summary');
   doc.autoTable({startY:y,head:[['Metric','Value']],body:[
     ['This Month Entries',''+m.mE.length],['All Time Entries',''+m.all.length],
     ['Resolution Rate',m.resRate+'%'],['Avg Resolution Time',m.avgRes+' days'],
     ['Pending Follow-Ups',''+m.fuPend],['Instrument Issues',''+m.instIssues],
     ['QC Flags',''+m.qcFlags],['Active Users',''+Object.keys(users).length],
     ['Resolved Today',''+m.all.filter(function(e){return e.status==='Resolved'&&e.resDate===m.today;}).length],
-    ['CAPA Documented',''+m.all.filter(function(e){return e.actionType&&e.actionType!=='None Required';}).length],
-    ['Effectiveness Reviews Due',''+m.all.filter(function(e){return e.effReviewDate&&(!e.effVerified||e.effVerified==='Not Yet Reviewed'||e.effVerified==='');}).length],
+    ['CAPA Documented (of required)',m.capaDoc+' of '+m.capaReq+' ('+m.capaPct+'%)'],
+    ['Effectiveness Reviews — Completed',''+m.effComp],
+    ['Effectiveness Reviews — Overdue',''+m.effOver],
+    ['Effectiveness Reviews — Not Yet Due',''+m.effPend],
+    ['Escalation SLA Compliance (lifetime)',m.slaPct+'% ('+m.slaWithin+' within, '+m.slaAfter+' after, '+m.slaPending+' pending)'],
     ['Monthly Supervisory Review',getReviewForMonth(curMonth,curYear).length>0?'Completed':'Pending']
   ],styles:{fontSize:9,cellPadding:3,font:'helvetica'},headStyles:{fillColor:[0,121,107],textColor:255,fontStyle:'bold'},
-  columnStyles:{0:{fontStyle:'bold',cellWidth:65}},alternateRowStyles:{fillColor:[247,244,239]},margin:{left:lm,right:rm}});
+  columnStyles:{0:{fontStyle:'bold',cellWidth:75}},alternateRowStyles:{fillColor:[247,244,239]},margin:{left:lm,right:rm}});
   y=doc.lastAutoTable.finalY+12;
 
-  // Charts page — 2 columns of small charts
+  // Charts page
   checkPage(60);
   doc.addPage();y=16;
   doc.setFontSize(13);doc.setTextColor(26,58,58);doc.setFont(undefined,'bold');doc.text('Analytics Charts',lm,y);doc.setFont(undefined,'normal');y+=8;
 
   var halfW=(cw-6)/2;var chartH=52;
-  // Row 1: Category + Shift side by side
+  // Row 1: Monthly by category + Shift side by side
   var y1=y;
-  var canvasCat=document.getElementById('chartCat');
-  var canvasShift=document.getElementById('chartShift');
-  if(canvasCat&&canvasCat.getContext){try{var d1=canvasCat.toDataURL('image/png',1.0);if(d1!=='data:,'){doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('By Category',lm,y1);doc.setFont(undefined,'normal');doc.addImage(d1,'PNG',lm,y1+3,halfW,chartH);}}catch(e){}}
+  var canvasMonthCat=document.getElementById('shchartMonthByCat');
+  var canvasShift=document.getElementById('shchartShift');
+  if(canvasMonthCat&&canvasMonthCat.getContext){try{var d1=canvasMonthCat.toDataURL('image/png',1.0);if(d1!=='data:,'){doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('Monthly by Category',lm,y1);doc.setFont(undefined,'normal');doc.addImage(d1,'PNG',lm,y1+3,halfW,chartH);}}catch(e){}}
   if(canvasShift&&canvasShift.getContext){try{var d2=canvasShift.toDataURL('image/png',1.0);if(d2!=='data:,'){var x2=lm+halfW+6;doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('By Shift',x2,y1);doc.setFont(undefined,'normal');doc.addImage(d2,'PNG',x2,y1+3,halfW,chartH);}}catch(e){}}
   y=y1+chartH+12;
 
-  // Row 2: Priority + Status side by side
+  // Row 2: Instruments + Follow-up Completion
   var y2=y;
-  var canvasPri=document.getElementById('chartPri');
-  var canvasStat=document.getElementById('chartStatus');
-  if(canvasPri&&canvasPri.getContext){try{var d3=canvasPri.toDataURL('image/png',1.0);if(d3!=='data:,'){doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('Priority Distribution',lm,y2);doc.setFont(undefined,'normal');doc.addImage(d3,'PNG',lm,y2+3,halfW,chartH);}}catch(e){}}
-  if(canvasStat&&canvasStat.getContext){try{var d4=canvasStat.toDataURL('image/png',1.0);if(d4!=='data:,'){var x4=lm+halfW+6;doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('Open vs Resolved',x4,y2);doc.setFont(undefined,'normal');doc.addImage(d4,'PNG',x4,y2+3,halfW,chartH);}}catch(e){}}
+  var canvasInstr=document.getElementById('shchartInstr');
+  var canvasFUCompl=document.getElementById('shchartFuCompl');
+  if(canvasInstr&&canvasInstr.getContext){try{var d3=canvasInstr.toDataURL('image/png',1.0);if(d3!=='data:,'){doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('Top Instruments',lm,y2);doc.setFont(undefined,'normal');doc.addImage(d3,'PNG',lm,y2+3,halfW,chartH);}}catch(e){}}
+  if(canvasFUCompl&&canvasFUCompl.getContext){try{var d4=canvasFUCompl.toDataURL('image/png',1.0);if(d4!=='data:,'){var x4=lm+halfW+6;doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('Follow-Up Completion',x4,y2);doc.setFont(undefined,'normal');doc.addImage(d4,'PNG',x4,y2+3,halfW,chartH);}}catch(e){}}
   y=y2+chartH+12;
 
-  // Row 3: Trend full width
+  // Row 3: Daily volume full width
   checkPage(55);
-  var canvasTrend=document.getElementById('chartTrend');
-  if(canvasTrend&&canvasTrend.getContext){try{var d5=canvasTrend.toDataURL('image/png',1.0);if(d5!=='data:,'){doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('Daily Trend (This Month)',lm,y);doc.setFont(undefined,'normal');doc.addImage(d5,'PNG',lm,y+3,cw,48);y+=56;}}catch(e){}}
+  var canvasDaily=document.getElementById('shchartDailyVol');
+  if(canvasDaily&&canvasDaily.getContext){try{var d5=canvasDaily.toDataURL('image/png',1.0);if(d5!=='data:,'){doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('Daily Entry Volume (12-week rolling)',lm,y);doc.setFont(undefined,'normal');doc.addImage(d5,'PNG',lm,y+3,cw,48);y+=56;}}catch(e){}}
 
-  // Row 4: Follow-Up half width
+  // Row 4: Eff Review + Announcement Volume
   checkPage(55);
-  var canvasFU=document.getElementById('chartFU');
-  if(canvasFU&&canvasFU.getContext){try{var d6=canvasFU.toDataURL('image/png',1.0);if(d6!=='data:,'){doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('Follow-Up Completion',lm,y);doc.setFont(undefined,'normal');doc.addImage(d6,'PNG',lm,y+3,halfW,chartH);y+=chartH+10;}}catch(e){}}
+  var y4=y;
+  var canvasEff=document.getElementById('shchartEffReview');
+  var canvasAnn=document.getElementById('shchartAnnVol');
+  if(canvasEff&&canvasEff.getContext){try{var d6=canvasEff.toDataURL('image/png',1.0);if(d6!=='data:,'){doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('Effectiveness Reviews',lm,y4);doc.setFont(undefined,'normal');doc.addImage(d6,'PNG',lm,y4+3,halfW,chartH);}}catch(e){}}
+  if(canvasAnn&&canvasAnn.getContext){try{var d7=canvasAnn.toDataURL('image/png',1.0);if(d7!=='data:,'){var x7=lm+halfW+6;doc.setFontSize(8);doc.setTextColor(60,60,70);doc.setFont(undefined,'bold');doc.text('Announcement Volume',x7,y4);doc.setFont(undefined,'normal');doc.addImage(d7,'PNG',x7,y4+3,halfW,chartH);}}catch(e){}}
 
   // Data tables page
   doc.addPage();y=16;
@@ -5220,11 +5939,32 @@ function exportDashPDF(){
   checkPage(40);secTitle('Follow-Up Status');
   doc.autoTable({startY:y,head:[['Metric','Value']],body:[['Total Follow-Ups',''+m.fuAll.length],['Completed',''+m.fuDone.length],['Pending',''+m.fuPend],['Completion Rate',m.fuAll.length?Math.round(m.fuDone.length/m.fuAll.length*100)+'%':'N/A']],
   styles:{fontSize:9,cellPadding:3},headStyles:{fillColor:[46,125,50],textColor:255},columnStyles:{0:{fontStyle:'bold',cellWidth:65}},alternateRowStyles:{fillColor:[232,245,233]},margin:{left:lm,right:rm}});
+  y=doc.lastAutoTable.finalY+12;
+  // Reporter table
+  checkPage(50);secTitle('Per-Reporter Activity');
+  var reporters={};
+  m.all.forEach(function(e){
+    var key=e.authorInitials||'??';
+    if(!reporters[key])reporters[key]={ini:key,entries:0,resolved:0,totalDays:0,daysCnt:0};
+    reporters[key].entries++;
+    if(e.status==='Resolved'){reporters[key].resolved++;if(e.resDate&&e.date){reporters[key].totalDays+=Math.max(0,Math.round((new Date(e.resDate)-new Date(e.date))/86400000));reporters[key].daysCnt++;}}
+  });
+  var repBody=Object.values(reporters).map(function(r){
+    var u=users[r.ini]||{};
+    return[u.fullName||ln(r.ini)||r.ini,''+r.entries,''+r.resolved,(r.entries>0?Math.round(r.resolved/r.entries*100):0)+'%',r.daysCnt>0?(r.totalDays/r.daysCnt).toFixed(1):'—'];
+  });
+  doc.autoTable({startY:y,head:[['Reporter','Entries','Resolved','Resolution %','Avg Days']],body:repBody,
+  styles:{fontSize:9,cellPadding:3},headStyles:{fillColor:[100,100,140],textColor:255},alternateRowStyles:{fillColor:[247,244,239]},margin:{left:lm,right:rm}});
 
   // Footer on each page
   var pages=doc.internal.getNumberOfPages();for(var i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(158,164,176);doc.text('Core Lab Shift Hub  |  Renton Central Lab  |  UW Medicine DLMP',lm,ph-8);doc.text('Page '+i+' of '+pages,pw-rm-18,ph-8);}
-  doc.save('Dashboard_'+MONTHS[curMonth]+'_'+curYear+'.pdf');toast('PDF exported with charts');}catch(e){toast('PDF failed: '+e.message);console.error(e);}
+  doc.save('Stats_'+MONTHS[curMonth]+'_'+curYear+'.pdf');toast('PDF exported');}catch(e){toast('PDF failed: '+e.message);console.error(e);}
 }
+
+// Stats export wrappers (new preferred names)
+function exportStatsPDF(){exportDashPDF();}
+function exportStatsCSV(){exportDashCSV();}
+function exportStatsTxt(){exportDashTxt();}
 
 function exportDashCSV(){
   var m=getDashMetrics();
@@ -5579,15 +6319,15 @@ var STEPS_ALL=[
 ];
 
 var STEPS_LEAD=[
-  // 14. DASHBOARD - stat cards
-  {target:function(){return '#dashStats';},page:'dash',
-    title:'Dashboard: Metrics',
-    text:'The <strong>Dashboard</strong> stat cards show the current month: total entries, open items, escalated, resolution rate, CAPA documented, effectiveness reviews due, and monthly review status. <strong>Red or amber = needs attention.</strong>'},
+  // 14. STATS - hero KPIs
+  {target:function(){return '#shstatsHero';},page:'stats',
+    title:'Stats: Hero Metrics',
+    text:'The <strong>Stats</strong> hero strip shows the top 6 KPIs with period-over-period deltas. <strong>Red or amber = needs attention.</strong> Stats is visible to leads and the Lab Manager only.'},
 
-  // 15. DASHBOARD - export/charts info
-  {target:function(){return '#pageDash .exp-wrap';},page:'dash',
-    title:'Dashboard: Charts and export',
-    text:'Below the stats are charts by <strong>category</strong>, <strong>shift</strong>, <strong>priority</strong>, and <strong>daily trend</strong>. Tap this <strong>Export Metrics</strong> button to download as PDF (with charts), CSV, or text summary.',
+  // 15. STATS - export/sections info
+  {target:function(){return '#pageStats .exp-wrap';},page:'stats',
+    title:'Stats: Sections and export',
+    text:'The page is divided into <strong>Operational Health</strong>, <strong>Quality &amp; Compliance</strong>, <strong>Activity &amp; Trends</strong>, <strong>Per-Reporter Activity</strong>, and <strong>Announcements &amp; Engagement</strong>. Tap <strong>Export Stats</strong> to download as PDF, CSV, or text summary.',
     action:function(){window.scrollTo(0,0);}},
 
   // 16. AUDIT - header
@@ -5828,8 +6568,8 @@ refreshUI=function(){
   <button class="mob-nav-btn active" id="mobAnn" onclick="switchPage('ann')">
     <span class="mi">campaign</span>Feed
   </button>
-  <button class="mob-nav-btn" id="mobDash" onclick="switchPage('dash')">
-    <span class="mi">dashboard</span>Dash
+  <button class="mob-nav-btn" id="mobStats" onclick="switchPage('stats')" style="display:none">
+    <span class="mi">insights</span>Stats
   </button>
   <button class="mob-nav-btn" id="mobLog" onclick="switchPage('log')">
     <span class="mi">assignment</span>Log
