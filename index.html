@@ -408,9 +408,9 @@ tr.row-selected td{background:rgba(224,242,241,.6);}
 
 /* Nav */
 .nav{display:flex;background:var(--white);border-bottom:1px solid var(--g200);padding:0 28px;gap:2px;position:sticky;top:60px;z-index:90;box-shadow:0 1px 4px rgba(28,26,22,.04);}
-.nav-tab{padding:12px 20px;font-size:12px;font-weight:600;color:var(--g500);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;transition:color var(--dur-short) var(--me-standard),background var(--dur-short) var(--me-standard),border-color var(--dur-med) var(--me-emphasized);user-select:none;display:flex;align-items:center;gap:6px;border-radius:var(--r) var(--r) 0 0;-webkit-tap-highlight-color:transparent;}
+.nav-tab{padding:12px 20px;font-size:12px;font-weight:600;color:var(--g500);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;transition:color var(--dur-short) var(--me-standard),background var(--dur-short) var(--me-standard),border-color var(--dur-med) var(--me-emphasized);user-select:none;display:flex;align-items:center;gap:6px;-webkit-tap-highlight-color:transparent;}
 .nav-tab:hover{color:var(--navy);background:var(--g50);}
-.nav-tab.active{color:var(--teal);border-bottom-color:var(--teal);background:var(--teal-bg);}
+.nav-tab.active{color:var(--teal);border-bottom-color:var(--teal);}
 .nav-tab .mi{transition:transform var(--dur-short) var(--me-spring);}
 .nav-tab:hover .mi{transform:scale(1.1);}
 
@@ -1505,7 +1505,12 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   <div class="form-item"><label>Department *</label><select id="eDept"><option value="">Select...</option><option>Hematology</option><option>Coagulation</option><option>Chemistry</option><option>Urinalysis</option><option>General</option></select></div>
   <div class="form-item"><label>Reported By *</label><input type="text" id="eReporter"></div>
   <div class="form-item"><label>Category *</label><select id="eCat" onchange="updateCapRequired()"><option value="">Select...</option><option>QC Issue</option><option>Instrument</option><option>Supply</option><option>Safety</option><option>Process</option><option>Patient Sample</option><option>Training</option><option>Administrative</option><option>General</option></select></div>
-  <div class="form-item"><label>Priority *</label><select id="ePri" onchange="updateCapRequired()"><option value="">Select...</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+  <div class="form-item" id="wrap-pri"><label id="lbl-pri">Priority *</label><select id="ePri" onchange="updateCapRequired();_updatePriDotOrChip();" title="High = patient safety risk, reportable event, or multi-day downtime · Medium = workflow disruption contained to one shift · Low = documented for trend tracking only">
+    <option value="">Select...</option>
+    <option value="High">🔴 High — Patient safety risk / reportable</option>
+    <option value="Medium">🟡 Medium — Workflow disrupted, one shift</option>
+    <option value="Low">🟢 Low — Trend tracking only</option>
+  </select><div id="priCapPreview" style="display:none;margin-top:4px;font-size:9px;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fbbf24;border-radius:999px;padding:2px 8px;width:max-content;"><span class="mi mi-xs" style="font-size:10px;">fact_check</span> CAPA required</div></div>
   <div class="form-item full"><label>Description *</label><textarea id="eDesc"></textarea></div>
   <div class="form-item full"><label>Action Taken</label><textarea id="eAction" oninput="_maybeSmartDefaultActionType()"></textarea></div>
   <!-- CAPA COMPLIANCE SECTION — collapsible; hidden entirely when not applicable -->
@@ -1548,7 +1553,6 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   <div class="form-item"><label>Status</label><select id="eStatus" onchange="onStatusChange()"><option>Open</option><option>In Progress</option><option>Resolved</option><option>Escalated</option></select></div>
   <div class="form-item"><label>Follow-Up</label><select id="eFollowUp" onchange="onFollowUpChange()"><option>No</option><option>Yes</option></select></div>
   <div class="form-item" id="fuAssignWrap" style="display:none"><label>Assign To</label><select id="eFUAssign"><option value="">Select...</option></select></div>
-  <div class="form-item"><label>Notes</label><textarea id="eNotes" style="min-height:36px;"></textarea></div>
   <div class="form-divider" id="resDivider" style="display:none"></div>
   <div class="form-item" id="resByWrap" style="display:none"><label>Resolved By</label><select id="eResBy"><option value="">Select...</option></select></div>
   <div class="form-item" id="resDateWrap" style="display:none"><label>Resolution Date</label><input type="date" id="eResDate"></div>
@@ -2259,6 +2263,27 @@ function _dataHash(){
     var a='';for(var j=0;j<announcements.length;j++){var y=announcements[j];a+=y.id+':'+(y.timestamp||y.date||'')+':'+((y.acknowledged||[]).length)+':'+((y.comments||[]).length)+':'+(y.resolved?'R':'_')+':'+(y.isDeleted?'D':'_')+';';}
     return 'e'+entries.length+'|'+e+'a'+announcements.length+'|'+a;
   }catch(err){return String(Date.now());}// if anything fails, force a rebuild
+}
+
+// Render wrappers that suppress the sectionIn entrance animation. Used for filter changes,
+// sort clicks, preset applies, and similar user actions where the entire log rebuilds but
+// nothing meaningful has changed visually — the animation would look like a flicker.
+function _renderLogNoAnim(){
+  document.body.classList.add('syncing');
+  try{renderLog();}finally{
+    requestAnimationFrame(function(){
+      // Only clear the class if no other sync is active (avoid race with the 60s tick)
+      if(!_syncInProgress)document.body.classList.remove('syncing');
+    });
+  }
+}
+function _renderAnnNoAnim(){
+  document.body.classList.add('syncing');
+  try{renderAnn();}finally{
+    requestAnimationFrame(function(){
+      if(!_syncInProgress)document.body.classList.remove('syncing');
+    });
+  }
 }
 let chartInstances={};// dead — kept as no-op shim in case any external code references it
 let _bulkSelected=new Set();// ids of rows currently selected for bulk action
@@ -4630,6 +4655,9 @@ function updateCapRequired(){
   var cat=($('eCat')?$('eCat').value:'')||'';
   var pri=($('ePri')?$('ePri').value:'')||'';
 
+  // Update the "CAPA required" preview chip below Priority
+  _updatePriDotOrChip();
+
   // ═══ TIERED DISCLOSURE ═══
   // Show CAPA section only when entry is CAPA-required.
   // Definition: priority=High OR category in {QC Issue, Instrument, Safety, Patient Sample}.
@@ -4697,6 +4725,29 @@ function updateCapRequired(){
   }
 }
 
+// ═══ SHIFT INFERENCE ═══
+// Renton Core Lab shifts per schedule.html:
+//   Morning: 07:00–15:30
+//   Evening: 15:00–23:30
+//   Night:   23:00–07:30
+// Overlap windows (15:00–15:29, 23:00–23:29, 07:00–07:29) are huddle/handoff — during overlap
+// we default to the ENDING shift since events are typically logged while wrapping up, not while
+// just clocking in.
+function _inferShift(totalMin){
+  // totalMin = hours*60 + minutes, 0 to 1439
+  // Rules (resolved in order):
+  //   07:00–07:29 (420–449)   → Night (Night shift wrapping up)
+  //   07:30–14:59 (450–899)   → Morning (solid Morning block)
+  //   15:00–15:29 (900–929)   → Morning (Morning shift wrapping up)
+  //   15:30–22:59 (930–1379)  → Evening (solid Evening block)
+  //   23:00–23:29 (1380–1409) → Evening (Evening shift wrapping up)
+  //   23:30+ or <07:00        → Night (solid Night block)
+  if(totalMin>=420&&totalMin<450)return 'Night';
+  if(totalMin>=450&&totalMin<930)return 'Morning';// Morning core + Morning's end-overlap
+  if(totalMin>=930&&totalMin<1410)return 'Evening';// Evening core + Evening's end-overlap
+  return 'Night';// 23:30+ or before 07:00
+}
+
 // ═══ CAPA SECTION TOGGLE ═══
 function toggleCapSection(forceOpen){
   var body=$('capSectionBody');
@@ -4708,6 +4759,19 @@ function toggleCapSection(forceOpen){
   if(chev)chev.style.transform=willOpen?'rotate(180deg)':'';
   // Track that user manually toggled so auto-expand doesn't fight them
   if(wrap&&forceOpen!==true)wrap.dataset.userToggled='1';
+}
+
+// ═══ PRIORITY CAPA PREVIEW CHIP ═══
+// Shows an amber "CAPA required" chip below the Priority field whenever the entry will trigger
+// the CAPA compliance section. Sets expectations before the section expands below.
+function _updatePriDotOrChip(){
+  var chip=$('priCapPreview');if(!chip)return;
+  var cat=($('eCat')?$('eCat').value:'')||'';
+  var pri=($('ePri')?$('ePri').value:'')||'';
+  var capRequired=(pri==='High')||(['QC Issue','Instrument','Safety','Patient Sample'].indexOf(cat)>=0);
+  chip.style.display=capRequired?'inline-flex':'none';
+  chip.style.alignItems='center';
+  chip.style.gap='3px';
 }
 
 // ═══ ACTION TYPE CHIP PICKER ═══
@@ -4799,7 +4863,23 @@ function validateCapFields(){
 }
 
 // === MODAL HELPERS ===
-function onStatusChange(){const s=$('eStatus').value,sh=s==='Resolved';['resDivider','resByWrap','resDateWrap'].forEach(id=>$(id).style.display=sh?'':'none');if(sh){if(!$('eResDate').value)$('eResDate').value=new Date().toISOString().split('T')[0];pDD('eResBy');_autoDefaultEffReviewDate();}}
+function onStatusChange(){
+  const s=$('eStatus').value,sh=s==='Resolved';
+  ['resDivider','resByWrap','resDateWrap'].forEach(id=>$(id).style.display=sh?'':'none');
+  if(sh){
+    if(!$('eResDate').value)$('eResDate').value=new Date().toISOString().split('T')[0];
+    pDD('eResBy');
+    _autoDefaultEffReviewDate();
+    // Auto-flip Follow-Up to No when resolved — if an entry is resolved the follow-up is by definition complete.
+    // Lead can manually re-enable if ongoing monitoring is needed.
+    var fu=$('eFollowUp');
+    if(fu&&fu.value==='Yes'){
+      fu.value='No';
+      onFollowUpChange();
+      toast('Follow-up auto-cleared (entry resolved)');
+    }
+  }
+}
 function onFollowUpChange(){const fu=$('eFollowUp').value==='Yes';$('fuAssignWrap').style.display=fu?'':'none';if(fu)pDD('eFUAssign');}
 function pDD(id){const s=$(id),cv=s.value;s.innerHTML='<option value="">Select...</option>'+ul().map(u=>'<option value="'+u.ini+'"'+(u.ini===cv?' selected':'')+'>'+esc(u.name)+' ('+u.ini+')</option>').join('');}
 
@@ -4819,16 +4899,16 @@ function rMT(){
     for(var y=2026;y<=2030;y++){var o=document.createElement('option');o.value=y;o.textContent=y;if(y===curYear)o.selected=true;ySel.appendChild(o);}
   }else if(ySel){ySel.value=curYear;}
 }
-function setM(i){curMonth=i;rMT();renderLog();}
-function setMonthFromDropdown(v){curMonth=parseInt(v);renderLog();}
-function setYearFromDropdown(v){curYear=parseInt(v);renderLog();}
+function setM(i){curMonth=i;rMT();_renderLogNoAnim();}
+function setMonthFromDropdown(v){curMonth=parseInt(v);_renderLogNoAnim();}
+function setYearFromDropdown(v){curYear=parseInt(v);_renderLogNoAnim();}
 function setDept(d){
   curDept=d;
   document.querySelectorAll('.dept-tab').forEach(function(t,i){
     var vals=['','Hematology','Coagulation','Chemistry','Urinalysis','General'];
     t.classList.toggle('active',vals[i]===d);
   });
-  renderLog();
+  _renderLogNoAnim();
 }
 
 // === FILTER ===
@@ -4849,7 +4929,7 @@ function gME(){
   });
 }
 function gF(){let d=gME();const q=$('searchBox').value.toLowerCase(),sh=$('fShift').value,ca=$('fCat').value,pr=$('fPri').value;if(curDept)d=d.filter(e=>(e.department||'General')===curDept);if(q)d=d.filter(e=>Object.values(e).some(v=>String(v).toLowerCase().includes(q)));if(sh)d=d.filter(e=>mapLegacyShift(e.shift)===sh);if(ca)d=d.filter(e=>e.category===ca||mapLegacyCategory(e.category)===ca);if(pr)d=d.filter(e=>e.priority===pr);d.sort((a,b)=>{let va=a[sortKey]||'',vb=b[sortKey]||'';if(sortKey==='date'){va+=a.time||'';vb+=b.time||'';}return sortAsc?(va<vb?-1:va>vb?1:0):(va>vb?-1:va<vb?1:0);});return d;}
-function doSort(k){if(sortKey===k)sortAsc=!sortAsc;else{sortKey=k;sortAsc=false;}renderLog();}
+function doSort(k){if(sortKey===k)sortAsc=!sortAsc;else{sortKey=k;sortAsc=false;}_renderLogNoAnim();}
 
 // ═══ FILTER PRESETS ═══
 // Persisted per-user in localStorage under rcl7_presets_{initials}. Each preset is
@@ -4947,7 +5027,7 @@ function applyPreset(name){
   // Clear any Stats-filter pill so the UI doesn't show conflicting state
   var spill=$('statsFilterPill');if(spill)spill.style.display='none';
   window._statsFilterActive=null;
-  renderLog();
+  _renderLogNoAnim();
   toast('Applied: '+name);
 }
 
@@ -4960,7 +5040,7 @@ function clearAllFilters(){
   var menu=$('presetMenu');if(menu)menu.classList.remove('show');
   var spill=$('statsFilterPill');if(spill)spill.style.display='none';
   window._statsFilterActive=null;
-  renderLog();
+  _renderLogNoAnim();
   toast('Filters cleared');
 }
 
@@ -5362,13 +5442,13 @@ function bulkDelete(){
 
 // === SECTIONS ===
 function toggleCapRow(eid,ev){if(ev)ev.stopPropagation();var rows=document.querySelectorAll('.cap-detail-row[data-parent="'+eid+'"]');rows.forEach(function(r){r.style.display=r.style.display==='none'?'table-row':'none';});}
-function rSec(zId,cls,lbl,ico,es,ok,exH){var z=$(zId);if(!es.length){z.innerHTML='';return;}var o=secOpen[ok];z.innerHTML='<div class="section '+cls+'"><div class="sec-hdr '+(o?'':'collapsed')+'" onclick="secOpen.'+ok+'=!secOpen.'+ok+';renderLog()"><h3><span class="mi mi-sm">'+ico+'</span> '+lbl+' <span class="cnt">'+es.length+'</span></h3><div>'+(exH||'')+' <span class="mi mi-sm">expand_more</span></div></div><div class="sec-body '+(o?'':'collapsed')+'"><div class="tbl-scroll"><table><thead><tr>'+TH+'</tr></thead><tbody>'+es.map(e=>bR(e)).join('')+'</tbody></table></div></div></div>';}
+function rSec(zId,cls,lbl,ico,es,ok,exH){var z=$(zId);if(!es.length){z.innerHTML='';return;}var o=secOpen[ok];z.innerHTML='<div class="section '+cls+'"><div class="sec-hdr '+(o?'':'collapsed')+'" onclick="secOpen.'+ok+'=!secOpen.'+ok+';_renderLogNoAnim()"><h3><span class="mi mi-sm">'+ico+'</span> '+lbl+' <span class="cnt">'+es.length+'</span></h3><div>'+(exH||'')+' <span class="mi mi-sm">expand_more</span></div></div><div class="sec-body '+(o?'':'collapsed')+'"><div class="tbl-scroll"><table><thead><tr>'+TH+'</tr></thead><tbody>'+es.map(e=>bR(e)).join('')+'</tbody></table></div></div></div>';}
 
 // === RENDER LOG ===
 function renderLog(){var all=gME(),esc_=all.filter(e=>e.status==='Escalated'),res=all.filter(e=>e.status==='Resolved'),active=gF().filter(e=>e.status!=='Resolved'&&e.status!=='Escalated');rSec('escZone','sec-esc','ESCALATED','warning',esc_,'esc','<span class="esc-sub">Leadership reviewing</span>');if(!active.length&&all.filter(e=>e.status!=='Resolved'&&e.status!=='Escalated').length===0){var isFirstTime=entries.filter(function(e){return !e.isDeleted;}).length===0;var firstTimeHtml=isFirstTime?'<div style="max-width:420px;margin:0 auto;text-align:left;background:var(--g50);border:1px solid var(--g200);border-radius:var(--rl);padding:14px;margin-top:14px;"><div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:8px;display:flex;align-items:center;gap:6px;"><span class="mi mi-sm">lightbulb</span>Quick start examples</div><div style="font-size:11px;color:var(--g600);line-height:1.6;"><div style="margin-bottom:4px;"><strong>QC Issue:</strong> "Sysmex XN-1 Beta out of range - Lot 45678"</div><div style="margin-bottom:4px;"><strong>Instrument:</strong> "Stago STA-R Max #3 motor error 0x42 after startup"</div><div style="margin-bottom:4px;"><strong>Supply:</strong> "Low on cobas 503 ISE diluent - 2 bottles remaining"</div><div><strong>Process:</strong> "Urinalysis sample mislabeled, resolved with patient verification"</div></div></div>':'';var ctaHtml='<button class="btn btn-p" onclick="openEntryModal()" style="margin-top:14px;"><span class="mi mi-xs">add</span>Create first entry</button>';$('activeZone').innerHTML='<div class="section sec-active"><div class="sec-hdr"><h3><span class="mi mi-sm">assignment</span> Active Entries <span class="cnt">0</span></h3></div><div class="sec-body"><div class="empty" style="padding:32px 20px;"><span class="mi" style="font-size:48px;">assignment</span><h3>'+(isFirstTime?'Welcome to the Shift Log':'No entries for '+MONTHS[curMonth])+'</h3><p style="color:var(--g500);font-size:12px;max-width:380px;margin:6px auto 0;">'+(isFirstTime?'Log any shift event — QC issue, instrument problem, safety concern, supply gap, or process note. Entries are visible to the whole team.':'Nothing logged yet this month. If something happens on your shift, log it here.')+'</p>'+ctaHtml+firstTimeHtml+'</div></div></div>';}else rSec('activeZone','sec-active','Active Entries','assignment',active,'active','');rSec('resZone','sec-res','Resolved','check_circle',res,'res','');renderMonthlyReview();uBell();_syncBulkMasterCheckbox();bulkUpdateBar();}
 
 // === ENTRY MODAL ===
-function openEntryModal(id){editId=id||null;attachments=[];$('entryModalTitle').textContent=id?'Edit Entry':'New Entry';$('entrySaveBtn').textContent=id?'Update':'Save';var rb=$('eReporter');if(id){var e=entries.find(x=>x.id===id);if(!e)return;$('eDate').value=e.date;$('eTime').value=e.time;$('eShift').value=e.shift;$('eDept').value=e.department||'General';rb.value=e.reportedBy||ln(e.authorInitials);rb.readOnly=!isLead();rb.style.background=isLead()?'var(--white)':'var(--g100)';$('eCat').value=e.category;$('ePri').value=e.priority;$('eDesc').value=e.description;$('eAction').value=e.action||'';$('eStatus').value=e.status;$('eFollowUp').value=e.followUp||'No';$('eNotes').value=e.notes||'';attachments=(e.attachments||[]).slice();onFollowUpChange();if(e.followUpAssign)setTimeout(()=>{$('eFUAssign').value=e.followUpAssign;},0);onStatusChange();if(e.resolvedBy)setTimeout(()=>{$('eResBy').value=e.resolvedBy;},0);$('eResDate').value=e.resDate||'';$('eActionType').value=e.actionType||'';$('eInstrument').value=e.instrument||'';$('eReagentLot').value=e.reagentLot||'';$('eTestSystem').value=e.testSystem||'';$('eRootCause').value=e.rootCause||'';$('eEffReviewDate').value=e.effReviewDate||'';$('eEffVerified').value=e.effVerified||'';$('eEffNotes').value=e.effNotes||'';}else{var now=new Date();$('eDate').value=now.toISOString().split('T')[0];$('eTime').value=now.toTimeString().slice(0,5);var hr=now.getHours();$('eShift').value=hr<15?'Morning':hr<23?'Evening':'Night';$('eDept').value=curDept||'';rb.value=me?me.fullName:'';rb.readOnly=!isLead();rb.style.background=isLead()?'var(--white)':'var(--g100)';$('eCat').value='';$('ePri').value='';$('eDesc').value='';$('eAction').value='';$('eStatus').value='Open';$('eFollowUp').value='No';$('eNotes').value='';$('eResDate').value='';$('eActionType').value='';$('eInstrument').value='';$('eReagentLot').value='';$('eTestSystem').value='';$('eRootCause').value='';$('eEffReviewDate').value='';$('eEffVerified').value='';$('eEffNotes').value='';onStatusChange();onFollowUpChange();
+function openEntryModal(id){editId=id||null;attachments=[];$('entryModalTitle').textContent=id?'Edit Entry':'New Entry';$('entrySaveBtn').textContent=id?'Update':'Save';var rb=$('eReporter');if(id){var e=entries.find(x=>x.id===id);if(!e)return;$('eDate').value=e.date;$('eTime').value=e.time;$('eShift').value=e.shift;$('eDept').value=e.department||'General';rb.value=e.reportedBy||ln(e.authorInitials);rb.readOnly=!isLead();rb.style.background=isLead()?'var(--white)':'var(--g100)';$('eCat').value=e.category;$('ePri').value=e.priority;$('eDesc').value=e.description;$('eAction').value=e.action||'';$('eStatus').value=e.status;$('eFollowUp').value=e.followUp||'No';attachments=(e.attachments||[]).slice();onFollowUpChange();if(e.followUpAssign)setTimeout(()=>{$('eFUAssign').value=e.followUpAssign;},0);onStatusChange();if(e.resolvedBy)setTimeout(()=>{$('eResBy').value=e.resolvedBy;},0);$('eResDate').value=e.resDate||'';$('eActionType').value=e.actionType||'';$('eInstrument').value=e.instrument||'';$('eReagentLot').value=e.reagentLot||'';$('eTestSystem').value=e.testSystem||'';$('eRootCause').value=e.rootCause||'';$('eEffReviewDate').value=e.effReviewDate||'';$('eEffVerified').value=e.effVerified||'';$('eEffNotes').value=e.effNotes||'';}else{var now=new Date();$('eDate').value=now.toISOString().split('T')[0];$('eTime').value=now.toTimeString().slice(0,5);var hr=now.getHours(),mn=now.getMinutes(),totalMin=hr*60+mn;$('eShift').value=_inferShift(totalMin);$('eDept').value=curDept||'';rb.value=me?me.fullName:'';rb.readOnly=!isLead();rb.style.background=isLead()?'var(--white)':'var(--g100)';$('eCat').value='';$('ePri').value='';$('eDesc').value='';$('eAction').value='';$('eStatus').value='Open';$('eFollowUp').value='No';$('eResDate').value='';$('eActionType').value='';$('eInstrument').value='';$('eReagentLot').value='';$('eTestSystem').value='';$('eRootCause').value='';$('eEffReviewDate').value='';$('eEffVerified').value='';$('eEffNotes').value='';onStatusChange();onFollowUpChange();
 // Check for a draft from a previous unsaved session
 _checkDraftRestore();}
 // Reset any user-toggled state on the CAPA section so it re-auto-expands appropriately
@@ -5380,7 +5460,7 @@ updateCapRequired();_syncActionChipState();rAP();openSheet('entryModalBg');_star
 // Only applies to new entries (not edits). Cleared on successful save or explicit discard.
 var DRAFT_KEY='rcl7_entry_draft';
 var _draftInterval=null;
-var _draftFields=['eDate','eTime','eShift','eDept','eCat','ePri','eDesc','eAction','eStatus','eFollowUp','eFUAssign','eNotes','eResBy','eResDate','eActionType','eInstrument','eReagentLot','eTestSystem','eRootCause','eEffReviewDate','eEffVerified','eEffNotes'];
+var _draftFields=['eDate','eTime','eShift','eDept','eCat','ePri','eDesc','eAction','eStatus','eFollowUp','eFUAssign','eResBy','eResDate','eActionType','eInstrument','eReagentLot','eTestSystem','eRootCause','eEffReviewDate','eEffVerified','eEffNotes'];
 
 function _snapshotDraft(){
   var d={timestamp:new Date().toISOString(),user:me?me.initials:''};
@@ -5392,7 +5472,7 @@ function _snapshotDraft(){
 function _isDraftEmpty(d){
   if(!d)return true;
   // Treat as empty if key content fields are all empty
-  return !(d.eDesc&&d.eDesc.trim())&&!(d.eAction&&d.eAction.trim())&&!(d.eNotes&&d.eNotes.trim())&&!(d.eRootCause&&d.eRootCause.trim())&&!d.eCat&&!d.ePri;
+  return !(d.eDesc&&d.eDesc.trim())&&!(d.eAction&&d.eAction.trim())&&!(d.eRootCause&&d.eRootCause.trim())&&!d.eCat&&!d.ePri;
 }
 
 function _saveDraft(){
@@ -5516,7 +5596,7 @@ if(editId){
   // New entry created directly as Escalated
   escDate=new Date().toISOString();
 }
-var en={id:editId||gid(),date:dt,time:tm,shift:sh,department:dept,reportedBy:rep,authorInitials:editId?ai:me.initials,category:cat,priority:pri,description:desc,action:$('eAction').value.trim(),status:st,followUp:fu,followUpAssign:fua,resolvedBy:rb,resDate:rd,notes:$('eNotes').value.trim(),attachments:attachments.slice(),lastModified:new Date().toISOString(),actionType:$('eActionType').value,instrument:$('eInstrument').value.trim(),reagentLot:$('eReagentLot').value.trim(),testSystem:$('eTestSystem').value.trim(),rootCause:$('eRootCause').value.trim(),effReviewDate:$('eEffReviewDate').value,effVerified:$('eEffVerified').value,effNotes:$('eEffNotes').value.trim(),escalatedDate:escDate,firstLeadResponseDate:flRespDate,firstLeadResponseBy:flRespBy};if(editId){var idx=entries.findIndex(e=>e.id===editId);if(idx!==-1){var old=entries[idx],changedFields=[];
+var en={id:editId||gid(),date:dt,time:tm,shift:sh,department:dept,reportedBy:rep,authorInitials:editId?ai:me.initials,category:cat,priority:pri,description:desc,action:$('eAction').value.trim(),status:st,followUp:fu,followUpAssign:fua,resolvedBy:rb,resDate:rd,notes:'',attachments:attachments.slice(),lastModified:new Date().toISOString(),actionType:$('eActionType').value,instrument:$('eInstrument').value.trim(),reagentLot:$('eReagentLot').value.trim(),testSystem:$('eTestSystem').value.trim(),rootCause:$('eRootCause').value.trim(),effReviewDate:$('eEffReviewDate').value,effVerified:$('eEffVerified').value,effNotes:$('eEffNotes').value.trim(),escalatedDate:escDate,firstLeadResponseDate:flRespDate,firstLeadResponseBy:flRespBy};if(editId){var idx=entries.findIndex(e=>e.id===editId);if(idx!==-1){var old=entries[idx],changedFields=[];
 var diffFields=[['status','Status'],['priority','Priority'],['category','Category'],['department','Department'],['shift','Shift'],['description','Description'],['action','Action Taken'],['actionType','Action Type'],['instrument','Instrument'],['reagentLot','Reagent Lot'],['testSystem','Test System'],['rootCause','Root Cause'],['effReviewDate','Eff. Review Due'],['effVerified','Eff. Verified'],['effNotes','Eff. Notes'],['followUp','Follow-Up'],['followUpAssign','Assigned To'],['resolvedBy','Resolved By'],['resDate','Resolution Date'],['notes','Notes'],['reportedBy','Reported By'],['date','Date'],['time','Time']];
 diffFields.forEach(function(f){var key=f[0],label=f[1],oldVal=String(old[key]||''),newVal=String(en[key]||'');if(oldVal!==newVal)changedFields.push({field:label,from:oldVal,to:newVal});});
 entries[idx]=en;
@@ -5538,7 +5618,6 @@ function cloneEntry(id){
     $('eAction').value='';
     $('eStatus').value='Open';// Always start as Open
     $('eFollowUp').value=src.followUp||'No';
-    $('eNotes').value='';
     $('eActionType').value=src.actionType||'';
     $('eInstrument').value=src.instrument||'';
     $('eReagentLot').value='';// Lot numbers are specific to the occurrence, don't copy
@@ -7118,7 +7197,8 @@ setInterval(async function(){
   }
   // Keep the preset label in sync with current filter state
   if(typeof _clearPresetLabelIfStale==='function')_clearPresetLabelIfStale();
-  renderLog();
+  // Filter changes shouldn't trigger the section entrance animation — it looks like a flicker.
+  _renderLogNoAnim();
 });});
 // Clear CAP field error highlighting on input
 ['eActionType','eInstrument','eReagentLot','eTestSystem','eRootCause','eEffReviewDate'].forEach(function(id){var el=$(id);if(el)el.addEventListener(el.tagName==='SELECT'?'change':'input',function(){this.style.borderColor='';this.style.boxShadow='';updateCapRequired();});});
