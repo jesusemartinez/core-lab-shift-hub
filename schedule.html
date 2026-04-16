@@ -688,6 +688,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
   </div>
   <div id="statsOverview" class="stats-row"></div>
   <div id="statsShiftBreakdown" style="margin-bottom:16px;"></div>
+  <div id="statsOTTracking" style="margin-bottom:16px;"></div>
   <div id="statsStaffTable" style="margin-bottom:16px;"></div>
   <div id="statsStaffDetail"></div>
 </div>
@@ -781,7 +782,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
     <div class="form-row"><label>Staff Member</label><select id="aStaff"></select></div>
     <div class="form-row"><label>Date</label><input type="date" id="aDate"></div>
     <div class="form-row"><label>Shift</label><select id="aShift"><option>Morning</option><option>Evening</option><option>Night</option></select></div>
-    <div class="form-row"><label>Assignment</label><select id="aBench">
+    <div class="form-row"><label>Assignment</label><select id="aBench" onchange="toggleOTPanel()">
       <option value="">-- None --</option>
       <optgroup label="Bench Assignments">
         <option value="H/C">H/C (Heme/Coag)</option>
@@ -805,6 +806,19 @@ body{font-family:var(--font);background:var(--surface);color:var(--g900);min-hei
       </optgroup>
     </select></div>
     <div class="form-row"><label>Notes</label><input type="text" id="aNotes" placeholder="Optional notes"></div>
+    <div id="otPanel" style="display:none;background:#fef3c7;border:1px solid #fbbf24;border-radius:var(--r);padding:10px 12px;margin:4px 0;">
+      <div style="font-size:10px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:4px;"><span class="mi mi-xs">warning</span> OT Pre-Approval Required (SEIU Article 10)</div>
+      <div class="form-row" style="margin-bottom:8px;"><label style="font-size:11px;">Approver *</label><select id="aOTApprover"></select></div>
+      <div class="form-row" style="margin-bottom:8px;"><label style="font-size:11px;">Reason *</label><select id="aOTReason">
+        <option value="">Select reason...</option>
+        <option value="Coverage gap">Coverage gap</option>
+        <option value="Planned activity">Planned activity</option>
+        <option value="Volunteer OT">Volunteer OT</option>
+        <option value="Required OT">Required OT (Article 10.2(a))</option>
+        <option value="Shift extension">Shift extension</option>
+      </select></div>
+      <div class="form-row" style="margin-bottom:0;"><label style="font-size:11px;">Expected Hours *</label><input type="number" id="aOTHours" min="0.5" max="16" step="0.5" value="8" style="width:100px;"></div>
+    </div>
     <div class="btn-row">
       <button class="btn" onclick="closeModal('assignModal')">Cancel</button>
       <button class="btn primary" onclick="saveAssignment()">Save</button>
@@ -1430,11 +1444,12 @@ function spSet(fm,pairs){
 
 function spToSched(item,fm){
   var g=function(n){return spVal(item,n,fm);};
-  return{id:item.Title||'',_spId:item.Id,userIni:g('UserInitials')||'',userName:g('UserName')||'',date:g('Date')||'',shift:g('Shift')||'',bench:g('Bench')||'',notes:g('Notes')||'',status:g('Status')||'Confirmed',createdBy:g('CreatedBy')||''};
+  var otH=parseFloat(g('OTHours'));
+  return{id:item.Title||'',_spId:item.Id,userIni:g('UserInitials')||'',userName:g('UserName')||'',date:g('Date')||'',shift:g('Shift')||'',bench:g('Bench')||'',notes:g('Notes')||'',status:g('Status')||'Confirmed',createdBy:g('CreatedBy')||'',otApprover:g('OTApprover')||'',otReason:g('OTReason')||'',otHours:isNaN(otH)?0:otH,otApprovedDate:g('OTApprovedDate')||''};
 }
 function schedToSP(e){
   var fm=_fieldMaps['ScheduleEntries']||{};
-  return spSet(fm,[['Title',e.id],['UserInitials',e.userIni],['UserName',e.userName],['Date',e.date],['Shift',e.shift],['Bench',e.bench],['Notes',e.notes],['Status',e.status||'Confirmed'],['CreatedBy',e.createdBy||'']]);
+  return spSet(fm,[['Title',e.id],['UserInitials',e.userIni],['UserName',e.userName],['Date',e.date],['Shift',e.shift],['Bench',e.bench],['Notes',e.notes],['Status',e.status||'Confirmed'],['CreatedBy',e.createdBy||''],['OTApprover',e.otApprover||''],['OTReason',e.otReason||''],['OTHours',e.bench==='OT'?String(e.otHours||8):''],['OTApprovedDate',e.otApprovedDate||'']]);
 }
 function spToSwap(item,fm){
   var g=function(n){return spVal(item,n,fm);};
@@ -2697,7 +2712,20 @@ function openAssignModal(userIni,dateStr,shift){
   var existing=getAssignment(userIni,dateStr,shift);
   document.getElementById('aBench').value=existing?existing.bench:'';
   document.getElementById('aNotes').value=existing?existing.notes:'';
+  // Populate OT approver dropdown (leads only) and fields
+  var apSel=document.getElementById('aOTApprover');
+  var leads=STAFF.filter(function(s){return s.active!==false&&(ELEVATED_ROLES.some(function(r){return s.role&&s.role.indexOf(r)>=0;})||s.ini==='JM');}).sort(function(a,b){return a.name.localeCompare(b.name);});
+  var curApprover=existing&&existing.otApprover?existing.otApprover:(me?me.initials:'');
+  apSel.innerHTML='<option value="">Select approver...</option>'+leads.map(function(s){return'<option value="'+esc(s.ini)+'"'+(s.ini===curApprover?' selected':'')+'>'+esc(s.name)+' ('+esc(s.ini)+')</option>';}).join('');
+  document.getElementById('aOTReason').value=existing?existing.otReason||'':'';
+  document.getElementById('aOTHours').value=existing&&existing.otHours?existing.otHours:8;
+  toggleOTPanel();
   openModal('assignModal');
+}
+function toggleOTPanel(){
+  var bench=(document.getElementById('aBench')||{}).value;
+  var panel=document.getElementById('otPanel');
+  if(panel)panel.style.display=bench==='OT'?'block':'none';
 }
 
 async function saveAssignment(){
@@ -2708,30 +2736,51 @@ async function saveAssignment(){
   var notes=document.getElementById('aNotes').value;
   var staff=STAFF.find(function(s){return s.ini===userIni;});
 
+  // OT validation: require approver + reason
+  var otApprover='',otReason='',otHours=0,otApprovedDate='';
+  if(bench==='OT'){
+    otApprover=(document.getElementById('aOTApprover')||{}).value||'';
+    otReason=(document.getElementById('aOTReason')||{}).value||'';
+    otHours=parseFloat((document.getElementById('aOTHours')||{}).value||8);
+    if(!otApprover){toast('OT requires an approver (SEIU Article 10)');return;}
+    if(!otReason){toast('OT requires a reason');return;}
+    if(!(otHours>0&&otHours<=16)){toast('OT hours must be between 0.5 and 16');return;}
+    // Only preserve existing approved date if unchanged; otherwise new timestamp
+    var existingForOT=getAssignment(userIni,dateStr,shift);
+    if(existingForOT&&existingForOT.bench==='OT'&&existingForOT.otApprover===otApprover&&existingForOT.otReason===otReason&&Number(existingForOT.otHours)===otHours&&existingForOT.otApprovedDate){
+      otApprovedDate=existingForOT.otApprovedDate;
+    }else{
+      otApprovedDate=new Date().toISOString();
+    }
+  }
+
   // Check if this would create a double shift (OT warning)
   var otherShifts=SHIFTS.filter(function(s){return s!==shift;});
   var hasOtherShift=otherShifts.some(function(os){
     var oa=getAssignment(userIni,dateStr,os);
     return oa&&oa.bench&&oa.bench!=='PTO'&&oa.bench!=='SL';
   });
-  if(hasOtherShift){
+  if(hasOtherShift&&bench!=='OT'){
     if(!confirm(staff.name+' already has another shift on this date. This creates a double shift (OT). Continue?'))return;
   }
 
   var existing=getAssignment(userIni,dateStr,shift);
   if(existing){
     existing.bench=bench;existing.notes=notes;existing.status=bench?'Confirmed':'';
-    logAudit('edit','assignment','Updated '+staff.name+' to '+bench+' on '+dateStr+' ('+shift+')',existing.id);
-    closeModal('assignModal');renderCurrentView();toast('Updated');
+    existing.otApprover=otApprover;existing.otReason=otReason;existing.otHours=otHours;existing.otApprovedDate=otApprovedDate;
+    var otDetail=bench==='OT'?' [OT approved by '+otApprover+', '+otReason+', '+otHours+'h]':'';
+    logAudit('edit','assignment','Updated '+staff.name+' to '+bench+' on '+dateStr+' ('+shift+')'+otDetail,existing.id);
+    closeModal('assignModal');renderCurrentView();toast(bench==='OT'?'OT saved · '+otHours+'h approved':'Updated');
     try{
       var sp=await spGet('ScheduleEntries',"Title eq '"+existing.id+"'");
       if(sp.length)await spUpdate('ScheduleEntries',sp[0].Id,schedToSP(existing));
     }catch(e){console.error('Update failed:',e);}
   }else if(bench){
-    var entry={id:gid(),userIni:userIni,userName:staff?staff.name:'',date:dateStr,shift:shift,bench:bench,notes:notes,status:'Confirmed',createdBy:me.initials};
+    var entry={id:gid(),userIni:userIni,userName:staff?staff.name:'',date:dateStr,shift:shift,bench:bench,notes:notes,status:'Confirmed',createdBy:me.initials,otApprover:otApprover,otReason:otReason,otHours:otHours,otApprovedDate:otApprovedDate};
     schedEntries.push(entry);
-    logAudit('add','assignment',staff.name+' assigned '+bench+' on '+dateStr+' ('+shift+')',entry.id);
-    closeModal('assignModal');renderCurrentView();toast('Assigned');
+    var otDetail2=bench==='OT'?' [OT approved by '+otApprover+', '+otReason+', '+otHours+'h]':'';
+    logAudit('add','assignment',staff.name+' assigned '+bench+' on '+dateStr+' ('+shift+')'+otDetail2,entry.id);
+    closeModal('assignModal');renderCurrentView();toast(bench==='OT'?'OT saved · '+otHours+'h approved':'Assigned');
     try{await spAdd('ScheduleEntries',schedToSP(entry));}catch(e){console.error('Add failed:',e);}
   }else{
     closeModal('assignModal');
@@ -4228,6 +4277,97 @@ function getStatsDateRange(){
   }
 }
 
+function renderOTTracking(){
+  var container=document.getElementById('statsOTTracking');
+  if(!container)return;
+  var activeStaff=STAFF.filter(function(s){return s.active!==false&&s.benchEligible;});
+  if(!activeStaff.length){container.innerHTML='';return;}
+
+  // Rolling windows: count OT entries for each staff member ending today
+  var today=new Date();
+  var d90=new Date(today);d90.setDate(d90.getDate()-90);
+  var d365=new Date(today);d365.setDate(d365.getDate()-365);
+  var t90=fmtDate(d90),t365=fmtDate(d365),tToday=fmtDate(today);
+
+  // Collect OT entries per staff member within each window
+  var otData={};
+  activeStaff.forEach(function(s){
+    otData[s.ini]={h90:0,h365:0,c90:0,c365:0,lastOT:'',lastApprover:'',lastReason:''};
+  });
+  schedEntries.forEach(function(e){
+    if(e.bench!=='OT')return;
+    if(!otData[e.userIni])return;
+    var hrs=parseFloat(e.otHours)||8;// fallback for legacy OT entries
+    if(e.date>=t365&&e.date<=tToday){
+      otData[e.userIni].h365+=hrs;otData[e.userIni].c365++;
+      if(!otData[e.userIni].lastOT||e.date>otData[e.userIni].lastOT){
+        otData[e.userIni].lastOT=e.date;
+        otData[e.userIni].lastApprover=e.otApprover||'';
+        otData[e.userIni].lastReason=e.otReason||'';
+      }
+    }
+    if(e.date>=t90&&e.date<=tToday){
+      otData[e.userIni].h90+=hrs;otData[e.userIni].c90++;
+    }
+  });
+
+  // Sort ascending by 90-day hours (least OT first for equitable solicitation per Article 10.2(a))
+  var sorted=activeStaff.map(function(s){return{ini:s.ini,name:s.name,role:s.role,data:otData[s.ini]};}).sort(function(a,b){
+    if(a.data.h90!==b.data.h90)return a.data.h90-b.data.h90;
+    return a.data.h365-b.data.h365;
+  });
+
+  // Compute max for bar scaling
+  var max90=Math.max.apply(null,sorted.map(function(r){return r.data.h90;}).concat([1]));
+  var max365=Math.max.apply(null,sorted.map(function(r){return r.data.h365;}).concat([1]));
+
+  var html='<div class="rec-panel"><h3><span class="mi">schedule</span> Cumulative OT Tracking <span style="font-size:10px;font-weight:400;color:var(--g400);">· rolling windows · sorted ascending (offer OT preferentially to staff with lower totals per SEIU Article 10.2(a))</span></h3>';
+  html+='<div style="overflow-x:auto;"><table class="sched-table" style="min-width:700px;"><thead><tr>';
+  html+='<th style="text-align:left;padding-left:12px;">Staff</th>';
+  html+='<th style="text-align:center;">90-day Hours</th>';
+  html+='<th style="text-align:center;">90-day Shifts</th>';
+  html+='<th style="text-align:center;">1-year Hours</th>';
+  html+='<th style="text-align:center;">1-year Shifts</th>';
+  html+='<th style="text-align:left;">Last OT</th>';
+  html+='</tr></thead><tbody>';
+  sorted.forEach(function(r,idx){
+    var d=r.data;
+    var isTopCandidate=idx<3&&d.h90<max90;// top 3 with below-max hours
+    var rowStyle=isTopCandidate?'background:var(--teal-bg);':'';
+    var rank=idx===0?'<span style="color:var(--teal);font-weight:800;">&#9733; 1st</span>':idx===1?'<span style="color:var(--teal);font-weight:700;">2nd</span>':idx===2?'<span style="color:var(--teal);font-weight:700;">3rd</span>':'';
+    var bar90=max90>0?Math.round(d.h90/max90*100):0;
+    var bar365=max365>0?Math.round(d.h365/max365*100):0;
+    var barColor=d.h90===0?'var(--g200)':d.h90<max90*0.33?'var(--green)':d.h90<max90*0.66?'var(--amber)':'var(--red)';
+    html+='<tr style="'+rowStyle+'">';
+    html+='<td style="text-align:left;padding-left:12px;font-weight:700;">'+esc(r.name)+(rank?' <span style="font-size:9px;margin-left:4px;">'+rank+'</span>':'')+'<div style="font-size:10px;font-weight:400;color:var(--g400);">'+esc(r.role||'')+'</div></td>';
+    html+='<td style="text-align:center;font-weight:700;"><div style="font-size:14px;color:'+barColor+';">'+d.h90.toFixed(1)+'h</div>';
+    html+='<div style="height:4px;background:var(--g100);border-radius:2px;margin:3px 8px 0;overflow:hidden;"><div style="height:100%;background:'+barColor+';width:'+bar90+'%;"></div></div></td>';
+    html+='<td style="text-align:center;color:var(--g500);">'+d.c90+'</td>';
+    html+='<td style="text-align:center;font-weight:700;"><div style="font-size:13px;color:var(--g600);">'+d.h365.toFixed(1)+'h</div>';
+    html+='<div style="height:4px;background:var(--g100);border-radius:2px;margin:3px 8px 0;overflow:hidden;"><div style="height:100%;background:var(--g400);width:'+bar365+'%;"></div></div></td>';
+    html+='<td style="text-align:center;color:var(--g500);">'+d.c365+'</td>';
+    if(d.lastOT){
+      var lastOTDate=new Date(d.lastOT+'T12:00:00');
+      var lastOTLabel=lastOTDate.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      html+='<td style="text-align:left;font-size:11px;color:var(--g600);"><div style="font-weight:700;">'+esc(lastOTLabel)+'</div>'+(d.lastReason?'<div style="font-size:10px;color:var(--g400);">'+esc(d.lastReason)+(d.lastApprover?' · appr '+esc(d.lastApprover):'')+'</div>':'')+'</td>';
+    }else{
+      html+='<td style="text-align:left;font-size:11px;color:var(--g300);font-style:italic;">Never</td>';
+    }
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+
+  // Legend
+  html+='<div style="margin-top:10px;padding:8px 12px;background:var(--g50);border-radius:var(--r);font-size:10px;color:var(--g500);line-height:1.5;">';
+  html+='<strong style="color:var(--navy);">Fairness guide:</strong> When offering OT, preferentially contact staff at the top of this list (lowest recent OT hours). ';
+  html+='Teal-highlighted rows are the top 3 candidates. ';
+  html+='Bars compare to the staff member with the highest OT in the same window.';
+  html+='</div>';
+
+  html+='</div>';
+  container.innerHTML=html;
+}
+
 function navStatsPeriod(dir){
   var range=document.getElementById('statsRange').value;
   if(range==='month'){_statsPeriod.month+=dir;if(_statsPeriod.month<0){_statsPeriod.month=11;_statsPeriod.year--;}if(_statsPeriod.month>11){_statsPeriod.month=0;_statsPeriod.year++;}}
@@ -4285,6 +4425,9 @@ function renderStats(){
   });
   sbHtml+='</tbody></table></div>';
   document.getElementById('statsShiftBreakdown').innerHTML=sbHtml;
+
+  // OT Tracking widget (rolling 90-day and 1-year hours, sorted ascending for equitable solicitation)
+  renderOTTracking();
 
   // Per-staff table
   var staffStats=[];
