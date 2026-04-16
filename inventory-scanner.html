@@ -303,6 +303,17 @@ html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--md-primary);box-shadow:0 0 0 3px rgba(0,105,110,.12)}
 .field textarea{resize:none;min-height:68px}
 
+/* REASON CODE CHIPS */
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0}
+.chip{background:var(--md-surface-container-lowest);border:1.5px solid var(--md-outline-variant);border-radius:20px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--md-on-surface-variant);cursor:pointer;transition:.15s;-webkit-tap-highlight-color:transparent;font-family:var(--font);user-select:none;display:inline-flex;align-items:center;gap:4px}
+.chip:hover{background:var(--md-surface-container-low);border-color:var(--md-outline)}
+.chip.selected{background:rgba(0,105,110,.12);border-color:var(--md-primary);color:var(--md-primary)}
+.chip.selected.narrative-required{background:rgba(191,90,48,.12);border-color:#BF5A30;color:#8B3A0F}
+.chip:active{transform:scale(.96)}
+.narrative-note{font-size:11px;color:#8B3A0F;font-weight:600;margin-top:4px;display:none;align-items:center;gap:4px}
+.narrative-note.show{display:inline-flex}
+.narrative-note .material-icons-outlined{font-size:14px}
+
 /* QTY STEPPER */
 .qty-row{display:flex;align-items:center;gap:0;border:1.5px solid var(--md-outline-variant);border-radius:var(--radius-md);overflow:hidden}
 .qty-row button{background:var(--md-surface-container-low);border:none;color:var(--md-on-surface);width:48px;height:48px;font-size:22px;cursor:pointer;flex-shrink:0;display:grid;place-items:center;-webkit-tap-highlight-color:transparent;transition:.15s;font-weight:500}
@@ -735,7 +746,7 @@ html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);
       <div class="card-title">Update Stock</div>
       <div class="action-tabs"><button class="action-tab" id="tab-receive" onclick="selectTab('receive')"><span class="material-icons-outlined">add_circle</span>Receive</button><button class="action-tab" id="tab-remove" onclick="selectTab('remove')"><span class="material-icons-outlined">remove_circle</span>Remove</button><button class="action-tab" id="tab-adjust" onclick="selectTab('adjust')"><span class="material-icons-outlined">tune</span>Adjust</button></div>
       <div class="action-form" id="form-receive"><div class="field"><label>Quantity to Add</label><div class="qty-row"><button onclick="stepQ('q-receive',-1)">&minus;</button><input type="number" id="q-receive" value="1" min="0" step="0.1"><button onclick="stepQ('q-receive',1)">+</button></div></div><div class="field"><label>Lot Number <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><input type="text" id="lot-receive" placeholder="e.g. LOT-2026-001"></div><div class="field"><label>Expiry Date <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><input type="date" id="exp-receive"></div><button class="btn btn-receive" onclick="submitAction('receive')"><span class="material-icons-outlined" style="font-size:20px">check_circle</span>Confirm Receive</button></div>
-      <div class="action-form" id="form-remove"><div class="field"><label>Quantity to Remove</label><div class="qty-row"><button onclick="stepQ('q-remove',-1)">&minus;</button><input type="number" id="q-remove" value="1" min="0" step="0.1"><button onclick="stepQ('q-remove',1)">+</button></div></div><div class="field"><label>Reason <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><textarea id="reason-remove" placeholder="e.g. Used up, expired, discarded..."></textarea></div><button class="btn btn-remove" onclick="submitAction('remove')"><span class="material-icons-outlined" style="font-size:20px">check_circle</span>Confirm Remove</button></div>
+      <div class="action-form" id="form-remove"><div class="field"><label>Quantity to Remove</label><div class="qty-row"><button onclick="stepQ('q-remove',-1)">&minus;</button><input type="number" id="q-remove" value="1" min="0" step="0.1"><button onclick="stepQ('q-remove',1)">+</button></div></div><div class="field"><label>Reason Code <span style="color:var(--md-error);font-weight:600">*</span></label><div class="chip-row" id="chips-remove"><div class="chip selected" data-code="Patient use" onclick="pickReason(this)">Patient use</div><div class="chip" data-code="Expired" onclick="pickReason(this)">Expired</div><div class="chip" data-code="Opened life exceeded" onclick="pickReason(this)">Opened life exceeded</div><div class="chip" data-code="QC failure" data-narrative="1" onclick="pickReason(this)">QC failure</div><div class="chip" data-code="Damaged" data-narrative="1" onclick="pickReason(this)">Damaged</div><div class="chip" data-code="Other" data-narrative="1" onclick="pickReason(this)">Other</div></div></div><div class="field"><label id="reason-remove-label">Notes <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><textarea id="reason-remove" placeholder="Additional details..."></textarea><div class="narrative-note" id="narrative-note-remove"><span class="material-icons-outlined">info</span>Narrative required: describe the details of the QC failure, damage, or other reason.</div></div><button class="btn btn-remove" onclick="submitAction('remove')"><span class="material-icons-outlined" style="font-size:20px">check_circle</span>Confirm Remove</button></div>
       <div class="action-form" id="form-adjust"><div style="font-size:13px;color:var(--md-on-surface-variant);padding:4px 0;font-weight:500">Set the exact current stock count.</div><div class="field"><label>New Stock Count</label><div class="qty-row"><button onclick="stepQ('q-adjust',-1)">&minus;</button><input type="number" id="q-adjust" value="0" min="0" step="0.1"><button onclick="stepQ('q-adjust',1)">+</button></div></div><div class="field"><label>Reason <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><textarea id="reason-adjust" placeholder="e.g. Physical count, discrepancy..."></textarea></div><button class="btn btn-adjust" onclick="submitAction('adjust')"><span class="material-icons-outlined" style="font-size:20px">check_circle</span>Set Stock Count</button></div>
     </div>
   </div>
@@ -814,7 +825,7 @@ var SP_API=SP.siteUrl+'/_api/web/lists';
 var ADMIN_EMAIL='jesusem@uw.edu';
 var CAT={CatalogID:'field_1',Instrument:'field_2',Manufacturer:'field_3',Unit:'field_4',BarcodeType:'field_5',BarcodeString:'field_6',CatalogNumber:'field_7',GS1ParsesExpiry:'field_8',GS1ParsesLot:'field_9',Notes:'field_10'};
 var INV={Instrument:'field_1',ItemType:'field_2',Unit:'field_3',InStock:'field_4',MinPAR:'field_5',DailyUse:'field_6',ExpiryDate:'field_7',OpenLifeDays:'field_8',DateOpened:'field_9',LotNumber:'field_10',Notes:'field_11',CatalogID:'field_12',IsActive:'field_13'};
-var LOG={Action:'field_1',QuantityDelta:'field_2',QuantityAfter:'field_3',LotNumber:'field_4',ExpiryDate:'field_5',Timestamp:'field_6',ReasonNote:'field_7',ScannedBy:'ScannedBy'};
+var LOG={Action:'field_1',QuantityDelta:'field_2',QuantityAfter:'field_3',LotNumber:'field_4',ExpiryDate:'field_5',Timestamp:'field_6',ReasonNote:'field_7',ScannedBy:'ScannedBy',ReasonCode:'ReasonCode'};
 function cf(obj,map){var o={};for(var k in obj)o[map[k]||k]=obj[k];return o;}
 function iv(row,k){return row[INV[k]||k];}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -1067,22 +1078,72 @@ function renderItem(){
   selectTab(null);
   document.getElementById('q-receive').value=1;document.getElementById('q-remove').value=1;document.getElementById('q-adjust').value=parseFloat(iv(currentItem,'InStock'))||0;
   document.getElementById('lot-receive').value='';document.getElementById('exp-receive').value='';document.getElementById('reason-remove').value='';document.getElementById('reason-adjust').value='';
+  resetRemoveForm();
 }
 
 function selectTab(action){currentTab=action;['receive','remove','adjust'].forEach(function(a){var tab=document.getElementById('tab-'+a);var form=document.getElementById('form-'+a);if(tab)tab.className='action-tab'+(action===a?' active-'+a:'');if(form)form.className='action-form'+(action===a?' show':'');});}
 
+function pickReason(el){
+  if(!el)return;
+  var row=el.parentElement;if(!row)return;
+  // Clear all selected
+  var chips=row.querySelectorAll('.chip');
+  chips.forEach(function(c){c.classList.remove('selected');c.classList.remove('narrative-required');});
+  // Select this one
+  el.classList.add('selected');
+  var needsNarrative=el.getAttribute('data-narrative')==='1';
+  if(needsNarrative)el.classList.add('narrative-required');
+  // Update label and note
+  var note=document.getElementById('narrative-note-remove');
+  var label=document.getElementById('reason-remove-label');
+  if(note)note.className='narrative-note'+(needsNarrative?' show':'');
+  if(label){
+    if(needsNarrative){
+      label.innerHTML='Narrative <span style="color:var(--md-error);font-weight:600">*</span>';
+    }else{
+      label.innerHTML='Notes <span style="color:var(--md-outline);font-weight:400">(optional)</span>';
+    }
+  }
+}
+function getSelectedReason(){
+  var row=document.getElementById('chips-remove');if(!row)return '';
+  var sel=row.querySelector('.chip.selected');
+  return sel?(sel.getAttribute('data-code')||''):'';
+}
+function resetRemoveForm(){
+  // Reset to default: "Patient use" selected, no narrative required
+  var row=document.getElementById('chips-remove');if(!row)return;
+  var chips=row.querySelectorAll('.chip');
+  chips.forEach(function(c){c.classList.remove('selected');c.classList.remove('narrative-required');});
+  var def=row.querySelector('[data-code="Patient use"]');if(def)def.classList.add('selected');
+  var note=document.getElementById('narrative-note-remove');if(note)note.className='narrative-note';
+  var label=document.getElementById('reason-remove-label');if(label)label.innerHTML='Notes <span style="color:var(--md-outline);font-weight:400">(optional)</span>';
+}
+
 async function submitAction(action){
   if(!currentItem){showToast('No item selected',true);return;}
-  var qty,lot='',expiry='',reason='';var oldStock=parseFloat(iv(currentItem,'InStock'))||0;var newStock,delta;
+  var qty,lot='',expiry='',reason='',reasonCode='';var oldStock=parseFloat(iv(currentItem,'InStock'))||0;var newStock,delta;
   if(action==='receive'){qty=parseFloat(document.getElementById('q-receive').value)||0;lot=document.getElementById('lot-receive').value.trim();expiry=document.getElementById('exp-receive').value;newStock=oldStock+qty;delta=qty;}
-  else if(action==='remove'){qty=parseFloat(document.getElementById('q-remove').value)||0;reason=document.getElementById('reason-remove').value.trim();newStock=Math.max(0,oldStock-qty);delta=-qty;}
+  else if(action==='remove'){
+    qty=parseFloat(document.getElementById('q-remove').value)||0;
+    reason=document.getElementById('reason-remove').value.trim();
+    reasonCode=getSelectedReason();
+    if(!reasonCode){showToast('Select a reason code',true);return;}
+    // Narrative required for QC failure, Damaged, Other
+    if(['QC failure','Damaged','Other'].indexOf(reasonCode)>=0 && !reason){
+      showToast('Narrative required for '+reasonCode,true);
+      var ta=document.getElementById('reason-remove');if(ta)ta.focus();
+      return;
+    }
+    newStock=Math.max(0,oldStock-qty);delta=-qty;
+  }
   else{qty=parseFloat(document.getElementById('q-adjust').value)||0;reason=document.getElementById('reason-adjust').value.trim();newStock=qty;delta=qty-oldStock;}
   showLoad('Updating inventory...');
   try{
     var patchData=cf({InStock:newStock},INV);if(lot)patchData[INV.LotNumber]=lot;if(expiry)patchData[INV.ExpiryDate]=expiry;
     await spPatch(SP.lists.inventory,currentItem.Id,patchData);
     var acct=msalInstance?.getActiveAccount();var scannedBy=acct?(acct.name||acct.username||''):'';var today=new Date().toISOString().slice(0,10);var actionLabel=action.charAt(0).toUpperCase()+action.slice(1);
-    var logData=cf({Action:actionLabel,QuantityDelta:delta,QuantityAfter:newStock,LotNumber:lot||'',ExpiryDate:expiry||'',Timestamp:new Date().toISOString(),ReasonNote:reason||'',ScannedBy:scannedBy},LOG);
+    var logData=cf({Action:actionLabel,QuantityDelta:delta,QuantityAfter:newStock,LotNumber:lot||'',ExpiryDate:expiry||'',Timestamp:new Date().toISOString(),ReasonNote:reason||'',ReasonCode:reasonCode||'',ScannedBy:scannedBy},LOG);
     logData.Title=currentItem.Title+' — '+actionLabel+' — '+today;
     await spPost(SP.lists.log,logData);
     lastEntry={item:currentItem.Title,action:actionLabel,delta:delta>0?'+'+delta:String(delta),newStock,lot:lot||'—',scannedBy,time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})};
@@ -1240,6 +1301,7 @@ function goScan(){
   // Clear action forms
   ['q-receive','q-remove','q-adjust'].forEach(function(id){setVal(id,id==='q-adjust'?'0':'1');});
   setVal('lot-receive','');setVal('exp-receive','');setVal('reason-remove','');setVal('reason-adjust','');
+  resetRemoveForm();
   // Clear manual entry form
   resetManual();
   // Clear success log
