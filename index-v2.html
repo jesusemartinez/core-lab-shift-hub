@@ -446,7 +446,17 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 .aud-time{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--g400);width:58px;flex-shrink:0;margin-top:1px;}
 .aud-user{font-weight:700;color:var(--navy);min-width:42px;flex-shrink:0;font-size:10px;}
 .aud-type{font-size:8px;font-weight:700;text-transform:uppercase;padding:1px 5px;border-radius:3px;flex-shrink:0;}
-.aud-type.add{background:#d6f5e8;color:var(--green);}.aud-type.edit{background:#fef3c7;color:var(--amber);}.aud-type.delete{background:#fbe2e2;color:var(--red);}
+.aud-type.add{background:#d6f5e8;color:var(--green);}.aud-type.edit{background:#fef3c7;color:var(--amber);}.aud-type.delete{background:#fbe2e2;color:var(--red);}.aud-type.restore{background:#d0efe8;color:var(--teal);}
+.aud-dot.restore{background:var(--teal);}
+.aud-snapshot{margin-top:6px;padding:8px 10px;background:#fff7f7;border-radius:var(--r);border:1px solid #f4c7c7;display:none;
+  animation:capRowIn var(--dur-med) var(--me-decelerate) both;}
+.aud-snapshot.show{display:block;}
+.aud-snap-table{display:flex;flex-direction:column;gap:3px;background:var(--white);border-radius:var(--r);padding:6px 8px;border:1px solid var(--g200);}
+.aud-snap-row{display:flex;gap:8px;padding:2px 0;border-bottom:1px dotted var(--g100);font-size:10px;align-items:flex-start;}
+.aud-snap-row:last-child{border-bottom:none;}
+.aud-snap-key{font-weight:700;color:var(--navy);min-width:100px;flex-shrink:0;font-size:9px;text-transform:uppercase;letter-spacing:.03em;}
+.aud-snap-val{color:var(--g700);flex:1;min-width:0;word-break:break-word;line-height:1.35;}
+.aud-raw{margin-top:6px;padding:8px 10px;background:#1e293b;color:#e2e8f0;font-family:'JetBrains Mono',monospace;font-size:9px;border-radius:var(--r);overflow-x:auto;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow-y:auto;}
 .aud-body{flex:1;min-width:0;}
 .aud-text{color:var(--g700);line-height:1.4;font-size:11px;font-weight:600;}
 .aud-detail{color:var(--g500);font-size:10px;line-height:1.3;margin-top:2px;}
@@ -1124,9 +1134,10 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
       <div class="aud-filters">
         <input type="text" class="aud-search" id="audSearch" placeholder="Search audit..." oninput="renderAudit()">
         <select id="audType" onchange="renderAudit()" style="font-size:10px;padding:4px 8px;border-radius:20px;border:1px solid var(--g300);">
-          <option value="">All Types</option><option value="add">Added</option><option value="edit">Edited</option><option value="delete">Deleted</option>
+          <option value="">All Types</option><option value="add">Added</option><option value="edit">Edited</option><option value="delete">Deleted</option><option value="restore">Restored</option>
         </select>
         <select id="audMonth" onchange="renderAudit()" style="font-size:10px;padding:4px 8px;border-radius:20px;border:1px solid var(--g300);"></select>
+        <label id="audShowDelWrap" style="font-size:10px;color:var(--g600);display:none;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="audShowDel" onchange="renderAudit()" style="cursor:pointer;"> Show deleted entries</label>
         <span style="font-size:10px;color:var(--g500);">Records: <strong id="audCount">0</strong></span>
         <div class="exp-wrap"><button class="btn btn-s" style="padding:4px 10px;font-size:9px;" onclick="toggleAudExpMenu()"><span class="mi mi-xs">download</span> Export</button><div class="exp-menu" id="audExpMenu"><button onclick="exportAuditCSV()"><span class="mi mi-xs">table_chart</span> CSV Spreadsheet</button><button onclick="exportAuditPDF()"><span class="mi mi-xs">picture_as_pdf</span> PDF Report</button><button onclick="exportAuditJSON()"><span class="mi mi-xs">code</span> JSON Data</button></div></div>
         <button class="btn btn-d" id="clearHistBtn" onclick="clearAuditHistory()" style="font-size:9px;padding:4px 8px;display:none;"><span class="mi mi-xs">lock</span> Clear</button>
@@ -1560,7 +1571,7 @@ async function getListItemType(listName) {
 
 function entryToSP(e) {
   var fm=_fieldMaps['ShiftEntries']||{};
-  return spSet(fm,[['Title',e.id],['Date',e.date||null],['Time',e.time||''],['Shift',e.shift||''],['Department',e.department||'General'],['ReportedBy',e.reportedBy||''],['AuthorInitials',e.authorInitials||''],['Category',e.category||''],['Priority',e.priority||''],['Description',e.description||''],['Action',e.action||''],['Status',e.status||'Open'],['FollowUp',e.followUp||'No'],['FollowUpAssign',e.followUpAssign||''],['ResolvedBy',e.resolvedBy||''],['ResDate',e.resDate||null],['Notes',e.notes||''],['AttachmentsJSON',JSON.stringify(e.attachments||[])],['LastModified0',e.lastModified||new Date().toISOString()],['ActionType',e.actionType||''],['Instrument',e.instrument||''],['ReagentLot',e.reagentLot||''],['TestSystem',e.testSystem||''],['RootCause',e.rootCause||''],['EffReviewDate',e.effReviewDate||null],['EffVerified',e.effVerified||''],['EffNotes',e.effNotes||'']]);
+  return spSet(fm,[['Title',e.id],['Date',e.date||null],['Time',e.time||''],['Shift',e.shift||''],['Department',e.department||'General'],['ReportedBy',e.reportedBy||''],['AuthorInitials',e.authorInitials||''],['Category',e.category||''],['Priority',e.priority||''],['Description',e.description||''],['Action',e.action||''],['Status',e.status||'Open'],['FollowUp',e.followUp||'No'],['FollowUpAssign',e.followUpAssign||''],['ResolvedBy',e.resolvedBy||''],['ResDate',e.resDate||null],['Notes',e.notes||''],['AttachmentsJSON',JSON.stringify(e.attachments||[])],['LastModified0',e.lastModified||new Date().toISOString()],['ActionType',e.actionType||''],['Instrument',e.instrument||''],['ReagentLot',e.reagentLot||''],['TestSystem',e.testSystem||''],['RootCause',e.rootCause||''],['EffReviewDate',e.effReviewDate||null],['EffVerified',e.effVerified||''],['EffNotes',e.effNotes||''],['IsDeleted',e.isDeleted?'Yes':'No'],['DeletedDate',e.deletedDate||null],['DeletedBy',e.deletedBy||'']]);
 }
 
 function spToEntry(item,fm) {
@@ -1569,19 +1580,21 @@ function spToEntry(item,fm) {
   var dt=g('Date')||'';if(dt&&dt.indexOf('T')>-1)dt=dt.split('T')[0];
   var rd=g('ResDate')||'';if(rd&&rd.indexOf('T')>-1)rd=rd.split('T')[0];
   var effRd=g('EffReviewDate')||'';if(effRd&&effRd.indexOf('T')>-1)effRd=effRd.split('T')[0];
-  return {id:item.Title,_spId:item.Id,date:dt,time:g('Time')||'',shift:g('Shift')||'',department:g('Department')||'General',reportedBy:g('ReportedBy')||'',authorInitials:g('AuthorInitials')||'',category:g('Category')||'',priority:g('Priority')||'',description:g('Description')||'',action:g('Action')||'',status:g('Status')||'Open',followUp:g('FollowUp')||'No',followUpAssign:g('FollowUpAssign')||'',resolvedBy:g('ResolvedBy')||'',resDate:rd,notes:g('Notes')||'',attachments:tryParse(g('AttachmentsJSON'),[]),lastModified:g('LastModified0')||'',actionType:g('ActionType')||'',instrument:g('Instrument')||'',reagentLot:g('ReagentLot')||'',testSystem:g('TestSystem')||'',rootCause:g('RootCause')||'',effReviewDate:effRd,effVerified:g('EffVerified')||'',effNotes:g('EffNotes')||''};
+  var delFlag=g('IsDeleted')||'';
+  return {id:item.Title,_spId:item.Id,date:dt,time:g('Time')||'',shift:g('Shift')||'',department:g('Department')||'General',reportedBy:g('ReportedBy')||'',authorInitials:g('AuthorInitials')||'',category:g('Category')||'',priority:g('Priority')||'',description:g('Description')||'',action:g('Action')||'',status:g('Status')||'Open',followUp:g('FollowUp')||'No',followUpAssign:g('FollowUpAssign')||'',resolvedBy:g('ResolvedBy')||'',resDate:rd,notes:g('Notes')||'',attachments:tryParse(g('AttachmentsJSON'),[]),lastModified:g('LastModified0')||'',actionType:g('ActionType')||'',instrument:g('Instrument')||'',reagentLot:g('ReagentLot')||'',testSystem:g('TestSystem')||'',rootCause:g('RootCause')||'',effReviewDate:effRd,effVerified:g('EffVerified')||'',effNotes:g('EffNotes')||'',isDeleted:(delFlag===true||delFlag==='Yes'||delFlag==='true'||delFlag==='1'),deletedDate:g('DeletedDate')||'',deletedBy:g('DeletedBy')||''};
 }
 
 function annToSP(a) {
   var fm=_fieldMaps['Announcements']||{};
-  return spSet(fm,[['Title',a.id],['AnnType',a.annType||'standard'],['Text',a.text||''],['Priority',a.priority||'Low'],['PostedBy',a.postedBy||''],['PostedByIni',a.postedByIni||''],['WelcomeName',a.welcomeName||''],['WelcomeRole',a.welcomeRole||''],['CommentsJSON',JSON.stringify(a.comments||[])],['AcknowledgedJSON',JSON.stringify(a.acknowledged||[])],['IsResolved',a.resolved?'Yes':'No'],['ResolvedDate',a.resolvedDate||null],['ResolvedBy0',a.resolvedBy||''],['PostedDate',a.date||''],['Timestamp',a.timestamp||new Date().toISOString()]]);
+  return spSet(fm,[['Title',a.id],['AnnType',a.annType||'standard'],['Text',a.text||''],['Priority',a.priority||'Low'],['PostedBy',a.postedBy||''],['PostedByIni',a.postedByIni||''],['WelcomeName',a.welcomeName||''],['WelcomeRole',a.welcomeRole||''],['CommentsJSON',JSON.stringify(a.comments||[])],['AcknowledgedJSON',JSON.stringify(a.acknowledged||[])],['IsResolved',a.resolved?'Yes':'No'],['ResolvedDate',a.resolvedDate||null],['ResolvedBy0',a.resolvedBy||''],['PostedDate',a.date||''],['Timestamp',a.timestamp||new Date().toISOString()],['IsDeleted',a.isDeleted?'Yes':'No'],['DeletedDate',a.deletedDate||null],['DeletedBy',a.deletedBy||'']]);
 }
 
 function spToAnn(item,fm) {
   fm=fm||_fieldMaps['Announcements']||{};
   var g=function(n){return spVal(item,n,fm);};
   var rd=g('ResolvedDate')||'';if(rd&&rd.indexOf('T')>-1)rd=rd.split('T')[0];
-  return {id:item.Title,_spId:item.Id,annType:g('AnnType')||'standard',text:g('Text')||'',priority:g('Priority')||'Low',postedBy:g('PostedBy')||'',postedByIni:g('PostedByIni')||'',welcomeName:g('WelcomeName')||'',welcomeRole:g('WelcomeRole')||'',comments:tryParse(g('CommentsJSON'),[]),acknowledged:tryParse(g('AcknowledgedJSON'),[]),resolved:g('IsResolved')==='Yes'||g('IsResolved')===true,resolvedDate:rd,resolvedBy:g('ResolvedBy0')||'',date:g('PostedDate')||'',timestamp:g('Timestamp')||''};
+  var delFlag=g('IsDeleted')||'';
+  return {id:item.Title,_spId:item.Id,annType:g('AnnType')||'standard',text:g('Text')||'',priority:g('Priority')||'Low',postedBy:g('PostedBy')||'',postedByIni:g('PostedByIni')||'',welcomeName:g('WelcomeName')||'',welcomeRole:g('WelcomeRole')||'',comments:tryParse(g('CommentsJSON'),[]),acknowledged:tryParse(g('AcknowledgedJSON'),[]),resolved:g('IsResolved')==='Yes'||g('IsResolved')===true,resolvedDate:rd,resolvedBy:g('ResolvedBy0')||'',date:g('PostedDate')||'',timestamp:g('Timestamp')||'',isDeleted:(delFlag===true||delFlag==='Yes'||delFlag==='true'||delFlag==='1'),deletedDate:g('DeletedDate')||'',deletedBy:g('DeletedBy')||''};
 }
 
 function userToSP(ini, u) {
@@ -1601,14 +1614,14 @@ function spToUser(item,fm) {
 
 function auditToSP(h) {
   var fm=_fieldMaps['AuditLog']||{};
-  var obj=spSet(fm,[['Title',gid()],['LogType',h.type||''],['Text',(h.text||'').slice(0,255)],['Detail',(h.detail||'').slice(0,255)],['User',h.user||''],['Timestamp',h.timestamp||new Date().toISOString()],['UserName',h.userName||''],['UserRole',h.userRole||''],['EntryId',h.entryId||''],['EntryCategory',h.entryCategory||''],['ChangedFieldsJSON',h.changedFields?JSON.stringify(h.changedFields):''],['AnnId',h.annId||'']]);
+  var obj=spSet(fm,[['Title',gid()],['LogType',h.type||''],['Text',(h.text||'').slice(0,255)],['Detail',(h.detail||'').slice(0,255)],['User',h.user||''],['Timestamp',h.timestamp||new Date().toISOString()],['UserName',h.userName||''],['UserRole',h.userRole||''],['EntryId',h.entryId||''],['EntryCategory',h.entryCategory||''],['ChangedFieldsJSON',h.changedFields?JSON.stringify(h.changedFields):''],['AnnId',h.annId||''],['DeletedSnapshot',h.deletedSnapshot||'']]);
   return obj;
 }
 
 function spToAudit(item,fm) {
   fm=fm||_fieldMaps['AuditLog']||{};
   var g=function(n){return spVal(item,n,fm);};
-  return {type:g('LogType')||'',text:g('Text')||'',detail:g('Detail')||'',user:g('User')||'',timestamp:g('Timestamp')||'',_spId:item.Id,userName:g('UserName')||'',userRole:g('UserRole')||'',entryId:g('EntryId')||'',entryCategory:g('EntryCategory')||'',changedFields:tryParse(g('ChangedFieldsJSON'),[]),annId:g('AnnId')||'',editedBy:''};
+  return {type:g('LogType')||'',text:g('Text')||'',detail:g('Detail')||'',user:g('User')||'',timestamp:g('Timestamp')||'',_spId:item.Id,userName:g('UserName')||'',userRole:g('UserRole')||'',entryId:g('EntryId')||'',entryCategory:g('EntryCategory')||'',changedFields:tryParse(g('ChangedFieldsJSON'),[]),annId:g('AnnId')||'',deletedSnapshot:g('DeletedSnapshot')||'',editedBy:''};
 }
 
 // === MONTHLY REVIEWS SP MAPPERS ===
@@ -1616,14 +1629,15 @@ var monthlyReviews=[];
 
 function reviewToSP(r){
   var fm=_fieldMaps['MonthlyReviews']||{};
-  return spSet(fm,[['Title',r.id],['ReviewMonth',String(r.month)],['ReviewYear',String(r.year)],['ReviewerInitials',r.reviewerInitials||''],['ReviewerName',r.reviewerName||''],['ReviewerRole',r.reviewerRole||''],['ReviewDate',r.reviewDate||''],['EntryCount',String(r.entryCount||0)],['OpenItems',String(r.openItems||0)],['HighPriorityCount',String(r.highPriority||0)],['CAPACount',String(r.capaCount||0)],['EffReviewsDue',String(r.effReviewsDue||0)],['Comments',r.comments||''],['Timestamp',r.timestamp||new Date().toISOString()]]);
+  return spSet(fm,[['Title',r.id],['ReviewMonth',String(r.month)],['ReviewYear',String(r.year)],['ReviewerInitials',r.reviewerInitials||''],['ReviewerName',r.reviewerName||''],['ReviewerRole',r.reviewerRole||''],['ReviewDate',r.reviewDate||''],['EntryCount',String(r.entryCount||0)],['OpenItems',String(r.openItems||0)],['HighPriorityCount',String(r.highPriority||0)],['CAPACount',String(r.capaCount||0)],['EffReviewsDue',String(r.effReviewsDue||0)],['Comments',r.comments||''],['Timestamp',r.timestamp||new Date().toISOString()],['IsDeleted',r.isDeleted?'Yes':'No'],['DeletedDate',r.deletedDate||null],['DeletedBy',r.deletedBy||'']]);
 }
 
 function spToReview(item,fm){
   fm=fm||_fieldMaps['MonthlyReviews']||{};
   var g=function(n){return spVal(item,n,fm);};
   var rd=g('ReviewDate')||'';if(rd&&rd.indexOf('T')>-1)rd=rd.split('T')[0];
-  return {id:item.Title,_spId:item.Id,month:parseInt(g('ReviewMonth'))||0,year:parseInt(g('ReviewYear'))||0,reviewerInitials:g('ReviewerInitials')||'',reviewerName:g('ReviewerName')||'',reviewerRole:g('ReviewerRole')||'',reviewDate:rd,entryCount:parseInt(g('EntryCount'))||0,openItems:parseInt(g('OpenItems'))||0,highPriority:parseInt(g('HighPriorityCount'))||0,capaCount:parseInt(g('CAPACount'))||0,effReviewsDue:parseInt(g('EffReviewsDue'))||0,comments:g('Comments')||'',timestamp:g('Timestamp')||''};
+  var delFlag=g('IsDeleted')||'';
+  return {id:item.Title,_spId:item.Id,month:parseInt(g('ReviewMonth'))||0,year:parseInt(g('ReviewYear'))||0,reviewerInitials:g('ReviewerInitials')||'',reviewerName:g('ReviewerName')||'',reviewerRole:g('ReviewerRole')||'',reviewDate:rd,entryCount:parseInt(g('EntryCount'))||0,openItems:parseInt(g('OpenItems'))||0,highPriority:parseInt(g('HighPriorityCount'))||0,capaCount:parseInt(g('CAPACount'))||0,effReviewsDue:parseInt(g('EffReviewsDue'))||0,comments:g('Comments')||'',timestamp:g('Timestamp')||'',isDeleted:(delFlag===true||delFlag==='Yes'||delFlag==='true'||delFlag==='1'),deletedDate:g('DeletedDate')||'',deletedBy:g('DeletedBy')||''};
 }
 
 async function spSaveReview(review){
@@ -1665,9 +1679,9 @@ async function loadAllData() {
         spGet('HubUsers')
       ]);
       var spReviews=[];try{spReviews=await spGet('MonthlyReviews');}catch(e){}
-      entries = spEntries.map(function(i){return spToEntry(i,fmE);});
-      announcements = spAnns.map(function(i){return spToAnn(i,fmA);});
-      monthlyReviews = spReviews.map(function(i){return spToReview(i,fmR);});
+      entries = spEntries.map(function(i){return spToEntry(i,fmE);}).filter(function(e){return !e.isDeleted;});
+      announcements = spAnns.map(function(i){return spToAnn(i,fmA);}).filter(function(a){return !a.isDeleted;});
+      monthlyReviews = spReviews.map(function(i){return spToReview(i,fmR);}).filter(function(r){return !r.isDeleted;});
       users = {};
       spUsers.forEach(function(item) {
         users[item.Title] = spToUser(item,fmU);
@@ -1688,23 +1702,31 @@ async function loadAllData() {
         spGet('Announcements',mf),
         spGet('HubUsers',mf)
       ]);
-      // Merge entries
+      // Merge entries (handle soft-delete: remove from active array if marked deleted)
       deltaE.forEach(function(sp){
         var e=spToEntry(sp,fmE);
         var idx=entries.findIndex(function(x){return x.id===e.id;});
-        if(idx>=0)entries[idx]=e;else entries.push(e);
+        if(e.isDeleted){
+          if(idx>=0)entries.splice(idx,1);
+        }else{
+          if(idx>=0)entries[idx]=e;else entries.push(e);
+        }
       });
-      // Merge announcements
+      // Merge announcements (handle soft-delete)
       deltaA.forEach(function(sp){
         var a=spToAnn(sp,fmA);
         var idx=announcements.findIndex(function(x){return x.id===a.id;});
-        if(idx>=0)announcements[idx]=a;else announcements.push(a);
+        if(a.isDeleted){
+          if(idx>=0)announcements.splice(idx,1);
+        }else{
+          if(idx>=0)announcements[idx]=a;else announcements.push(a);
+        }
       });
       // Merge users
       deltaU.forEach(function(sp){users[sp.Title]=spToUser(sp,fmU);});
       users[ADMIN_INI].isAdmin=true;
-      // Monthly reviews (small list, always full)
-      try{var spR=await spGet('MonthlyReviews');monthlyReviews=spR.map(function(i){return spToReview(i,fmR);});}catch(e){}
+      // Monthly reviews (small list, always full) - filter deleted
+      try{var spR=await spGet('MonthlyReviews');monthlyReviews=spR.map(function(i){return spToReview(i,fmR);}).filter(function(r){return !r.isDeleted;});}catch(e){}
       _lastSyncISO=new Date().toISOString();
       if(deltaE.length||deltaA.length||deltaU.length)console.log('Delta sync: +'+deltaE.length+'e +'+deltaA.length+'a +'+deltaU.length+'u');
     }
@@ -1739,7 +1761,7 @@ async function reloadAnnouncements(){
   try{
     var fmA=await discoverFields('Announcements');
     var spAnns=await spGet('Announcements');
-    announcements=spAnns.map(function(i){return spToAnn(i,fmA);});
+    announcements=spAnns.map(function(i){return spToAnn(i,fmA);}).filter(function(a){return !a.isDeleted;});
   }catch(e){console.warn('Announcement reload failed:',e);}
 }
 
@@ -1782,7 +1804,7 @@ async function spSaveUser(ini, userData) {
 
 async function spAddAudit(type, text, detail, extra) {
   extra=extra||{};
-  var h = { type: type, text: text, detail: detail || '', user: me ? me.initials : '??', timestamp: new Date().toISOString(), userName: me ? me.fullName : '', userRole: me ? me.role : '', entryId: extra.entryId || '', entryCategory: extra.entryCategory || '', changedFields: extra.changedFields || [], annId: extra.annId || '' };
+  var h = { type: type, text: text, detail: detail || '', user: me ? me.initials : '??', timestamp: new Date().toISOString(), userName: me ? me.fullName : '', userRole: me ? me.role : '', entryId: extra.entryId || '', entryCategory: extra.entryCategory || '', changedFields: extra.changedFields || [], annId: extra.annId || '', deletedSnapshot: extra.deletedSnapshot || '' };
   hist.unshift(h);
   if (hist.length > 2000) hist = hist.slice(0, 2000);
   await spAdd('AuditLog', auditToSP(h));
@@ -1827,7 +1849,7 @@ function isLead(){return me&&(ELEVATED.includes(me.role)||isAdm());}
 function ul(){return Object.entries(users).map(([i,u])=>({ini:i,name:u.fullName})).sort((a,b)=>a.name.localeCompare(b.name));}
 function canEdit(e){if(!me)return false;if(isAdm())return true;if(['Resolved','Escalated'].includes(e.status))return isLead();return isLead()||e.authorInitials===me.initials;}
 function canDel(e){if(!me)return false;if(isAdm())return true;if(e.status!=='Open')return isLead();return isLead()||e.authorInitials===me.initials;}
-function addH(t,tx,dt,extra){extra=extra||{};var h={type:t,text:tx,detail:dt||'',user:me?me.initials:'??',timestamp:new Date().toISOString(),userName:me?me.fullName:'',userRole:me?me.role:'',entryId:extra.entryId||'',entryCategory:extra.entryCategory||'',changedFields:extra.changedFields||[],annId:extra.annId||''};hist.unshift(h);if(hist.length>2000)hist=hist.slice(0,2000);spAddAudit(t,tx,dt,extra).catch(function(e){console.error('Audit save failed:',e);});}
+function addH(t,tx,dt,extra){extra=extra||{};var h={type:t,text:tx,detail:dt||'',user:me?me.initials:'??',timestamp:new Date().toISOString(),userName:me?me.fullName:'',userRole:me?me.role:'',entryId:extra.entryId||'',entryCategory:extra.entryCategory||'',changedFields:extra.changedFields||[],annId:extra.annId||'',deletedSnapshot:extra.deletedSnapshot||''};hist.unshift(h);if(hist.length>2000)hist=hist.slice(0,2000);spAddAudit(t,tx,dt,extra).catch(function(e){console.error('Audit save failed:',e);});}
 
 // === PUSH NOTIFICATIONS (Browser Notification API) ===
 var _pushEnabled=false;
@@ -2294,17 +2316,53 @@ function editMSR(rid){
 
 async function deleteMSR(rid){
   if(!isAdm()){toast('Admin only');return;}
-  if(!confirm('Delete this monthly review? This cannot be undone.'))return;
   var r=monthlyReviews.find(function(x){return x.id===rid;});
   if(!r)return;
+  var label=MONTHS[r.month]+' '+r.year+' (signed by '+r.reviewerName+' on '+r.reviewDate+')';
+  // Monthly Supervisory Review records are high-risk compliance artifacts.
+  // Require type-to-confirm guardrail.
+  if(!confirm('Delete Monthly Supervisory Review?\n\n'+label+'\n\nMSR records directly support CAP GEN.20316 and COM.04200 compliance. Soft-deleted records are preserved in the audit trail with a full snapshot and can be restored by an administrator, but active MSR deletion is still a significant action.\n\nClick OK to proceed to the next confirmation.'))return;
+  var typed=prompt('To confirm deletion of the '+MONTHS[r.month]+' '+r.year+' Monthly Supervisory Review, type DELETE (all caps) below:');
+  if(typed!=='DELETE'){toast('Deletion cancelled (confirmation not typed correctly)');return;}
+  var snapshot=JSON.stringify(r);
+  var nowIso=new Date().toISOString();
+  r.isDeleted=true;
+  r.deletedDate=nowIso;
+  r.deletedBy=me?me.initials:'';
   monthlyReviews=monthlyReviews.filter(function(x){return x.id!==rid;});
-  if(r._spId){
-    try{await spDelete('MonthlyReviews',r._spId);}catch(e){console.error('SP delete failed:',e);}
-  }else{
-    try{var existing=await spGet('MonthlyReviews',"Title eq '"+rid+"'");if(existing.length>0)await spDelete('MonthlyReviews',existing[0].Id);}catch(e){console.error(e);}
+  addH('delete','Deleted Monthly Supervisory Review: '+label,'Soft-deleted by '+(me?me.fullName:'unknown')+'. Full snapshot preserved in audit. Reviewer was '+r.reviewerName+'.',{entryId:r.id,deletedSnapshot:snapshot});
+  try{
+    await spSaveReview(r);
+  }catch(err){
+    console.error('SP soft-delete failed:',err);
+    toast('Delete saved locally but SP update failed');
   }
-  addH('delete','Deleted monthly review: '+MONTHS[r.month]+' '+r.year,'By admin');
-  renderMonthlyReview();renderDash();toast('Review deleted');
+  renderMonthlyReview();renderDash();
+  toast('MSR deleted (soft delete, restorable)');
+}
+
+async function restoreMSR(rid){
+  if(!isAdm()){toast('Admin only');return;}
+  try{
+    var fmR=await discoverFields('MonthlyReviews');
+    var existing=await spGet('MonthlyReviews',"Title eq '"+rid+"'");
+    if(!existing.length){toast('Review not found in SharePoint');return;}
+    var r=spToReview(existing[0],fmR);
+    if(!r.isDeleted){toast('Review is not deleted');return;}
+    var label=MONTHS[r.month]+' '+r.year+' (signed by '+r.reviewerName+')';
+    if(!confirm('Restore this Monthly Supervisory Review?\n\n'+label))return;
+    r.isDeleted=false;
+    r.deletedDate='';
+    r.deletedBy='';
+    await spUpdate('MonthlyReviews',existing[0].Id,reviewToSP(r));
+    monthlyReviews.push(r);
+    addH('restore','Restored Monthly Supervisory Review: '+label,'Restored by '+(me?me.fullName:'unknown'),{entryId:r.id});
+    renderMonthlyReview();renderDash();renderAud();
+    toast('MSR restored');
+  }catch(err){
+    console.error(err);
+    toast('Restore failed: '+err.message);
+  }
 }
 
 // === AVATAR ===
@@ -3194,7 +3252,47 @@ function addWC(aid){var input=$('wci_'+aid);if(!input)return;var t=input.value.t
 function editAnn(aid){if(!isLead()&&!isAdm()){toast('Leads+ only');return;}var a=announcements.find(x=>x.id===aid);if(!a)return;if(a.annType==='welcome'){var n=prompt('Name:',a.welcomeName||'');if(n===null)return;var r=prompt('Role:',a.welcomeRole||'');if(r===null)return;var t=prompt('Message:',a.text||'');if(t===null)return;a.welcomeName=n;a.welcomeRole=r;a.text=t;addH('edit','Edited welcome for '+n,'');}else{var t2=prompt('Text:',a.text||'');if(t2===null)return;a.text=t2;addH('edit','Edited '+(a.annType||'announcement')+': "'+t2.slice(0,30)+'..."','');}var _ea=announcements.find(function(x){return x.id===aid;});if(_ea)spSaveAnn(_ea).catch(function(e){console.error(e);});renderAnn();toast('Updated');}
 function resolveAnn(aid){if(!isLead()&&!isAdm()){toast('Leads+ only');return;}var a=announcements.find(x=>x.id===aid);if(!a)return;if(!confirm('Resolve this? Moves to resolved section.'))return;a.resolved=true;a.resolvedDate=new Date().toISOString().split('T')[0];a.resolvedBy=me.initials;addH('edit','Resolved: "'+(a.text||a.welcomeName||'').slice(0,30)+'..."','');var _ra=announcements.find(function(x){return x.id===aid;});if(_ra)spSaveAnn(_ra).catch(function(e){console.error(e);});renderAnn();toast('Resolved');}
 function unresolveAnn(aid){if(!isLead()&&!isAdm()){toast('Leads+ only');return;}var a=announcements.find(x=>x.id===aid);if(!a)return;if(!confirm('Reopen this?'))return;a.resolved=false;delete a.resolvedDate;delete a.resolvedBy;addH('edit','Reopened: "'+(a.text||a.welcomeName||'').slice(0,30)+'..."','');var _ua=announcements.find(function(x){return x.id===aid;});if(_ua)spSaveAnn(_ua).catch(function(e){console.error(e);});renderAnn();toast('Reopened');}
-function deleteAnn(aid){if(!isAdm()){toast('Admin only');return;}var a=announcements.find(x=>x.id===aid);if(!a)return;if(!confirm('Delete permanently?'))return;spDeleteAnn(aid).then(function(){toast('Deleted from SharePoint');}).catch(function(e){console.error('SP delete failed:',e);toast('Delete failed');});announcements=announcements.filter(x=>x.id!==aid);addH('delete','Deleted: "'+(a.text||a.welcomeName||'').slice(0,30)+'..."','');renderAnn();toast('Deleted');}
+function deleteAnn(aid){
+  if(!isAdm()){toast('Admin only');return;}
+  var a=announcements.find(x=>x.id===aid);
+  if(!a)return;
+  var label=a.annType==='welcome'?('Welcome: '+(a.welcomeName||'')):a.annType==='mandatory'?('Mandatory: '+(a.text||'').slice(0,50)):(a.text||'').slice(0,50);
+  if(!confirm('Delete this announcement?\n\n'+label+'\n\nThis announcement will be soft-deleted (hidden from views) and preserved in the audit trail with a full snapshot including any acknowledgment roster. An administrator can restore it if needed.'))return;
+  var snapshot=JSON.stringify(a);
+  var nowIso=new Date().toISOString();
+  a.isDeleted=true;
+  a.deletedDate=nowIso;
+  a.deletedBy=me?me.initials:'';
+  announcements=announcements.filter(x=>x.id!==aid);
+  addH('delete','Deleted announcement: "'+label+'"','Soft-deleted by '+(me?me.fullName:'unknown')+'. Full snapshot preserved in audit.',{annId:a.id,deletedSnapshot:snapshot});
+  spSaveAnn(a).catch(function(err){console.error('SP soft-delete failed:',err);toast('Delete saved locally but SP update failed');});
+  renderAnn();
+  toast('Announcement deleted (soft delete, restorable)');
+}
+async function restoreAnn(aid){
+  if(!isAdm()){toast('Admin only');return;}
+  try{
+    var fmA=await discoverFields('Announcements');
+    var existing=await spGet('Announcements',"Title eq '"+aid+"'");
+    if(!existing.length){toast('Announcement not found in SharePoint');return;}
+    var a=spToAnn(existing[0],fmA);
+    if(!a.isDeleted){toast('Announcement is not deleted');return;}
+    var label=a.annType==='welcome'?('Welcome: '+(a.welcomeName||'')):(a.text||'').slice(0,60);
+    if(!confirm('Restore this announcement?\n\n'+label))return;
+    a.isDeleted=false;
+    a.deletedDate='';
+    a.deletedBy='';
+    await spUpdate('Announcements',existing[0].Id,annToSP(a));
+    announcements.push(a);
+    addH('restore','Restored announcement: "'+label+'"','Restored by '+(me?me.fullName:'unknown'),{annId:a.id});
+    renderAnn();
+    renderAud();
+    toast('Announcement restored');
+  }catch(err){
+    console.error(err);
+    toast('Restore failed: '+err.message);
+  }
+}
 function openAnnModal(){annType='standard';setAnnType('standard');$('annText').value='';$('annPri').value='Low';$('annWelcomeName').value='';$('annWelcomeRole').value='';openSheet('annModalBg');}
 function closeAnnModal(){closeSheet('annModalBg');}
 function postAnnouncement(){var t=$('annText').value.trim();if(annType==='welcome'&&!$('annWelcomeName').value.trim()){toast('Enter name');return;}if(!t&&annType!=='welcome'){toast('Enter text');return;}var a={id:gid(),text:t,annType:annType,priority:$('annPri').value,date:new Date().toISOString().split('T')[0],postedBy:me.fullName,postedByIni:me.initials,timestamp:new Date().toISOString()};if(annType==='welcome'){a.welcomeName=$('annWelcomeName').value.trim();a.welcomeRole=$('annWelcomeRole').value.trim();a.comments=[];}if(annType==='mandatory'){a.acknowledged=[me.initials];}announcements.unshift(a);spSaveAnn(a).catch(function(e){console.error('Ann save failed:',e);});pushOnNewAnnouncement(a);addH('add','Announcement ('+annType+'): "'+(t||a.welcomeName||'').slice(0,40)+'..."','');saveAll();closeAnnModal();secOpen.ann=true;renderAnn();if(annType==='welcome'){var sk='rcl7_confetti_seen',sn=ld(sk,{});if(!sn[me.initials])sn[me.initials]=[];sn[me.initials].push(a.id);sv(sk,sn);fireConfetti();}toast(annType==='mandatory'?'Mandatory read posted.':'Posted');}
@@ -3253,19 +3351,130 @@ entries[idx]=en;
 var summary=changedFields.length>0?changedFields.map(function(c){return c.field+': '+c.from+' -> '+c.to;}).join('; '):'Minor edit (no field changes)';
 addH('edit','Edited: '+cat+' ('+en.id+')',summary.slice(0,255),{entryId:en.id,entryCategory:cat,changedFields:changedFields});toast('Updated');}}else{entries.push(en);addH('add','New: '+cat+' - "'+desc.slice(0,35)+'..."','Pri:'+pri+', Dept:'+dept+', Shift:'+sh,{entryId:en.id,entryCategory:cat});toast('Added');var d=new Date(dt+'T00:00:00');if(d.getMonth()!==curMonth){curMonth=d.getMonth();rMT();}}if(en.status==='Escalated')nLeads('escalation','Escalation: '+cat,desc.slice(0,70)+' ('+rep+')',en.id);if(en.followUp==='Yes'&&en.followUpAssign){if(en.followUpAssign!==me.initials)pNot(en.followUpAssign,'followup','Follow-up assigned',cat+': '+desc.slice(0,70),en.id);nLeads('followup','F/U: '+ln(en.followUpAssign),cat+': '+desc.slice(0,50),en.id);}spSaveEntry(en).then(function(){renderAll();}).catch(function(e){toast('Save failed');console.error(e);});pushOnNewEntry(en);closeEntryModal();renderAll();}
 function editEntry(id){var e=entries.find(x=>x.id===id);if(!e)return;if(!canEdit(e)){toast('Cannot edit');return;}openEntryModal(id);}
-function deleteEntry(id){var e=entries.find(x=>x.id===id);if(!e)return;if(!canDel(e)){toast('Cannot delete');return;}if(!confirm('Delete?\n'+e.category+': '+e.description.slice(0,50)))return;entries=entries.filter(x=>x.id!==id);addH('delete','Deleted: '+e.category,'');spDeleteEntry(id).catch(function(e){console.error(e);});renderAll();toast('Deleted');}
+function deleteEntry(id){
+  var e=entries.find(x=>x.id===id);
+  if(!e)return;
+  if(!canDel(e)){toast('Cannot delete');return;}
+  if(!confirm('Delete entry?\n\n'+e.category+': '+(e.description||'').slice(0,80)+'\n\nThis entry will be soft-deleted (hidden from normal views) and preserved in the audit trail. An administrator can restore it if needed.'))return;
+  var snapshot=JSON.stringify(e);
+  var nowIso=new Date().toISOString();
+  var deletedBy=me?me.initials:'';
+  // Mark as soft-deleted and update SP
+  e.isDeleted=true;
+  e.deletedDate=nowIso;
+  e.deletedBy=deletedBy;
+  e.lastModified=nowIso;
+  // Remove from active local array so UI hides it (Audit view reloads from SP)
+  entries=entries.filter(x=>x.id!==id);
+  // Log with full snapshot
+  addH('delete','Deleted: '+(e.category||'Entry')+' - "'+((e.description||'').slice(0,60))+(((e.description||'').length>60)?'...':'')+'"','Soft-deleted by '+(me?me.fullName:'unknown')+'. Full snapshot preserved in audit.',{entryId:e.id,entryCategory:e.category,deletedSnapshot:snapshot});
+  // Persist soft-delete to SP
+  spSaveEntry(e).catch(function(err){console.error('SP soft-delete failed:',err);toast('Delete saved locally but SP update failed');});
+  renderAll();
+  toast('Entry deleted (soft delete, restorable)');
+}
+
+async function restoreEntry(id){
+  if(!isAdm()){toast('Admin only');return;}
+  try{
+    var fmE=await discoverFields('ShiftEntries');
+    var existing=await spGet('ShiftEntries',"Title eq '"+id+"'");
+    if(!existing.length){toast('Entry not found in SharePoint');return;}
+    var e=spToEntry(existing[0],fmE);
+    if(!e.isDeleted){toast('Entry is not deleted');return;}
+    if(!confirm('Restore this entry?\n\n'+e.category+': '+(e.description||'').slice(0,80)))return;
+    e.isDeleted=false;
+    e.deletedDate='';
+    e.deletedBy='';
+    e.lastModified=new Date().toISOString();
+    await spUpdate('ShiftEntries',existing[0].Id,entryToSP(e));
+    entries.push(e);
+    addH('restore','Restored: '+(e.category||'Entry')+' - "'+((e.description||'').slice(0,60))+'"','Restored by '+(me?me.fullName:'unknown'),{entryId:e.id,entryCategory:e.category});
+    renderAll();
+    renderAud();
+    toast('Entry restored');
+  }catch(err){
+    console.error(err);
+    toast('Restore failed: '+err.message);
+  }
+}
 
 // === AUDIT ===
+// Helper: format a deleted snapshot as a human-readable preview
+function fmtDeletedSnapshot(snapshotStr, isEntry, isAnn, isReview){
+  if(!snapshotStr)return '';
+  var obj;
+  try{obj=JSON.parse(snapshotStr);}catch(e){return '<div style="font-size:9px;color:var(--red);font-style:italic;">Could not parse snapshot JSON: '+esc(e.message)+'</div>';}
+  var pairs=[];
+  // Shift entry
+  if(obj.date!==undefined||obj.category!==undefined){
+    if(obj.date)pairs.push(['Date',obj.date+(obj.time?' '+obj.time:'')]);
+    if(obj.shift)pairs.push(['Shift',obj.shift]);
+    if(obj.department)pairs.push(['Department',obj.department]);
+    if(obj.reportedBy)pairs.push(['Reported By',obj.reportedBy]);
+    if(obj.authorInitials)pairs.push(['Author',obj.authorInitials]);
+    if(obj.category)pairs.push(['Category',obj.category]);
+    if(obj.priority)pairs.push(['Priority',obj.priority]);
+    if(obj.status)pairs.push(['Status',obj.status]);
+    if(obj.description)pairs.push(['Description',obj.description]);
+    if(obj.action)pairs.push(['Action Taken',obj.action]);
+    if(obj.followUp==='Yes')pairs.push(['Follow-Up','Yes - '+(obj.followUpAssign||'')]);
+    if(obj.resolvedBy)pairs.push(['Resolved By',obj.resolvedBy+(obj.resDate?' on '+obj.resDate:'')]);
+    if(obj.notes)pairs.push(['Notes',obj.notes]);
+    if(obj.actionType)pairs.push(['Action Type',obj.actionType]);
+    if(obj.instrument)pairs.push(['Instrument',obj.instrument]);
+    if(obj.reagentLot)pairs.push(['Reagent Lot',obj.reagentLot]);
+    if(obj.rootCause)pairs.push(['Root Cause',obj.rootCause]);
+    if(obj.attachments&&obj.attachments.length)pairs.push(['Attachments',obj.attachments.length+' image(s)']);
+  }
+  // Announcement
+  else if(obj.annType!==undefined){
+    pairs.push(['Type',(obj.annType||'standard').toUpperCase()]);
+    if(obj.welcomeName)pairs.push(['For',obj.welcomeName+(obj.welcomeRole?' ('+obj.welcomeRole+')':'')]);
+    if(obj.text)pairs.push(['Text',obj.text]);
+    if(obj.postedBy)pairs.push(['Posted By',obj.postedBy+(obj.date?' on '+obj.date:'')]);
+    if(obj.priority)pairs.push(['Priority',obj.priority]);
+    if(obj.acknowledged&&obj.acknowledged.length)pairs.push(['Acknowledged By',obj.acknowledged.join(', ')+' ('+obj.acknowledged.length+' user'+(obj.acknowledged.length!==1?'s':'')+')']);
+    if(obj.comments&&obj.comments.length)pairs.push(['Comments',obj.comments.length+' welcome message(s)']);
+    if(obj.resolved)pairs.push(['Resolved',(obj.resolvedDate||'')+' by '+(obj.resolvedBy||'')]);
+  }
+  // Monthly review
+  else if(obj.month!==undefined&&obj.reviewerInitials!==undefined){
+    pairs.push(['Period',(typeof obj.month==='number'?['January','February','March','April','May','June','July','August','September','October','November','December'][obj.month]:obj.month)+' '+obj.year]);
+    if(obj.reviewerName)pairs.push(['Reviewer',obj.reviewerName+' ('+obj.reviewerInitials+', '+obj.reviewerRole+')']);
+    if(obj.reviewDate)pairs.push(['Review Date',obj.reviewDate]);
+    pairs.push(['Entry Count',String(obj.entryCount)]);
+    pairs.push(['Open Items',String(obj.openItems)]);
+    pairs.push(['High Priority',String(obj.highPriority)]);
+    pairs.push(['CAPA Count',String(obj.capaCount)]);
+    if(obj.effReviewsDue)pairs.push(['Eff. Reviews Due',String(obj.effReviewsDue)]);
+    if(obj.comments)pairs.push(['Review Comments',obj.comments]);
+  }
+  // Fallback
+  else{
+    Object.keys(obj).forEach(function(k){if(obj[k]!==null&&obj[k]!==''&&typeof obj[k]!=='object')pairs.push([k,String(obj[k])]);});
+  }
+  return pairs.map(function(p){
+    var v=String(p[1]||'');var vLong=v.length>200;
+    return '<div class="aud-snap-row"><div class="aud-snap-key">'+esc(p[0])+'</div><div class="aud-snap-val">'+(vLong?esc(v.slice(0,200))+'<span style="color:var(--g400);"> ... ('+(v.length-200)+' more chars)</span>':esc(v))+'</div></div>';
+  }).join('');
+}
+
 function renderAudit(){
   var sel=$('audMonth');
   if(!sel.options.length)sel.innerHTML='<option value="-1">All</option>'+MONTHS.map((m,i)=>'<option value="'+i+'"'+(i===curMonth?' selected':'')+'>'+m+'</option>').join('');
+  // Show the "Show deleted" toggle only to admins
+  var delWrap=$('audShowDelWrap');if(delWrap)delWrap.style.display=isAdm()?'inline-flex':'none';
+  var showDel=($('audShowDel')&&$('audShowDel').checked)||false;
   var mi=parseInt(sel.value);
   var typeFilter=($('audType')?$('audType').value:'')||'';
   var searchQ=($('audSearch')?$('audSearch').value:'')||'';
   var f=hist;
+  // If "Show deleted" is OFF, still show delete/restore audit rows but don't show their snapshot previews
+  // (The audit row itself is always visible - this toggle only affects snapshot visibility)
   if(mi>=0)f=f.filter(h=>{var d=new Date(h.timestamp);return d.getMonth()===mi&&d.getFullYear()===curYear;});
   if(typeFilter)f=f.filter(h=>h.type===typeFilter);
-  if(searchQ){var q=searchQ.toLowerCase();f=f.filter(h=>{var haystack=((h.text||'')+' '+(h.detail||'')+' '+(h.user||'')+' '+(h.userName||'')+' '+(h.entryId||'')+' '+(h.entryCategory||'')).toLowerCase();return haystack.indexOf(q)>=0;});}
+  if(searchQ){var q=searchQ.toLowerCase();f=f.filter(h=>{var haystack=((h.text||'')+' '+(h.detail||'')+' '+(h.user||'')+' '+(h.userName||'')+' '+(h.entryId||'')+' '+(h.entryCategory||'')+' '+(h.deletedSnapshot||'')).toLowerCase();return haystack.indexOf(q)>=0;});}
   $('audCount').textContent=f.length;
   var g={};f.forEach(h=>{var dk=h.timestamp.split('T')[0];if(!g[dk])g[dk]=[];g[dk].push(h);});
   var ds=Object.keys(g).sort().reverse(),c=$('audContent');
@@ -3278,6 +3487,8 @@ function renderAudit(){
       var changes=h.changedFields||[];
       var hasChanges=changes.length>0;
       var changeId='aud-chg-'+dk+'-'+hi;
+      var snapId='aud-snap-'+dk+'-'+hi;
+      var rawId='aud-raw-'+dk+'-'+hi;
       // Build change detail HTML
       var changeHtml='';
       if(hasChanges){
@@ -3288,8 +3499,31 @@ function renderAudit(){
           }).join('')+
           '</div>';
       }
+      // DELETE snapshot preview
+      var snapHtml='',hasSnap=(h.type==='delete'&&h.deletedSnapshot);
+      if(hasSnap){
+        var preview=fmtDeletedSnapshot(h.deletedSnapshot);
+        snapHtml='<div class="aud-snapshot" id="'+snapId+'">'+
+          '<div style="font-size:8px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;display:flex;align-items:center;gap:4px;"><span class="mi mi-xs">description</span> Deleted Record Snapshot</div>'+
+          '<div class="aud-snap-table">'+preview+'</div>'+
+          '<div style="margin-top:6px;display:flex;gap:6px;align-items:center;"><button class="btn btn-s" style="padding:2px 8px;font-size:9px;" onclick="toggleAudRaw(\''+rawId+'\',this)"><span class="mi mi-xs">code</span> View raw JSON</button></div>'+
+          '<pre class="aud-raw" id="'+rawId+'" style="display:none;">'+esc(h.deletedSnapshot)+'</pre>'+
+          '</div>';
+      }
+      // Restore button (admin only, delete type only)
+      var restoreBtn='';
+      if(isAdm()&&h.type==='delete'&&h.entryId){
+        // Determine which restore function based on record type
+        var restoreFn='restoreEntry';
+        if(h.deletedSnapshot){
+          try{var snap=JSON.parse(h.deletedSnapshot);if(snap.annType!==undefined)restoreFn='restoreAnn';else if(snap.month!==undefined&&snap.reviewerInitials!==undefined)restoreFn='restoreMSR';}catch(e){}
+        }else if(h.annId){restoreFn='restoreAnn';}
+        restoreBtn='<button class="btn btn-s" style="padding:2px 8px;font-size:9px;background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-bdr);margin-left:6px;" onclick="'+restoreFn+'(\''+escJS(h.entryId)+'\')"><span class="mi mi-xs">restore</span> Restore</button>';
+      }else if(isAdm()&&h.type==='delete'&&h.annId){
+        restoreBtn='<button class="btn btn-s" style="padding:2px 8px;font-size:9px;background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-bdr);margin-left:6px;" onclick="restoreAnn(\''+escJS(h.annId)+'\')"><span class="mi mi-xs">restore</span> Restore</button>';
+      }
       // Entry link
-      var entryLink=h.entryId?'<span class="aud-entry-link" onclick="goToAuditEntry(\''+escJS(h.entryId)+'\')"><span class="mi mi-xs">open_in_new</span> '+esc(h.entryId.slice(0,12))+'</span>':'';
+      var entryLink=(h.entryId&&h.type!=='delete')?'<span class="aud-entry-link" onclick="goToAuditEntry(\''+escJS(h.entryId)+'\')"><span class="mi mi-xs">open_in_new</span> '+esc(h.entryId.slice(0,12))+'</span>':(h.entryId?'<span style="font-size:9px;color:var(--g400);">'+esc(h.entryId.slice(0,12))+'</span>':'');
       // Category badge
       var catBadge=h.entryCategory?'<span style="font-size:8px;background:var(--teal-bg);color:var(--teal);padding:1px 5px;border-radius:3px;font-weight:600;">'+esc(h.entryCategory)+'</span>':'';
       // User info
@@ -3312,8 +3546,11 @@ function renderAudit(){
             '<span style="font-weight:600;color:var(--navy);">'+userDisplay+'</span>'+roleDisplay+
             entryLink+
             (hasChanges?'<button class="aud-toggle-btn" onclick="toggleAudChanges(\''+changeId+'\',this)"><span class="mi mi-xs">compare_arrows</span> '+changes.length+' change'+(changes.length!==1?'s':'')+'</button>':'')+
+            (hasSnap?'<button class="aud-toggle-btn" onclick="toggleAudSnap(\''+snapId+'\',this)"><span class="mi mi-xs">description</span> View snapshot</button>':'')+
+            restoreBtn+
           '</div>'+
           changeHtml+
+          snapHtml+
         '</div>'+
         '<div class="aud-actions">'+
           (isAdm()?'<button class="aud-edit-btn" onclick="eAE('+hIdx+')"><span class="mi mi-xs">edit</span></button>':'')
@@ -3322,6 +3559,8 @@ function renderAudit(){
     }).join('')+'</div></div>';
   }).join('');
 }
+function toggleAudSnap(id,btn){var el=$(id);if(!el)return;el.classList.toggle('show');if(btn)btn.innerHTML=el.classList.contains('show')?'<span class="mi mi-xs">expand_less</span> Hide snapshot':'<span class="mi mi-xs">description</span> View snapshot';}
+function toggleAudRaw(id,btn){var el=$(id);if(!el)return;var on=el.style.display==='none';el.style.display=on?'block':'none';if(btn)btn.innerHTML=on?'<span class="mi mi-xs">visibility_off</span> Hide raw JSON':'<span class="mi mi-xs">code</span> View raw JSON';}
 function toggleAudChanges(id,btn){var el=$(id);if(!el)return;el.classList.toggle('show');if(btn)btn.innerHTML=el.classList.contains('show')?'<span class="mi mi-xs">expand_less</span> Hide':'<span class="mi mi-xs">compare_arrows</span> '+((el.querySelectorAll('.aud-change-row')||[]).length)+' changes';}
 function goToAuditEntry(eid){var e=entries.find(function(x){return x.id===eid;});if(!e){toast('Entry not found');return;}switchPage('log');var d=new Date(e.date+'T00:00:00');if(d.getMonth()!==curMonth){curMonth=d.getMonth();rMT();}if(e.status==='Resolved')secOpen.res=true;highlightId=eid;renderLog();setTimeout(function(){var row=document.querySelector('tr[data-eid="'+eid+'"]');if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.classList.add('row-hl');setTimeout(function(){row.classList.remove('row-hl');highlightId=null;},4000);}},200);}
 function eAE(i){
@@ -3697,12 +3936,18 @@ async function getExportEntries(){
   var from=$('expFrom').value,to=$('expTo').value,dept=$('expDept').value;
   var shift=$('expShift').value,cat=$('expCat').value,pri=$('expPri').value,status=$('expStatus').value;
   // Check if requested range extends beyond what's loaded in memory
-  // Fetch directly from SP for the exact range to ensure completeness
+  // Note: ShiftEntries.Date is a text column (ISO yyyy-mm-dd), so we fetch
+  // all and filter client-side. Server-side ge/le operators are unreliable
+  // on text columns in SharePoint REST and produce 500 errors.
   try{
     var fmE=await discoverFields('ShiftEntries');
-    var filter="Date ge '"+from+"' and Date le '"+to+"'";
-    var spEntries=await spGet('ShiftEntries',filter);
-    var rangeEntries=spEntries.map(function(i){return spToEntry(i,fmE);});
+    var spEntries=await spGet('ShiftEntries');
+    var rangeEntries=spEntries.map(function(i){return spToEntry(i,fmE);})
+      .filter(function(e){
+        if(!e||e.isDeleted)return false;
+        if(!e.date)return false;
+        return e.date>=from&&e.date<=to;
+      });
     // Also merge into local cache
     rangeEntries.forEach(function(e){
       var idx=entries.findIndex(function(x){return x.id===e.id;});
@@ -3710,8 +3955,8 @@ async function getExportEntries(){
     });
     return rangeEntries.filter(function(e){
       if(dept&&(e.department||'General')!==dept)return false;
-      if(shift&&e.shift!==shift)return false;
-      if(cat&&e.category!==cat)return false;
+      if(shift&&mapLegacyShift(e.shift)!==shift)return false;
+      if(cat&&e.category!==cat&&mapLegacyCategory(e.category)!==cat)return false;
       if(pri&&e.priority!==pri)return false;
       if(status&&e.status!==status)return false;
       return true;
