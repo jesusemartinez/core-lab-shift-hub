@@ -4881,30 +4881,126 @@ function renderOTTracking(){
     if(a.data.h90!==b.data.h90)return a.data.h90-b.data.h90;
     return a.data.h365-b.data.h365;
   });
-  var max90=Math.max.apply(null,sorted.map(function(r){return r.data.h90;}).concat([1]));
+  var max90=Math.max.apply(null,sorted.map(function(r){return r.data.h90;}).concat([0]));
+  var max365=Math.max.apply(null,sorted.map(function(r){return r.data.h365;}).concat([0]));
+  var allZero=max90===0&&max365===0;
 
-  var html='<div style="display:grid;grid-template-columns:2fr 2fr 2fr 1.2fr;gap:10px;padding:6px 6px 8px;border-bottom:1px solid var(--g200);font-size:10px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.04em;">';
-  html+='<div>Staff</div><div>90-day</div><div>1-year</div><div style="text-align:right;">Last OT</div>';
+  // Empty state when no OT in entire lab
+  if(allZero){
+    var html='<div style="padding:24px 16px;text-align:center;">';
+    html+='<span class="mi" style="font-size:32px;color:var(--g300);display:block;margin-bottom:8px;">sentiment_satisfied</span>';
+    html+='<div style="font-size:12px;font-weight:700;color:var(--g600);margin-bottom:4px;">No overtime worked in the past year</div>';
+    html+='<div style="font-size:11px;color:var(--g500);">All '+sorted.length+' bench-eligible staff are at 0 hours. Rankings will appear here once OT is recorded.</div>';
+    html+='</div>';
+    html+='<div style="margin-top:8px;padding:10px 12px;background:var(--g50);border:1px solid var(--g200);border-radius:var(--r);font-size:11px;color:var(--g600);line-height:1.5;"><strong style="color:var(--navy);">Fairness policy:</strong> Overtime is offered to qualified staff with the lowest recent OT totals first, per SEIU Article 10.2(a). When totals are equal, seniority is the tiebreaker.</div>';
+    container.innerHTML=html;
+    // Still render the name rows so leads can see who's eligible
+    var rosterHtml='<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--g200);"><div style="font-size:10px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">Bench-eligible roster ('+sorted.length+')</div>';
+    rosterHtml+='<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+    sorted.forEach(function(r){
+      rosterHtml+='<div style="background:var(--white);border:1px solid var(--g200);border-radius:var(--r);padding:5px 10px;font-size:11px;"><strong style="color:var(--navy);">'+esc(r.name)+'</strong> <span style="color:var(--g400);font-size:10px;">'+esc(r.role||'')+'</span></div>';
+    });
+    rosterHtml+='</div></div>';
+    container.innerHTML+=rosterHtml;
+    return;
+  }
+
+  // Column headers
+  var html='<div style="display:grid;grid-template-columns:minmax(160px,2.2fr) 2fr 2fr minmax(110px,1.2fr);gap:14px;padding:0 8px 10px;border-bottom:2px solid var(--g200);font-size:10px;font-weight:800;color:var(--g600);text-transform:uppercase;letter-spacing:.06em;">';
+  html+='<div>Staff</div><div>90-day rolling</div><div>1-year rolling</div><div style="text-align:right;">Last OT</div>';
   html+='</div>';
+
+  // Rows
+  html+='<div style="display:flex;flex-direction:column;">';
   sorted.forEach(function(r,idx){
     var d=r.data;
-    var isTop=idx<3&&d.h90<max90;
-    var barColor=d.h90===0?'var(--g200)':d.h90<max90*0.33?'var(--green)':d.h90<max90*0.66?'var(--amber)':'var(--red)';
-    var bar90=max90>0?Math.round(d.h90/max90*100):0;
-    var rank=idx===0?'<span class="ot-rank">★ 1st</span>':idx===1?'<span class="ot-rank">2nd</span>':idx===2?'<span class="ot-rank">3rd</span>':'';
-    html+='<div class="ot-row'+(isTop?' top-candidate':'')+'">';
-    html+='<div><div class="ot-name">'+esc(r.name)+rank+'</div><div class="ot-name-role">'+esc(r.role||'')+'</div></div>';
-    html+='<div class="ot-bar-wrap"><div class="ot-bar-val" style="color:'+barColor+';">'+d.h90.toFixed(1)+'h <span style="font-weight:500;color:var(--g400);font-size:10px;">('+d.c90+' shifts)</span></div><div class="ot-bar"><div class="ot-bar-fill" style="background:'+barColor+';width:'+bar90+'%;"></div></div></div>';
-    html+='<div class="ot-bar-wrap"><div class="ot-bar-val" style="color:var(--g600);">'+d.h365.toFixed(1)+'h <span style="font-weight:500;color:var(--g400);font-size:10px;">('+d.c365+' shifts)</span></div><div class="ot-bar"><div class="ot-bar-fill" style="background:var(--g400);width:'+(d.h365>0?Math.round(d.h365/Math.max(...sorted.map(function(x){return x.data.h365;}),1)*100):0)+'%;"></div></div></div>';
-    if(d.lastOT){
-      var lastD=new Date(d.lastOT+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
-      html+='<div class="ot-last"><div style="font-weight:700;color:var(--g700);">'+esc(lastD)+'</div>'+(d.lastReason?'<div>'+esc(d.lastReason.slice(0,16))+'</div>':'')+'</div>';
+    var isTop=idx<3;
+    // Rank badge
+    var rankHtml='';
+    if(idx===0)rankHtml='<span style="display:inline-flex;align-items:center;gap:2px;background:var(--teal);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;margin-left:6px;">★ NEXT UP</span>';
+    else if(idx===1)rankHtml='<span style="display:inline-flex;align-items:center;background:var(--teal-bg);color:var(--teal);font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;margin-left:6px;border:1px solid var(--teal-bdr);">2ND</span>';
+    else if(idx===2)rankHtml='<span style="display:inline-flex;align-items:center;background:var(--teal-bg);color:var(--teal);font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;margin-left:6px;border:1px solid var(--teal-bdr);">3RD</span>';
+
+    // Row background: subtle left border + faint tint for top 3, plain otherwise
+    var rowStyle=isTop
+      ? 'background:rgba(0,121,107,.04);border-left:3px solid var(--teal);padding:12px 12px 12px 10px;'
+      : 'padding:12px 13px;border-left:3px solid transparent;';
+
+    // 90-day bar color (only used if value > 0)
+    var bar90Color='var(--g200)';
+    if(d.h90>0){
+      bar90Color=d.h90<max90*0.34?'var(--teal)':d.h90<max90*0.67?'var(--amber)':'var(--red)';
+    }
+    var bar90Pct=max90>0?Math.round(d.h90/max90*100):0;
+    var bar365Pct=max365>0?Math.round(d.h365/max365*100):0;
+
+    // PRIMARY VALUE STYLING — always dark, high-contrast, independent of bar color
+    var h90Color=d.h90===0?'var(--g400)':'var(--navy)';// dark navy for non-zero; muted gray for zero
+    var h365Color=d.h365===0?'var(--g400)':'var(--navy)';
+
+    html+='<div style="'+rowStyle+'display:grid;grid-template-columns:minmax(160px,2.2fr) 2fr 2fr minmax(110px,1.2fr);gap:14px;align-items:center;border-bottom:1px solid var(--g100);">';
+
+    // Column 1: Name
+    html+='<div>';
+    html+='<div style="font-size:13px;font-weight:800;color:var(--navy);display:flex;align-items:center;flex-wrap:wrap;gap:2px;">'+esc(r.name)+rankHtml+'</div>';
+    html+='<div style="font-size:10px;font-weight:600;color:var(--g500);margin-top:2px;">'+esc(r.role||'')+'</div>';
+    html+='</div>';
+
+    // Column 2: 90-day
+    html+='<div>';
+    html+='<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:5px;">';
+    html+='<span style="font-size:16px;font-weight:800;color:'+h90Color+';font-variant-numeric:tabular-nums;">'+d.h90.toFixed(1)+'h</span>';
+    html+='<span style="font-size:11px;color:var(--g500);font-weight:600;">'+d.c90+' shift'+(d.c90===1?'':'s')+'</span>';
+    html+='</div>';
+    if(max90>0){
+      html+='<div style="height:6px;background:var(--g100);border-radius:3px;overflow:hidden;"><div style="height:100%;width:'+bar90Pct+'%;background:'+bar90Color+';border-radius:3px;transition:width .4s ease;"></div></div>';
     }else{
-      html+='<div class="ot-last" style="font-style:italic;color:var(--g300);">Never</div>';
+      html+='<div style="height:6px;background:var(--g100);border-radius:3px;"></div>';
     }
     html+='</div>';
+
+    // Column 3: 1-year
+    html+='<div>';
+    html+='<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:5px;">';
+    html+='<span style="font-size:16px;font-weight:800;color:'+h365Color+';font-variant-numeric:tabular-nums;">'+d.h365.toFixed(1)+'h</span>';
+    html+='<span style="font-size:11px;color:var(--g500);font-weight:600;">'+d.c365+' shift'+(d.c365===1?'':'s')+'</span>';
+    html+='</div>';
+    if(max365>0){
+      html+='<div style="height:6px;background:var(--g100);border-radius:3px;overflow:hidden;"><div style="height:100%;width:'+bar365Pct+'%;background:var(--g500);border-radius:3px;transition:width .4s ease;"></div></div>';
+    }else{
+      html+='<div style="height:6px;background:var(--g100);border-radius:3px;"></div>';
+    }
+    html+='</div>';
+
+    // Column 4: Last OT
+    html+='<div style="text-align:right;">';
+    if(d.lastOT){
+      var lastD=new Date(d.lastOT+'T12:00:00');
+      var daysSince=Math.round((today-lastD)/86400000);
+      var dateStr=lastD.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      html+='<div style="font-size:12px;font-weight:700;color:var(--navy);">'+esc(dateStr)+'</div>';
+      html+='<div style="font-size:10px;color:var(--g500);font-weight:600;">'+daysSince+' day'+(daysSince===1?'':'s')+' ago</div>';
+      if(d.lastReason){
+        html+='<div style="font-size:9px;color:var(--g400);margin-top:2px;font-style:italic;" title="'+esc(d.lastReason)+'">'+esc(d.lastReason.slice(0,24))+(d.lastReason.length>24?'…':'')+'</div>';
+      }
+    }else{
+      html+='<div style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--g100);border-radius:999px;font-size:10px;font-weight:700;color:var(--g500);">';
+      html+='<span class="mi mi-xs" style="font-size:12px;">remove</span> None';
+      html+='</div>';
+    }
+    html+='</div>';
+
+    html+='</div>';
   });
-  html+='<div style="margin-top:10px;padding:8px 10px;background:var(--teal-bg);border-radius:var(--r);font-size:10px;color:var(--g600);line-height:1.5;"><strong style="color:var(--navy);">Fairness guide:</strong> Offer OT preferentially to staff at the top of this list per SEIU Article 10.2(a). Top 3 highlighted.</div>';
+  html+='</div>';
+
+  // Fairness guide with stronger visual anchor
+  html+='<div style="margin-top:14px;padding:12px 14px;background:linear-gradient(135deg,rgba(0,121,107,.08),rgba(0,121,107,.02));border:1px solid var(--teal-bdr);border-radius:var(--r);display:flex;gap:10px;align-items:flex-start;">';
+  html+='<span class="mi" style="color:var(--teal);font-size:20px;flex-shrink:0;">balance</span>';
+  html+='<div style="font-size:11px;color:var(--g700);line-height:1.55;">';
+  html+='<strong style="color:var(--navy);">Fairness guide:</strong> Offer overtime to staff at the top of this list first, per SEIU Article 10.2(a). When 90-day totals are equal, 1-year totals break the tie; when both are equal, seniority governs. The <strong style="color:var(--teal);">NEXT UP</strong> staff member has the lowest recent OT and should be contacted first.';
+  html+='</div></div>';
+
   container.innerHTML=html;
 }
 
