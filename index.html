@@ -323,6 +323,50 @@ select:focus,input[type="text"]:focus,input[type="date"]:focus,input[type="time"
 .chart-box{position:relative;width:100%;height:220px;}
 .chart-box.tall{height:280px;}
 
+/* ═══ BULK ACTIONS ═══ */
+.bulk-cb{width:16px;height:16px;cursor:pointer;accent-color:var(--teal);flex-shrink:0;}
+.bulk-col{width:38px;text-align:center;padding-left:12px!important;padding-right:6px!important;}
+.sec-hdr .bulk-cb{margin-right:6px;vertical-align:middle;}
+tr.bulk-selected{background:rgba(0,121,107,.07)!important;outline:2px solid var(--teal-bdr);outline-offset:-2px;}
+tr.bulk-selected td{position:relative;}
+tr.cap-incomplete-row td:first-child+td{box-shadow:inset 3px 0 0 #fbbf24;}
+tr.cap-incomplete-row:hover td:first-child+td{box-shadow:inset 3px 0 0 #f59e0b;}
+
+/* Comment thread */
+.comment-bubble{background:var(--white);border:1px solid var(--g200);border-radius:var(--rl);padding:10px 12px;margin-bottom:8px;box-shadow:var(--shadow-1);position:relative;}
+.comment-bubble.mine{background:#e0f2f1;border-color:var(--teal-bdr);margin-left:32px;}
+.comment-bubble.deleted{opacity:.55;font-style:italic;color:var(--g500);background:var(--g50);}
+.comment-head{display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:10px;}
+.comment-author{font-weight:700;color:var(--navy);}
+.comment-role{color:var(--g400);font-size:9px;}
+.comment-time{color:var(--g400);font-size:9px;margin-left:auto;font-family:'JetBrains Mono',monospace;}
+.comment-text{font-size:12px;line-height:1.5;color:var(--g900);white-space:pre-wrap;word-wrap:break-word;}
+.comment-del{position:absolute;top:6px;right:6px;opacity:0;width:22px;height:22px;border-radius:50%;background:transparent;color:var(--g400);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s,background .15s,color .15s;}
+.comment-bubble:hover .comment-del{opacity:1;}
+.comment-del:hover{background:var(--red-bg);color:var(--red);}
+.comment-empty{text-align:center;padding:32px 16px;color:var(--g400);font-size:11px;}
+.comment-empty .mi{font-size:36px;display:block;margin-bottom:6px;color:var(--g200);}
+tr.row-selected{background:#e0f2f1!important;box-shadow:inset 4px 0 0 var(--teal);}
+tr.row-selected td{background:rgba(224,242,241,.6);}
+.mob-log-card.row-selected{background:#e0f2f1;box-shadow:0 0 0 2px var(--teal);border-color:var(--teal);}
+
+.bulk-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--navy);color:var(--white);padding:10px 14px;border-radius:999px;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;gap:10px;z-index:250;transition:transform .3s cubic-bezier(.2,.8,.2,1);max-width:calc(100vw - 40px);font-size:12px;font-weight:600;}
+.bulk-bar.show{transform:translateX(-50%) translateY(0);}
+.bulk-bar .count{background:var(--teal);padding:4px 10px;border-radius:999px;font-weight:800;font-size:11px;}
+.bulk-bar button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:var(--white);padding:6px 12px;border-radius:999px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:inherit;transition:background .15s,border-color .15s;}
+.bulk-bar button:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.4);}
+.bulk-bar button.b-green{background:rgba(46,125,50,.4);border-color:rgba(46,125,50,.8);}
+.bulk-bar button.b-green:hover{background:rgba(46,125,50,.6);}
+.bulk-bar button.b-amber{background:rgba(230,160,0,.4);border-color:rgba(230,160,0,.8);}
+.bulk-bar button.b-amber:hover{background:rgba(230,160,0,.6);}
+.bulk-bar button.b-red{background:rgba(198,40,40,.4);border-color:rgba(198,40,40,.8);}
+.bulk-bar button.b-red:hover{background:rgba(198,40,40,.6);}
+.bulk-bar button.b-clear{background:transparent;border-color:rgba(255,255,255,.3);}
+@media(max-width:600px){
+  .bulk-bar{font-size:11px;padding:8px 12px;gap:6px;bottom:80px;flex-wrap:wrap;justify-content:center;}
+  .bulk-bar button{padding:5px 10px;font-size:10px;}
+}
+
 /* Avatar */
 .av{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700;position:relative;background:var(--navy-l);color:var(--white);overflow:hidden;flex-shrink:0;}
 .av img{width:100%;height:100%;object-fit:cover;}
@@ -1336,6 +1380,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
       <div class="ctrl-group ctrl-shift"><label>Shift</label><select id="fShift"><option value="">All</option><option>Morning</option><option>Evening</option><option>Night</option></select></div>
       <div class="ctrl-group ctrl-cat"><label>Category</label><select id="fCat"><option value="">All</option><option>QC Issue</option><option>Instrument</option><option>Supply</option><option>Safety</option><option>Process</option><option>Patient Sample</option><option>Training</option><option>Administrative</option><option>General</option></select></div>
       <div class="ctrl-group ctrl-pri"><label>Priority</label><select id="fPri"><option value="">All</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+      <div class="ctrl-group ctrl-presets" style="position:relative;"><label>Presets</label><button id="presetBtn" class="btn btn-s" onclick="togglePresetMenu(event)" style="min-width:110px;height:32px;justify-content:space-between;"><span id="presetLabel">None</span> <span class="mi mi-xs">expand_more</span></button><div id="presetMenu" class="exp-menu" style="min-width:220px;"></div></div>
       <div class="spacer"></div>
       <button class="btn btn-s ctrl-export" onclick="openExportModal()"><span class="mi mi-xs">download</span> Export</button>
       <button class="btn btn-p ctrl-new-entry" onclick="openEntryModal()"><span class="mi mi-xs">add</span> New Entry</button>
@@ -1510,6 +1555,30 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 <div class="mand-body"><div class="mb-text" id="mandText"></div><div class="mb-meta" id="mandMeta"></div>
 <div class="mb-ack"><div class="mb-ack-label">Type your initials to acknowledge:</div><div class="mb-ack-row"><input type="text" id="mandAckInput" maxlength="4" style="text-transform:uppercase;" onkeydown="if(event.key==='Enter')ackMandatory()"><button onclick="ackMandatory()">Acknowledge</button></div><div class="mb-ack-list" id="mandAckList"></div></div>
 </div></div></div>
+
+<!-- COMMENT THREAD SHEET -->
+<div class="nd-bg" id="commentBg" onclick="if(event.target===this)closeCommentThread()">
+<div class="nd-card" style="max-width:560px;">
+  <div class="nd-header" style="background:linear-gradient(135deg,var(--teal),#00695C);">
+    <div class="nd-ico" style="background:rgba(255,255,255,.18);"><span class="mi">chat</span></div>
+    <div class="nd-info">
+      <div class="nd-type">COMMENT THREAD</div>
+      <div class="nd-title" id="commentEntryTitle"></div>
+    </div>
+  </div>
+  <div class="nd-body" style="padding:0;max-height:55vh;overflow-y:auto;">
+    <div id="commentList" style="padding:12px 16px;"></div>
+  </div>
+  <div style="border-top:1px solid var(--g200);padding:10px 14px;background:var(--g50);">
+    <div style="display:flex;gap:8px;align-items:flex-end;">
+      <textarea id="commentInput" placeholder="Add a comment..." style="flex:1;min-height:44px;max-height:140px;padding:8px 12px;border:1px solid var(--g200);border-radius:var(--r);font-family:inherit;font-size:12px;resize:vertical;" onkeydown="if((event.metaKey||event.ctrlKey)&&event.key==='Enter')postComment()"></textarea>
+      <button class="btn btn-p" onclick="postComment()" style="flex-shrink:0;"><span class="mi mi-xs">send</span>Post</button>
+    </div>
+    <div style="font-size:9px;color:var(--g400);margin-top:4px;">Cmd/Ctrl+Enter to post</div>
+  </div>
+  <div class="nd-footer"><button class="btn btn-s" onclick="closeCommentThread()">Close</button></div>
+</div>
+</div>
 
 <!-- EXPORT MODAL -->
 <div class="modal-bg" id="exportModalBg" onclick="if(event.target===this)closeExportModal()">
@@ -1881,7 +1950,7 @@ async function getListItemType(listName) {
 
 function entryToSP(e) {
   var fm=_fieldMaps['ShiftEntries']||{};
-  return spSet(fm,[['Title',e.id],['Date',e.date||null],['Time',e.time||''],['Shift',e.shift||''],['Department',e.department||'General'],['ReportedBy',e.reportedBy||''],['AuthorInitials',e.authorInitials||''],['Category',e.category||''],['Priority',e.priority||''],['Description',e.description||''],['Action',e.action||''],['Status',e.status||'Open'],['FollowUp',e.followUp||'No'],['FollowUpAssign',e.followUpAssign||''],['ResolvedBy',e.resolvedBy||''],['ResDate',e.resDate||null],['Notes',e.notes||''],['AttachmentsJSON',JSON.stringify(e.attachments||[])],['LastModified0',e.lastModified||new Date().toISOString()],['ActionType',e.actionType||''],['Instrument',e.instrument||''],['ReagentLot',e.reagentLot||''],['TestSystem',e.testSystem||''],['RootCause',e.rootCause||''],['EffReviewDate',e.effReviewDate||null],['EffVerified',e.effVerified||''],['EffNotes',e.effNotes||''],['IsDeleted',e.isDeleted?'Yes':'No'],['DeletedDate',e.deletedDate||null],['DeletedBy',e.deletedBy||''],['EscalatedDate',e.escalatedDate||''],['FirstLeadResponseDate',e.firstLeadResponseDate||''],['FirstLeadResponseBy',e.firstLeadResponseBy||'']]);
+  return spSet(fm,[['Title',e.id],['Date',e.date||null],['Time',e.time||''],['Shift',e.shift||''],['Department',e.department||'General'],['ReportedBy',e.reportedBy||''],['AuthorInitials',e.authorInitials||''],['Category',e.category||''],['Priority',e.priority||''],['Description',e.description||''],['Action',e.action||''],['Status',e.status||'Open'],['FollowUp',e.followUp||'No'],['FollowUpAssign',e.followUpAssign||''],['ResolvedBy',e.resolvedBy||''],['ResDate',e.resDate||null],['Notes',e.notes||''],['AttachmentsJSON',JSON.stringify(e.attachments||[])],['CommentsJSON',JSON.stringify(e.comments||[])],['LastModified0',e.lastModified||new Date().toISOString()],['ActionType',e.actionType||''],['Instrument',e.instrument||''],['ReagentLot',e.reagentLot||''],['TestSystem',e.testSystem||''],['RootCause',e.rootCause||''],['EffReviewDate',e.effReviewDate||null],['EffVerified',e.effVerified||''],['EffNotes',e.effNotes||''],['IsDeleted',e.isDeleted?'Yes':'No'],['DeletedDate',e.deletedDate||null],['DeletedBy',e.deletedBy||''],['EscalatedDate',e.escalatedDate||''],['FirstLeadResponseDate',e.firstLeadResponseDate||''],['FirstLeadResponseBy',e.firstLeadResponseBy||'']]);
 }
 
 function spToEntry(item,fm) {
@@ -1891,7 +1960,7 @@ function spToEntry(item,fm) {
   var rd=g('ResDate')||'';if(rd&&rd.indexOf('T')>-1)rd=rd.split('T')[0];
   var effRd=g('EffReviewDate')||'';if(effRd&&effRd.indexOf('T')>-1)effRd=effRd.split('T')[0];
   var delFlag=g('IsDeleted')||'';
-  return {id:item.Title,_spId:item.Id,date:dt,time:g('Time')||'',shift:g('Shift')||'',department:g('Department')||'General',reportedBy:g('ReportedBy')||'',authorInitials:g('AuthorInitials')||'',category:g('Category')||'',priority:g('Priority')||'',description:g('Description')||'',action:g('Action')||'',status:g('Status')||'Open',followUp:g('FollowUp')||'No',followUpAssign:g('FollowUpAssign')||'',resolvedBy:g('ResolvedBy')||'',resDate:rd,notes:g('Notes')||'',attachments:tryParse(g('AttachmentsJSON'),[]),lastModified:g('LastModified0')||'',actionType:g('ActionType')||'',instrument:g('Instrument')||'',reagentLot:g('ReagentLot')||'',testSystem:g('TestSystem')||'',rootCause:g('RootCause')||'',effReviewDate:effRd,effVerified:g('EffVerified')||'',effNotes:g('EffNotes')||'',isDeleted:(delFlag===true||delFlag==='Yes'||delFlag==='true'||delFlag==='1'),deletedDate:g('DeletedDate')||'',deletedBy:g('DeletedBy')||'',escalatedDate:g('EscalatedDate')||'',firstLeadResponseDate:g('FirstLeadResponseDate')||'',firstLeadResponseBy:g('FirstLeadResponseBy')||''};
+  return {id:item.Title,_spId:item.Id,date:dt,time:g('Time')||'',shift:g('Shift')||'',department:g('Department')||'General',reportedBy:g('ReportedBy')||'',authorInitials:g('AuthorInitials')||'',category:g('Category')||'',priority:g('Priority')||'',description:g('Description')||'',action:g('Action')||'',status:g('Status')||'Open',followUp:g('FollowUp')||'No',followUpAssign:g('FollowUpAssign')||'',resolvedBy:g('ResolvedBy')||'',resDate:rd,notes:g('Notes')||'',attachments:tryParse(g('AttachmentsJSON'),[]),comments:tryParse(g('CommentsJSON'),[]),lastModified:g('LastModified0')||'',actionType:g('ActionType')||'',instrument:g('Instrument')||'',reagentLot:g('ReagentLot')||'',testSystem:g('TestSystem')||'',rootCause:g('RootCause')||'',effReviewDate:effRd,effVerified:g('EffVerified')||'',effNotes:g('EffNotes')||'',isDeleted:(delFlag===true||delFlag==='Yes'||delFlag==='true'||delFlag==='1'),deletedDate:g('DeletedDate')||'',deletedBy:g('DeletedBy')||'',escalatedDate:g('EscalatedDate')||'',firstLeadResponseDate:g('FirstLeadResponseDate')||'',firstLeadResponseBy:g('FirstLeadResponseBy')||''};
 }
 
 function annToSP(a) {
@@ -2134,6 +2203,7 @@ let editId=null,sortKey='date',sortAsc=false;
 let secOpen={esc:true,active:true,res:false,ann:true,resAnn:false};
 let pendingNE=null,highlightId=null,attachments=[],annType='standard',activeMandId=null;
 let chartInstances={};
+let _bulkSelected=new Set();// ids of rows currently selected for bulk action
 
 if(!users[ADMIN_INI])users[ADMIN_INI]={fullName:'Jesus Martinez',role:'MLS Lead',password:'admin',isAdmin:true};
 users[ADMIN_INI].isAdmin=true;
@@ -4360,6 +4430,8 @@ function switchPage(p){
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
   $('page'+p.charAt(0).toUpperCase()+p.slice(1)).classList.add('active');
+  // Hide stats-filter pill when leaving log page
+  if(p!=='log'){var host=$('statsFilterPill');if(host)host.style.display='none';bulkClear();}
   if(p==='stats'){$('navStats').classList.add('active');renderStats();}
   else if(p==='ann'){$('navAnn').classList.add('active');renderAnn();}
   else if(p==='log'){$('navLog').classList.add('active');renderLog();if(window.innerWidth<=600)setTimeout(renderMobileLog,50);}
@@ -4635,6 +4707,166 @@ function gME(){
 function gF(){let d=gME();const q=$('searchBox').value.toLowerCase(),sh=$('fShift').value,ca=$('fCat').value,pr=$('fPri').value;if(curDept)d=d.filter(e=>(e.department||'General')===curDept);if(q)d=d.filter(e=>Object.values(e).some(v=>String(v).toLowerCase().includes(q)));if(sh)d=d.filter(e=>mapLegacyShift(e.shift)===sh);if(ca)d=d.filter(e=>e.category===ca||mapLegacyCategory(e.category)===ca);if(pr)d=d.filter(e=>e.priority===pr);d.sort((a,b)=>{let va=a[sortKey]||'',vb=b[sortKey]||'';if(sortKey==='date'){va+=a.time||'';vb+=b.time||'';}return sortAsc?(va<vb?-1:va>vb?1:0):(va>vb?-1:va<vb?1:0);});return d;}
 function doSort(k){if(sortKey===k)sortAsc=!sortAsc;else{sortKey=k;sortAsc=false;}renderLog();}
 
+// ═══ FILTER PRESETS ═══
+// Persisted per-user in localStorage under rcl7_presets_{initials}. Each preset is
+// a named snapshot of (search, shift, cat, pri, dept). Month/year are intentionally
+// excluded so saved views make sense across periods.
+var PRESET_KEY_PREFIX='rcl7_presets_';
+var _builtInPresets=[
+  {name:'High priority · open',filters:{search:'',shift:'',cat:'',pri:'High',dept:''},builtIn:true},
+  {name:'QC issues',filters:{search:'',shift:'',cat:'QC Issue',pri:'',dept:''},builtIn:true},
+  {name:'Instrument issues',filters:{search:'',shift:'',cat:'Instrument',pri:'',dept:''},builtIn:true},
+  {name:'Safety · all',filters:{search:'',shift:'',cat:'Safety',pri:'',dept:''},builtIn:true}
+];
+function _presetKey(){return PRESET_KEY_PREFIX+(me?me.initials:'_');}
+function _loadPresets(){
+  var user=[];try{var raw=localStorage.getItem(_presetKey());if(raw)user=JSON.parse(raw)||[];}catch(e){user=[];}
+  return _builtInPresets.concat(user);
+}
+function _saveUserPresets(list){try{localStorage.setItem(_presetKey(),JSON.stringify(list.filter(function(p){return !p.builtIn;})));}catch(e){}}
+
+function _currentFilterSnapshot(){
+  return{
+    search:($('searchBox')?$('searchBox').value:'').trim(),
+    shift:$('fShift')?$('fShift').value:'',
+    cat:$('fCat')?$('fCat').value:'',
+    pri:$('fPri')?$('fPri').value:'',
+    dept:curDept||''
+  };
+}
+
+function togglePresetMenu(e){
+  if(e){e.stopPropagation();e.preventDefault();}
+  var menu=$('presetMenu');if(!menu)return;
+  var isOpen=menu.classList.contains('show');
+  // Close any other open menus first
+  document.querySelectorAll('.exp-menu.show').forEach(function(m){if(m.id!=='presetMenu')m.classList.remove('show');});
+  if(isOpen){menu.classList.remove('show');return;}
+  renderPresetMenu();
+  menu.classList.add('show');
+}
+// Close on outside click — piggyback on existing listener by hooking its pattern
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#presetBtn')&&!e.target.closest('#presetMenu')){
+    var menu=$('presetMenu');if(menu)menu.classList.remove('show');
+  }
+});
+
+function renderPresetMenu(){
+  var menu=$('presetMenu');if(!menu)return;
+  var presets=_loadPresets();
+  var cur=_currentFilterSnapshot();
+  var html='';
+  // "None / Clear all" at the top
+  html+='<button onclick="clearAllFilters()" style="border-bottom:1px solid var(--g100);"><span class="mi mi-xs">clear_all</span> Clear all filters</button>';
+  // Built-ins
+  presets.filter(function(p){return p.builtIn;}).forEach(function(p){
+    html+=_presetMenuItem(p,cur);
+  });
+  // User presets
+  var user=presets.filter(function(p){return !p.builtIn;});
+  if(user.length){
+    html+='<div style="padding:6px 12px;font-size:9px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.04em;background:var(--g50);border-top:1px solid var(--g100);border-bottom:1px solid var(--g100);">Saved views</div>';
+    user.forEach(function(p){html+=_presetMenuItem(p,cur);});
+  }
+  // Save current
+  var isEmpty=!cur.search&&!cur.shift&&!cur.cat&&!cur.pri&&!cur.dept;
+  html+='<button onclick="saveCurrentAsPreset()" style="border-top:1px solid var(--g100);color:var(--teal);font-weight:700;"'+(isEmpty?' disabled title="Apply some filters first"':'')+'><span class="mi mi-xs">bookmark_add</span> Save current view...</button>';
+  menu.innerHTML=html;
+}
+
+function _presetMenuItem(p,cur){
+  var active=(p.filters.search===cur.search&&p.filters.shift===cur.shift&&p.filters.cat===cur.cat&&p.filters.pri===cur.pri&&p.filters.dept===cur.dept);
+  var desc=[];
+  if(p.filters.cat)desc.push(p.filters.cat);
+  if(p.filters.pri)desc.push(p.filters.pri);
+  if(p.filters.shift)desc.push(p.filters.shift);
+  if(p.filters.dept)desc.push(p.filters.dept);
+  if(p.filters.search)desc.push('"'+p.filters.search.slice(0,15)+'"');
+  var descLine=desc.length?'<div style="font-size:9px;color:var(--g400);margin-top:2px;">'+esc(desc.join(' · '))+'</div>':'';
+  var delBtn=p.builtIn?'':'<span class="mi mi-xs" onclick="event.stopPropagation();deletePreset(\''+escJS(p.name)+'\')" style="margin-left:auto;color:var(--g400);cursor:pointer;padding:0 4px;" title="Delete">delete</span>';
+  return '<button onclick="applyPreset(\''+escJS(p.name)+'\')" style="display:flex;align-items:flex-start;gap:6px;'+(active?'background:var(--teal-bg);color:var(--teal);':'')+'"><span class="mi mi-xs" style="margin-top:1px;">'+(active?'check_circle':p.builtIn?'star':'bookmark')+'</span><span style="flex:1;"><div style="font-weight:'+(active?'700':'600')+';">'+esc(p.name)+'</div>'+descLine+'</span>'+delBtn+'</button>';
+}
+
+function applyPreset(name){
+  var presets=_loadPresets();
+  var p=presets.find(function(x){return x.name===name;});
+  if(!p)return;
+  var f=p.filters;
+  if($('searchBox'))$('searchBox').value=f.search||'';
+  if($('fShift'))$('fShift').value=f.shift||'';
+  if($('fCat'))$('fCat').value=f.cat||'';
+  if($('fPri'))$('fPri').value=f.pri||'';
+  if(f.dept)setDept(f.dept);
+  var lbl=$('presetLabel');if(lbl)lbl.textContent=p.name;
+  var menu=$('presetMenu');if(menu)menu.classList.remove('show');
+  // Clear any Stats-filter pill so the UI doesn't show conflicting state
+  var spill=$('statsFilterPill');if(spill)spill.style.display='none';
+  window._statsFilterActive=null;
+  renderLog();
+  toast('Applied: '+name);
+}
+
+function clearAllFilters(){
+  if($('searchBox'))$('searchBox').value='';
+  if($('fShift'))$('fShift').value='';
+  if($('fCat'))$('fCat').value='';
+  if($('fPri'))$('fPri').value='';
+  var lbl=$('presetLabel');if(lbl)lbl.textContent='None';
+  var menu=$('presetMenu');if(menu)menu.classList.remove('show');
+  var spill=$('statsFilterPill');if(spill)spill.style.display='none';
+  window._statsFilterActive=null;
+  renderLog();
+  toast('Filters cleared');
+}
+
+function saveCurrentAsPreset(){
+  var cur=_currentFilterSnapshot();
+  if(!cur.search&&!cur.shift&&!cur.cat&&!cur.pri&&!cur.dept){toast('No filters active — apply some filters first');return;}
+  var name=prompt('Name this view (max 30 chars):','');
+  if(name===null)return;
+  name=(''+name).trim().slice(0,30);
+  if(!name){toast('Name cannot be empty');return;}
+  var presets=_loadPresets();
+  // Check collision with built-in names
+  if(presets.some(function(p){return p.builtIn&&p.name.toLowerCase()===name.toLowerCase();})){toast('That name is reserved for a built-in preset');return;}
+  var user=presets.filter(function(p){return !p.builtIn;});
+  // Update existing user preset with the same name, otherwise add
+  var existing=user.find(function(p){return p.name.toLowerCase()===name.toLowerCase();});
+  if(existing){
+    if(!confirm('Overwrite existing "'+existing.name+'" preset?'))return;
+    existing.filters=cur;existing.name=name;
+  }else{
+    if(user.length>=20){toast('Maximum 20 saved views');return;}
+    user.push({name:name,filters:cur});
+  }
+  _saveUserPresets(user);
+  var lbl=$('presetLabel');if(lbl)lbl.textContent=name;
+  var menu=$('presetMenu');if(menu)menu.classList.remove('show');
+  toast('Saved: '+name);
+}
+
+function deletePreset(name){
+  if(!confirm('Delete preset "'+name+'"?'))return;
+  var presets=_loadPresets();
+  var user=presets.filter(function(p){return !p.builtIn&&p.name!==name;});
+  _saveUserPresets(user);
+  var lbl=$('presetLabel');
+  if(lbl&&lbl.textContent===name)lbl.textContent='None';
+  renderPresetMenu();
+  toast('Deleted: '+name);
+}
+
+// When user changes any filter manually, clear the "active preset" label
+// (it's no longer in sync with what's showing)
+function _clearPresetLabelIfStale(){
+  var cur=_currentFilterSnapshot();
+  var presets=_loadPresets();
+  var match=presets.find(function(p){return p.filters.search===cur.search&&p.filters.shift===cur.shift&&p.filters.cat===cur.cat&&p.filters.pri===cur.pri&&p.filters.dept===cur.dept;});
+  var lbl=$('presetLabel');if(!lbl)return;
+  lbl.textContent=match?match.name:'None';
+}
+
 // === ANNOUNCEMENTS ===
 function setAnnType(t){annType=t;document.querySelectorAll('.ato').forEach(el=>el.classList.remove('sel'));$('ato'+(t==='standard'?'Std':t==='welcome'?'Wel':'Mand')).classList.add('sel');$('annWelcomeNameWrap').style.display=t==='welcome'?'':'none';$('annWelcomeRoleWrap').style.display=t==='welcome'?'':'none';$('annPostBtn').innerHTML=t==='welcome'?'<span class="mi mi-xs">celebration</span> Welcome!':t==='mandatory'?'<span class="mi mi-xs">priority_high</span> Post Mandatory':'<span class="mi mi-xs">campaign</span> Post';}
 function renderAnn(){
@@ -4709,8 +4941,10 @@ function checkWelcomeConfetti(){if(!me)return;var sk='rcl7_confetti_seen',sn=ld(
 function fireConfetti(){var cv=$('confettiCanvas');if(!cv)return;var ctx=cv.getContext('2d');cv.width=window.innerWidth;cv.height=window.innerHeight;var ps=[],cs=['#00796B','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ef4444','#06b6d4','#f97316'];for(var i=0;i<150;i++)ps.push({x:Math.random()*cv.width,y:-Math.random()*cv.height*.5,vx:(Math.random()-.5)*8,vy:Math.random()*4+2,w:Math.random()*10+4,h:Math.random()*6+3,c:cs[Math.floor(Math.random()*cs.length)],r:Math.random()*360,rs:(Math.random()-.5)*12,o:1});var st=Date.now();function anim(){var el=Date.now()-st;if(el>4500){ctx.clearRect(0,0,cv.width,cv.height);return;}ctx.clearRect(0,0,cv.width,cv.height);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.1;p.r+=p.rs;if(el>3500)p.o=Math.max(0,1-(el-3500)/1000);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r*Math.PI/180);ctx.globalAlpha=p.o;ctx.fillStyle=p.c;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});requestAnimationFrame(anim);}anim();}
 
 // === TABLE ROW ===
-const TH='<th onclick="doSort(\'date\')">Date</th><th>Shift</th><th onclick="doSort(\'time\')">Time</th><th>By</th><th onclick="doSort(\'category\')">Category</th><th onclick="doSort(\'priority\')">Priority</th><th>Description</th><th>Action</th><th onclick="doSort(\'status\')">Status</th><th>F/U</th><th>Actions</th>';
-function bR(e){var fn=e.reportedBy||ln(e.authorInitials),ini=e.authorInitials||'',fuI=e.followUp==='Yes'&&e.followUpAssign?' <span style="font-size:9px;color:var(--g500);">('+ln(e.followUpAssign)+')</span>':'',imgs=(e.attachments||[]).length?'<div class="attach-thumbs">'+e.attachments.map(s=>'<div class="attach-thumb" onclick="viewImage(this.querySelector(\'img\').src)">'+safeImg(s)+'</div>').join('')+'</div>':'';
+const TH='<th class="bulk-col"><input type="checkbox" class="bulk-cb" id="bulkSelectAll" onclick="bulkSelectAllVisible(this.checked)" title="Select all visible"></th><th onclick="doSort(\'date\')">Date</th><th>Shift</th><th onclick="doSort(\'time\')">Time</th><th>By</th><th onclick="doSort(\'category\')">Category</th><th onclick="doSort(\'priority\')">Priority</th><th>Description</th><th>Action</th><th onclick="doSort(\'status\')">Status</th><th>F/U</th><th>Actions</th>';
+function bR(e){
+  var isSelected=_bulkSelected.has(e.id);
+  var fn=e.reportedBy||ln(e.authorInitials),ini=e.authorInitials||'',fuI=e.followUp==='Yes'&&e.followUpAssign?' <span style="font-size:9px;color:var(--g500);">('+ln(e.followUpAssign)+')</span>':'',imgs=(e.attachments||[]).length?'<div class="attach-thumbs">'+e.attachments.map(s=>'<div class="attach-thumb" onclick="viewImage(this.querySelector(\'img\').src)">'+safeImg(s)+'</div>').join('')+'</div>':'';
 var capBits=[];
 if(e.actionType)capBits.push('<span class="badge b-cat-qcca" style="font-size:8px;">'+esc(e.actionType)+'</span>');
 if(e.instrument)capBits.push('<span style="font-size:9px;color:var(--g500);"><b>Instr:</b> '+esc(e.instrument)+'</span>');
@@ -4723,7 +4957,7 @@ if(e.rootCause||e.actionType||e.instrument||e.effVerified){
   else if(e.effVerified==='Not Effective')effBadge='<span class="badge b-high" style="font-size:8px;">Not Effective</span>';
   else if(e.effVerified==='Partially Effective')effBadge='<span class="badge b-medium" style="font-size:8px;">Partial</span>';
   else if(e.effReviewDate){var daysLeft=Math.round((new Date(e.effReviewDate+'T00:00:00')-new Date())/86400000);effBadge=daysLeft<=0?'<span class="badge b-high" style="font-size:8px;">Review Overdue</span>':daysLeft<=7?'<span class="badge b-medium" style="font-size:8px;">Review in '+daysLeft+'d</span>':'';}
-  capRow='<tr class="cap-detail-row" data-parent="'+e.id+'" style="display:none;background:var(--g50);"><td colspan="11" style="padding:6px 12px 8px;border-bottom:2px solid var(--teal-bg);">'
+  capRow='<tr class="cap-detail-row" data-parent="'+e.id+'" style="display:none;background:var(--g50);"><td colspan="12" style="padding:6px 12px 8px;border-bottom:2px solid var(--teal-bg);">'
     +'<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:4px;">'
     +'<span style="font-size:9px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.04em;">CAP Compliance</span>'
     +capBits.join(' ')
@@ -4734,7 +4968,38 @@ if(e.rootCause||e.actionType||e.instrument||e.effVerified){
     +'</td></tr>';
 }
 var hasCapData=capRow?'<span class="mi mi-xs" style="color:var(--teal);cursor:pointer;margin-left:4px;" title="Show CAP details" onclick="toggleCapRow(\''+escJS(e.id)+'\',event)">verified</span>':'';
-return'<tr class="'+rCls(e.priority)+'" data-eid="'+esc(e.id)+'"><td style="white-space:nowrap;font-family:\'JetBrains Mono\',monospace;font-size:10px;">'+fd(e.date)+'</td><td><span class="'+shB(e.shift)+'">'+esc(e.shift)+'</span></td><td style="font-family:\'JetBrains Mono\',monospace;font-size:10px;">'+esc(e.time||'')+'</td><td>'+avH(ini,26)+'</td><td><span class="'+catB(e.category)+'">'+esc(e.category)+'</span></td><td><span class="'+priB(e.priority)+'">'+esc(e.priority)+'</span></td><td class="desc-cell"><div class="cell-txt" onclick="this.classList.toggle(\'expanded\')">'+esc(e.description)+'</div>'+imgs+'</td><td class="desc-cell"><div class="cell-txt" onclick="this.classList.toggle(\'expanded\')">'+esc(e.action||'')+'</div></td><td><span class="'+stB(e.status)+'">'+esc(e.status)+'</span>'+slaChip(e)+hasCapData+'</td><td style="text-align:center;">'+(e.followUp==='Yes'?'<span style="color:var(--red);font-weight:700;">Yes</span>'+fuI:'No')+'</td><td style="white-space:nowrap;">'+(canEdit(e)?'<button class="btn btn-s" style="padding:2px 6px;font-size:9px;" onclick="editEntry(\''+escJS(e.id)+'\')"><span class="mi mi-xs">edit</span></button> ':'')+(canDel(e)?'<button class="btn btn-d" style="padding:2px 6px;font-size:9px;" onclick="deleteEntry(\''+escJS(e.id)+'\')"><span class="mi mi-xs">delete</span></button>':'')+((!canEdit(e)&&!canDel(e))?'<span style="color:var(--g400);font-size:9px;">View</span>':'')+'</td></tr>'+capRow;}
+var capIncompleteChip=capIncompleteBadge(e);
+var cbCell='<td class="bulk-col"><input type="checkbox" class="bulk-cb row-cb" '+(isSelected?'checked ':'')+'data-eid="'+esc(e.id)+'" onclick="event.stopPropagation();bulkToggleRow(\''+escJS(e.id)+'\',this.checked)"></td>';
+return'<tr class="'+rCls(e.priority)+(isSelected?' bulk-selected':'')+(capIncompleteChip?' cap-incomplete-row':'')+'" data-eid="'+esc(e.id)+'">'+cbCell+'<td style="white-space:nowrap;font-family:\'JetBrains Mono\',monospace;font-size:10px;">'+fd(e.date)+'</td><td><span class="'+shB(e.shift)+'">'+esc(e.shift)+'</span></td><td style="font-family:\'JetBrains Mono\',monospace;font-size:10px;">'+esc(e.time||'')+'</td><td>'+avH(ini,26)+'</td><td><span class="'+catB(e.category)+'">'+esc(e.category)+'</span></td><td><span class="'+priB(e.priority)+'">'+esc(e.priority)+'</span></td><td class="desc-cell"><div class="cell-txt" onclick="this.classList.toggle(\'expanded\')">'+esc(e.description)+'</div>'+imgs+'</td><td class="desc-cell"><div class="cell-txt" onclick="this.classList.toggle(\'expanded\')">'+esc(e.action||'')+'</div></td><td><span class="'+stB(e.status)+'">'+esc(e.status)+'</span>'+slaChip(e)+capIncompleteChip+hasCapData+'</td><td style="text-align:center;">'+(e.followUp==='Yes'?'<span style="color:var(--red);font-weight:700;">Yes</span>'+fuI:'No')+'</td><td style="white-space:nowrap;">'+_commentBtn(e)+' <button class="btn btn-s" style="padding:2px 6px;font-size:9px;" onclick="cloneEntry(\''+escJS(e.id)+'\')" title="Clone as new entry"><span class="mi mi-xs">content_copy</span></button> '+(canEdit(e)?'<button class="btn btn-s" style="padding:2px 6px;font-size:9px;" onclick="editEntry(\''+escJS(e.id)+'\')"><span class="mi mi-xs">edit</span></button> ':'')+(canDel(e)?'<button class="btn btn-d" style="padding:2px 6px;font-size:9px;" onclick="deleteEntry(\''+escJS(e.id)+'\')"><span class="mi mi-xs">delete</span></button>':'')+((!canEdit(e)&&!canDel(e))?'':'')+'</td></tr>'+capRow;}
+
+function _commentBtn(e){
+  var n=(e.comments||[]).length;
+  var color=n>0?'var(--teal)':'var(--g500)';
+  return '<button class="btn btn-s" style="padding:2px 6px;font-size:9px;'+(n>0?'border-color:var(--teal-bdr);color:var(--teal);':'')+'" onclick="openCommentThread(\''+escJS(e.id)+'\')" title="'+n+' comment'+(n===1?'':'s')+'"><span class="mi mi-xs">chat</span>'+(n>0?' '+n:'')+'</button>';
+}
+
+// CAP-incomplete: evaluate if this entry needs CAPA and is missing required fields
+function capIsRequired(e){
+  if(!e)return false;
+  if(e.priority==='High')return true;
+  if(['QC Issue','Instrument','Safety','Patient Sample'].indexOf(e.category)>=0)return true;
+  return false;
+}
+function capIncompleteReasons(e){
+  if(!capIsRequired(e))return [];
+  var reasons=[];
+  if(!e.rootCause||!(''+e.rootCause).trim())reasons.push('Root Cause');
+  if(!e.actionType||e.actionType==='None Required'||!(''+e.actionType).trim())reasons.push('Action Type');
+  // Effectiveness review only required if entry is resolved
+  if(e.status==='Resolved'&&(!e.effReviewDate||!(''+e.effReviewDate).trim()))reasons.push('Eff. Review Date');
+  return reasons;
+}
+function capIncompleteBadge(e){
+  var reasons=capIncompleteReasons(e);
+  if(!reasons.length)return '';
+  var tip='CAP-incomplete: missing '+reasons.join(', ')+'. CLIA 42 CFR 493.1252 / CAP GEN.20316';
+  return ' <span title="'+esc(tip)+'" onclick="event.stopPropagation();editEntry(\''+escJS(e.id)+'\')" style="cursor:pointer;display:inline-flex;align-items:center;gap:2px;font-size:9px;font-weight:700;color:#92400e;background:#fef3c7;padding:1px 5px;border-radius:999px;border:1px solid #fbbf24;margin-left:4px;"><span class="mi mi-xs" style="font-size:10px;">error</span>CAP?</span>';
+}
 
 function slaChip(e){
   if(e.status!=='Escalated')return '';
@@ -4746,16 +5011,296 @@ function slaChip(e){
   return ' <span title="SLA: '+esc(slaLabel(e.priority))+'" style="display:inline-flex;align-items:center;gap:2px;font-size:9px;font-weight:700;color:var(--green);background:var(--green-bg);padding:1px 5px;border-radius:999px;border:1px solid var(--green-bdr);margin-left:4px;"><span class="mi mi-xs" style="font-size:10px;">schedule</span>'+esc(fmtDuration(s.remainingMs))+' left</span>';
 }
 
+// === BULK ACTIONS ===
+// Selection model: _bulkSelected is a Set of entry ids. Functions maintain it,
+// re-render the bar, and on bulk action completion clear it + refresh log.
+
+function bulkUpdateBar(){
+  var bar=$('bulkBar');if(!bar)return;
+  var n=_bulkSelected.size;
+  if(n===0){bar.classList.remove('show');return;}
+  bar.classList.add('show');
+  var cnt=$('bulkCount');if(cnt)cnt.textContent=n;
+  // Gate destructive action button visibility
+  var delBtn=$('bulkDeleteBtn');
+  if(delBtn)delBtn.style.display=isLead()||isAdm()?'inline-flex':'none';
+}
+
+// Called from row checkbox onclick
+function bulkToggleRow(id,checked){
+  if(checked)_bulkSelected.add(id);else _bulkSelected.delete(id);
+  // Visual row state
+  var row=document.querySelector('tr[data-eid="'+id+'"]');
+  if(row){if(checked)row.classList.add('bulk-selected');else row.classList.remove('bulk-selected');}
+  bulkUpdateBar();
+  // Also sync the header master-checkbox state
+  _syncBulkMasterCheckbox();
+}
+
+function _syncBulkMasterCheckbox(){
+  var master=document.querySelectorAll('#bulkSelectAll');
+  master.forEach(function(m){
+    var visibleCbs=document.querySelectorAll('.row-cb');
+    if(!visibleCbs.length){m.checked=false;m.indeterminate=false;return;}
+    var allChecked=true,anyChecked=false;
+    visibleCbs.forEach(function(cb){if(cb.checked)anyChecked=true;else allChecked=false;});
+    m.checked=allChecked;
+    m.indeterminate=!allChecked&&anyChecked;
+  });
+}
+
+// Called from header master-checkbox
+function bulkSelectAllVisible(checked){
+  var rows=document.querySelectorAll('.row-cb');
+  rows.forEach(function(cb){
+    var id=cb.getAttribute('data-eid');
+    if(!id)return;
+    cb.checked=checked;
+    if(checked)_bulkSelected.add(id);else _bulkSelected.delete(id);
+    var row=document.querySelector('tr[data-eid="'+id+'"]');
+    if(row){if(checked)row.classList.add('bulk-selected');else row.classList.remove('bulk-selected');}
+  });
+  bulkUpdateBar();
+}
+
+function bulkClear(){
+  _bulkSelected.clear();
+  document.querySelectorAll('.row-cb').forEach(function(cb){cb.checked=false;});
+  document.querySelectorAll('tr.bulk-selected').forEach(function(r){r.classList.remove('bulk-selected');});
+  _syncBulkMasterCheckbox();
+  bulkUpdateBar();
+}
+
+function _bulkSelectedEntries(){
+  var out=[];
+  _bulkSelected.forEach(function(id){var e=entries.find(function(x){return x.id===id;});if(e)out.push(e);});
+  return out;
+}
+
+// Save one entry to SP — returns a promise
+function _bulkPersist(e){
+  e.lastModified=new Date().toISOString();
+  return spSaveEntry(e).catch(function(err){console.error('SP save failed for '+e.id,err);});
+}
+
+// Parallel persist for N entries, show progress toast, render when done
+function _bulkPersistAll(list,verb){
+  if(!list.length)return Promise.resolve();
+  toast(verb+' '+list.length+' entries...');
+  return Promise.all(list.map(_bulkPersist)).then(function(){
+    toast(verb+' complete ('+list.length+')');
+    bulkClear();
+    renderAll();
+  });
+}
+
+function bulkResolve(){
+  var sel=_bulkSelectedEntries();
+  if(!sel.length){toast('Nothing selected');return;}
+  // Filter only ones that can be resolved (not already resolved, user has perm)
+  var doable=sel.filter(function(e){return e.status!=='Resolved'&&canEdit(e);});
+  if(!doable.length){toast('No eligible entries (already resolved or no permission)');return;}
+  if(!confirm('Resolve '+doable.length+' entr'+(doable.length===1?'y':'ies')+'?\n\nThis will mark them as Resolved with today\'s date and your name as resolver.'))return;
+  var today=new Date().toISOString().split('T')[0];
+  var resolver=me?me.initials:'';
+  var resolverName=me?me.fullName:'';
+  doable.forEach(function(e){
+    e.status='Resolved';
+    e.resDate=today;
+    e.resolvedBy=resolver;
+    addH('edit','Bulk resolved: '+e.category+' - "'+((e.description||'').slice(0,40))+'..."','Resolved by '+resolverName+' via bulk action',{entryId:e.id,entryCategory:e.category,changedFields:['status','resDate','resolvedBy']});
+  });
+  _bulkPersistAll(doable,'Resolved');
+}
+
+function bulkEscalate(){
+  var sel=_bulkSelectedEntries();
+  if(!sel.length){toast('Nothing selected');return;}
+  var doable=sel.filter(function(e){return e.status!=='Escalated'&&e.status!=='Resolved'&&canEdit(e);});
+  if(!doable.length){toast('No eligible entries');return;}
+  if(!confirm('Escalate '+doable.length+' entr'+(doable.length===1?'y':'ies')+'?\n\nLeads will be notified and SLA timers will start.'))return;
+  var nowIso=new Date().toISOString();
+  doable.forEach(function(e){
+    e.status='Escalated';
+    e.escalatedDate=nowIso;
+    addH('edit','Bulk escalated: '+e.category+' - "'+((e.description||'').slice(0,40))+'..."','Escalated by '+(me?me.fullName:'')+' via bulk action',{entryId:e.id,entryCategory:e.category,changedFields:['status','escalatedDate']});
+    // Notify leads
+    nLeads('escalation','Escalation: '+e.category,(e.description||'').slice(0,70),e.id);
+  });
+  _bulkPersistAll(doable,'Escalated');
+}
+
+function bulkToggleFollowUp(){
+  var sel=_bulkSelectedEntries();
+  if(!sel.length){toast('Nothing selected');return;}
+  var doable=sel.filter(function(e){return canEdit(e);});
+  if(!doable.length){toast('No editable entries selected');return;}
+  // Ask what to flip to — if mixed state, flipping will set them all to the same state
+  var currentlyAnyNo=doable.some(function(e){return e.followUp!=='Yes';});
+  var newState=currentlyAnyNo?'Yes':'No';
+  var verb=newState==='Yes'?'Flag':'Clear flag on';
+  if(!confirm(verb+' '+doable.length+' entr'+(doable.length===1?'y':'ies')+' for follow-up?'))return;
+  doable.forEach(function(e){
+    e.followUp=newState;
+    if(newState==='No')e.followUpAssign='';
+    addH('edit','Bulk follow-up '+(newState==='Yes'?'flagged':'cleared')+': '+e.category,'Updated by '+(me?me.fullName:'')+' via bulk action',{entryId:e.id,entryCategory:e.category,changedFields:['followUp']});
+  });
+  _bulkPersistAll(doable,newState==='Yes'?'Flagged':'Cleared');
+}
+
+function bulkDelete(){
+  if(!isLead()&&!isAdm()){toast('Leads or admins only');return;}
+  var sel=_bulkSelectedEntries();
+  if(!sel.length){toast('Nothing selected');return;}
+  var doable=sel.filter(function(e){return canDel(e);});
+  if(!doable.length){toast('No deletable entries selected');return;}
+  if(!confirm('Soft-delete '+doable.length+' entr'+(doable.length===1?'y':'ies')+'?\n\nThese will be hidden from normal views but preserved in the audit trail. An admin can restore them if needed.'))return;
+  var nowIso=new Date().toISOString();
+  var deletedBy=me?me.initials:'';
+  var deletedByName=me?me.fullName:'';
+  var ids=doable.map(function(e){return e.id;});
+  doable.forEach(function(e){
+    var snapshot=JSON.stringify(e);
+    e.isDeleted=true;
+    e.deletedDate=nowIso;
+    e.deletedBy=deletedBy;
+    e.lastModified=nowIso;
+    addH('delete','Bulk deleted: '+(e.category||'Entry')+' - "'+((e.description||'').slice(0,60))+(((e.description||'').length>60)?'...':'')+'"','Soft-deleted by '+deletedByName+' via bulk action. Full snapshot preserved.',{entryId:e.id,entryCategory:e.category,deletedSnapshot:snapshot});
+  });
+  // Persist each soft-delete to SP (before removing from entries array)
+  Promise.all(doable.map(_bulkPersist)).then(function(){
+    // Remove from active array so UI hides them
+    entries=entries.filter(function(x){return ids.indexOf(x.id)<0;});
+    bulkClear();
+    renderAll();
+    toast(doable.length+' entries deleted (restorable by admin)');
+  });
+}
+
 // === SECTIONS ===
 function toggleCapRow(eid,ev){if(ev)ev.stopPropagation();var rows=document.querySelectorAll('.cap-detail-row[data-parent="'+eid+'"]');rows.forEach(function(r){r.style.display=r.style.display==='none'?'table-row':'none';});}
 function rSec(zId,cls,lbl,ico,es,ok,exH){var z=$(zId);if(!es.length){z.innerHTML='';return;}var o=secOpen[ok];z.innerHTML='<div class="section '+cls+'"><div class="sec-hdr '+(o?'':'collapsed')+'" onclick="secOpen.'+ok+'=!secOpen.'+ok+';renderLog()"><h3><span class="mi mi-sm">'+ico+'</span> '+lbl+' <span class="cnt">'+es.length+'</span></h3><div>'+(exH||'')+' <span class="mi mi-sm">expand_more</span></div></div><div class="sec-body '+(o?'':'collapsed')+'"><div class="tbl-scroll"><table><thead><tr>'+TH+'</tr></thead><tbody>'+es.map(e=>bR(e)).join('')+'</tbody></table></div></div></div>';}
 
 // === RENDER LOG ===
-function renderLog(){var all=gME(),esc_=all.filter(e=>e.status==='Escalated'),res=all.filter(e=>e.status==='Resolved'),active=gF().filter(e=>e.status!=='Resolved'&&e.status!=='Escalated');rSec('escZone','sec-esc','ESCALATED','warning',esc_,'esc','<span class="esc-sub">Leadership reviewing</span>');if(!active.length&&all.filter(e=>e.status!=='Resolved'&&e.status!=='Escalated').length===0){$('activeZone').innerHTML='<div class="section sec-active"><div class="sec-hdr"><h3><span class="mi mi-sm">assignment</span> Active Entries <span class="cnt">0</span></h3></div><div class="sec-body"><div class="empty"><span class="mi">assignment</span><h3>No entries for '+MONTHS[curMonth]+'</h3></div></div></div>';}else rSec('activeZone','sec-active','Active Entries','assignment',active,'active','');rSec('resZone','sec-res','Resolved','check_circle',res,'res','');renderMonthlyReview();uBell();}
+function renderLog(){var all=gME(),esc_=all.filter(e=>e.status==='Escalated'),res=all.filter(e=>e.status==='Resolved'),active=gF().filter(e=>e.status!=='Resolved'&&e.status!=='Escalated');rSec('escZone','sec-esc','ESCALATED','warning',esc_,'esc','<span class="esc-sub">Leadership reviewing</span>');if(!active.length&&all.filter(e=>e.status!=='Resolved'&&e.status!=='Escalated').length===0){$('activeZone').innerHTML='<div class="section sec-active"><div class="sec-hdr"><h3><span class="mi mi-sm">assignment</span> Active Entries <span class="cnt">0</span></h3></div><div class="sec-body"><div class="empty"><span class="mi">assignment</span><h3>No entries for '+MONTHS[curMonth]+'</h3></div></div></div>';}else rSec('activeZone','sec-active','Active Entries','assignment',active,'active','');rSec('resZone','sec-res','Resolved','check_circle',res,'res','');renderMonthlyReview();uBell();_syncBulkMasterCheckbox();bulkUpdateBar();}
 
 // === ENTRY MODAL ===
-function openEntryModal(id){editId=id||null;attachments=[];$('entryModalTitle').textContent=id?'Edit Entry':'New Entry';$('entrySaveBtn').textContent=id?'Update':'Save';var rb=$('eReporter');if(id){var e=entries.find(x=>x.id===id);if(!e)return;$('eDate').value=e.date;$('eTime').value=e.time;$('eShift').value=e.shift;$('eDept').value=e.department||'General';rb.value=e.reportedBy||ln(e.authorInitials);rb.readOnly=!isLead();rb.style.background=isLead()?'var(--white)':'var(--g100)';$('eCat').value=e.category;$('ePri').value=e.priority;$('eDesc').value=e.description;$('eAction').value=e.action||'';$('eStatus').value=e.status;$('eFollowUp').value=e.followUp||'No';$('eNotes').value=e.notes||'';attachments=(e.attachments||[]).slice();onFollowUpChange();if(e.followUpAssign)setTimeout(()=>{$('eFUAssign').value=e.followUpAssign;},0);onStatusChange();if(e.resolvedBy)setTimeout(()=>{$('eResBy').value=e.resolvedBy;},0);$('eResDate').value=e.resDate||'';$('eActionType').value=e.actionType||'';$('eInstrument').value=e.instrument||'';$('eReagentLot').value=e.reagentLot||'';$('eTestSystem').value=e.testSystem||'';$('eRootCause').value=e.rootCause||'';$('eEffReviewDate').value=e.effReviewDate||'';$('eEffVerified').value=e.effVerified||'';$('eEffNotes').value=e.effNotes||'';}else{var now=new Date();$('eDate').value=now.toISOString().split('T')[0];$('eTime').value=now.toTimeString().slice(0,5);var hr=now.getHours();$('eShift').value=hr<15?'Morning':hr<23?'Evening':'Night';$('eDept').value=curDept||'';rb.value=me?me.fullName:'';rb.readOnly=!isLead();rb.style.background=isLead()?'var(--white)':'var(--g100)';$('eCat').value='';$('ePri').value='';$('eDesc').value='';$('eAction').value='';$('eStatus').value='Open';$('eFollowUp').value='No';$('eNotes').value='';$('eResDate').value='';$('eActionType').value='';$('eInstrument').value='';$('eReagentLot').value='';$('eTestSystem').value='';$('eRootCause').value='';$('eEffReviewDate').value='';$('eEffVerified').value='';$('eEffNotes').value='';onStatusChange();onFollowUpChange();}updateCapRequired();rAP();openSheet('entryModalBg');}
-function closeEntryModal(){closeSheet('entryModalBg');editId=null;attachments=[];}
+function openEntryModal(id){editId=id||null;attachments=[];$('entryModalTitle').textContent=id?'Edit Entry':'New Entry';$('entrySaveBtn').textContent=id?'Update':'Save';var rb=$('eReporter');if(id){var e=entries.find(x=>x.id===id);if(!e)return;$('eDate').value=e.date;$('eTime').value=e.time;$('eShift').value=e.shift;$('eDept').value=e.department||'General';rb.value=e.reportedBy||ln(e.authorInitials);rb.readOnly=!isLead();rb.style.background=isLead()?'var(--white)':'var(--g100)';$('eCat').value=e.category;$('ePri').value=e.priority;$('eDesc').value=e.description;$('eAction').value=e.action||'';$('eStatus').value=e.status;$('eFollowUp').value=e.followUp||'No';$('eNotes').value=e.notes||'';attachments=(e.attachments||[]).slice();onFollowUpChange();if(e.followUpAssign)setTimeout(()=>{$('eFUAssign').value=e.followUpAssign;},0);onStatusChange();if(e.resolvedBy)setTimeout(()=>{$('eResBy').value=e.resolvedBy;},0);$('eResDate').value=e.resDate||'';$('eActionType').value=e.actionType||'';$('eInstrument').value=e.instrument||'';$('eReagentLot').value=e.reagentLot||'';$('eTestSystem').value=e.testSystem||'';$('eRootCause').value=e.rootCause||'';$('eEffReviewDate').value=e.effReviewDate||'';$('eEffVerified').value=e.effVerified||'';$('eEffNotes').value=e.effNotes||'';}else{var now=new Date();$('eDate').value=now.toISOString().split('T')[0];$('eTime').value=now.toTimeString().slice(0,5);var hr=now.getHours();$('eShift').value=hr<15?'Morning':hr<23?'Evening':'Night';$('eDept').value=curDept||'';rb.value=me?me.fullName:'';rb.readOnly=!isLead();rb.style.background=isLead()?'var(--white)':'var(--g100)';$('eCat').value='';$('ePri').value='';$('eDesc').value='';$('eAction').value='';$('eStatus').value='Open';$('eFollowUp').value='No';$('eNotes').value='';$('eResDate').value='';$('eActionType').value='';$('eInstrument').value='';$('eReagentLot').value='';$('eTestSystem').value='';$('eRootCause').value='';$('eEffReviewDate').value='';$('eEffVerified').value='';$('eEffNotes').value='';onStatusChange();onFollowUpChange();
+// Check for a draft from a previous unsaved session
+_checkDraftRestore();}updateCapRequired();rAP();openSheet('entryModalBg');_startDraftAutosave();}
+
+// ═══ DRAFT AUTOSAVE ═══
+// Saves unsaved new-entry form state to localStorage every 2s while modal is open.
+// Only applies to new entries (not edits). Cleared on successful save or explicit discard.
+var DRAFT_KEY='rcl7_entry_draft';
+var _draftInterval=null;
+var _draftFields=['eDate','eTime','eShift','eDept','eCat','ePri','eDesc','eAction','eStatus','eFollowUp','eFUAssign','eNotes','eResBy','eResDate','eActionType','eInstrument','eReagentLot','eTestSystem','eRootCause','eEffReviewDate','eEffVerified','eEffNotes'];
+
+function _snapshotDraft(){
+  var d={timestamp:new Date().toISOString(),user:me?me.initials:''};
+  _draftFields.forEach(function(id){var el=$(id);if(el)d[id]=el.value;});
+  d.attachments=attachments?attachments.slice():[];
+  return d;
+}
+
+function _isDraftEmpty(d){
+  if(!d)return true;
+  // Treat as empty if key content fields are all empty
+  return !(d.eDesc&&d.eDesc.trim())&&!(d.eAction&&d.eAction.trim())&&!(d.eNotes&&d.eNotes.trim())&&!(d.eRootCause&&d.eRootCause.trim())&&!d.eCat&&!d.ePri;
+}
+
+function _saveDraft(){
+  if(editId)return;// Only autosave for new entries
+  if(!$('entryModalBg')||!$('entryModalBg').classList.contains('show'))return;
+  var d=_snapshotDraft();
+  if(_isDraftEmpty(d)){_clearDraft();return;}
+  try{localStorage.setItem(DRAFT_KEY,JSON.stringify(d));}catch(err){}
+}
+
+function _clearDraft(){try{localStorage.removeItem(DRAFT_KEY);}catch(e){}}
+
+function _startDraftAutosave(){
+  if(_draftInterval){clearInterval(_draftInterval);_draftInterval=null;}
+  if(editId)return;// Edits don't autosave drafts
+  _draftInterval=setInterval(_saveDraft,2000);
+}
+function _stopDraftAutosave(){
+  if(_draftInterval){clearInterval(_draftInterval);_draftInterval=null;}
+}
+
+function _checkDraftRestore(){
+  if(editId)return;
+  var raw='';try{raw=localStorage.getItem(DRAFT_KEY)||'';}catch(e){}
+  if(!raw)return;
+  var d;try{d=JSON.parse(raw);}catch(e){_clearDraft();return;}
+  if(!d||_isDraftEmpty(d)){_clearDraft();return;}
+  // Only restore if same user
+  if(me&&d.user&&d.user!==me.initials)return;
+  // Compute draft age
+  var ts=d.timestamp?new Date(d.timestamp):new Date();
+  var ageMin=Math.round((Date.now()-ts.getTime())/60000);
+  // If older than 7 days, drop silently
+  if(ageMin>7*24*60){_clearDraft();return;}
+  _showDraftBanner(d,ageMin);
+}
+
+function _showDraftBanner(draft,ageMin){
+  var modal=$('entryModalBg');
+  if(!modal)return;
+  var existing=modal.querySelector('.draft-banner');
+  if(existing)existing.remove();
+  var ageStr=ageMin<1?'just now':ageMin<60?ageMin+' min ago':ageMin<60*24?Math.round(ageMin/60)+' hr ago':Math.round(ageMin/(60*24))+' day'+(ageMin>=60*48?'s':'')+' ago';
+  // Show desc preview to help user identify the draft
+  var preview=(draft.eDesc||'').trim().slice(0,80);
+  if(preview.length>=80)preview+='…';
+  var banner=document.createElement('div');
+  banner.className='draft-banner';
+  banner.style.cssText='background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #fbbf24;border-radius:var(--r);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-1);';
+  banner.innerHTML=
+    '<span class="mi" style="color:#92400e;font-size:22px;">restore</span>'+
+    '<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;color:#78350f;">Unsaved draft from '+esc(ageStr)+'</div>'+
+    (preview?'<div style="font-size:10px;color:#92400e;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">"'+esc(preview)+'"</div>':'')+'</div>'+
+    '<button class="btn btn-p btn-s" onclick="_restoreDraft()" style="white-space:nowrap;"><span class="mi mi-xs">restore</span>Restore</button>'+
+    '<button class="btn btn-s" onclick="_discardDraft()" style="white-space:nowrap;"><span class="mi mi-xs">close</span>Discard</button>';
+  // Insert at the top of the modal body
+  var modalBody=modal.querySelector('.nd-card, .modal-card, .entry-modal-card')||modal.firstElementChild;
+  if(modalBody){
+    var firstChild=modalBody.querySelector('.modal-body, form, .entry-form')||modalBody.firstElementChild;
+    if(firstChild&&firstChild.parentNode)firstChild.parentNode.insertBefore(banner,firstChild);
+    else modalBody.insertBefore(banner,modalBody.firstChild);
+  }
+}
+
+function _restoreDraft(){
+  var raw='';try{raw=localStorage.getItem(DRAFT_KEY)||'';}catch(e){}
+  if(!raw){_removeDraftBanner();return;}
+  var d;try{d=JSON.parse(raw);}catch(e){_clearDraft();_removeDraftBanner();return;}
+  // Populate all fields
+  _draftFields.forEach(function(id){
+    var el=$(id);if(!el||d[id]===undefined)return;
+    el.value=d[id];
+  });
+  // Restore attachments
+  if(Array.isArray(d.attachments)){attachments=d.attachments.slice();rAP();}
+  // Trigger dependent-field toggles
+  onStatusChange();onFollowUpChange();updateCapRequired();
+  _removeDraftBanner();
+  toast('Draft restored');
+}
+
+function _discardDraft(){
+  _clearDraft();
+  _removeDraftBanner();
+  toast('Draft discarded');
+}
+
+function _removeDraftBanner(){
+  var modal=$('entryModalBg');
+  if(!modal)return;
+  var b=modal.querySelector('.draft-banner');
+  if(b)b.remove();
+}
+function closeEntryModal(){closeSheet('entryModalBg');editId=null;attachments=[];_stopDraftAutosave();_removeDraftBanner();}
 function saveEntry(){var dt=$('eDate').value,tm=$('eTime').value,sh=$('eShift').value,dept=$('eDept').value,cat=$('eCat').value,pri=$('ePri').value,desc=$('eDesc').value.trim(),rep=$('eReporter').value.trim();if(!dt||!tm||!sh||!dept||!cat||!pri||!desc){toast('Fill required fields');return;}if(!validateCapFields())return;var st=$('eStatus').value,rb=$('eResBy').value,rd=$('eResDate').value,fu=$('eFollowUp').value,fua=fu==='Yes'?$('eFUAssign').value:'';if(rb&&rd&&st!=='Resolved')st='Resolved';var ai=me.initials;if(editId){var o=entries.find(x=>x.id===editId);if(o){if(isLead()&&rep!==o.reportedBy){var ni=li(rep);ai=ni||o.authorInitials;}else ai=o.authorInitials;}}
 // Escalation SLA tracking
 var escDate='',flRespDate='',flRespBy='';
@@ -4787,8 +5332,164 @@ var diffFields=[['status','Status'],['priority','Priority'],['category','Categor
 diffFields.forEach(function(f){var key=f[0],label=f[1],oldVal=String(old[key]||''),newVal=String(en[key]||'');if(oldVal!==newVal)changedFields.push({field:label,from:oldVal,to:newVal});});
 entries[idx]=en;
 var summary=changedFields.length>0?changedFields.map(function(c){return c.field+': '+c.from+' -> '+c.to;}).join('; '):'Minor edit (no field changes)';
-addH('edit','Edited: '+cat+' ('+en.id+')',summary.slice(0,255),{entryId:en.id,entryCategory:cat,changedFields:changedFields});toast('Updated');}}else{entries.push(en);addH('add','New: '+cat+' - "'+desc.slice(0,35)+'..."','Pri:'+pri+', Dept:'+dept+', Shift:'+sh,{entryId:en.id,entryCategory:cat});toast('Added');var d=new Date(dt+'T00:00:00');if(d.getMonth()!==curMonth){curMonth=d.getMonth();rMT();}}if(en.status==='Escalated')nLeads('escalation','Escalation: '+cat,desc.slice(0,70)+' ('+rep+')',en.id);if(en.followUp==='Yes'&&en.followUpAssign){if(en.followUpAssign!==me.initials)pNot(en.followUpAssign,'followup','Follow-up assigned',cat+': '+desc.slice(0,70),en.id);nLeads('followup','F/U: '+ln(en.followUpAssign),cat+': '+desc.slice(0,50),en.id);}spSaveEntry(en).then(function(){renderAll();}).catch(function(e){toast('Save failed');console.error(e);});pushOnNewEntry(en);closeEntryModal();renderAll();}
+addH('edit','Edited: '+cat+' ('+en.id+')',summary.slice(0,255),{entryId:en.id,entryCategory:cat,changedFields:changedFields});toast('Updated');}}else{entries.push(en);addH('add','New: '+cat+' - "'+desc.slice(0,35)+'..."','Pri:'+pri+', Dept:'+dept+', Shift:'+sh,{entryId:en.id,entryCategory:cat});toast('Added');_clearDraft();var d=new Date(dt+'T00:00:00');if(d.getMonth()!==curMonth){curMonth=d.getMonth();rMT();}}if(en.status==='Escalated')nLeads('escalation','Escalation: '+cat,desc.slice(0,70)+' ('+rep+')',en.id);if(en.followUp==='Yes'&&en.followUpAssign){if(en.followUpAssign!==me.initials)pNot(en.followUpAssign,'followup','Follow-up assigned',cat+': '+desc.slice(0,70),en.id);nLeads('followup','F/U: '+ln(en.followUpAssign),cat+': '+desc.slice(0,50),en.id);}spSaveEntry(en).then(function(){renderAll();}).catch(function(e){toast('Save failed');console.error(e);});pushOnNewEntry(en);closeEntryModal();renderAll();}
 function editEntry(id){var e=entries.find(x=>x.id===id);if(!e)return;if(!canEdit(e)){toast('Cannot edit');return;}openEntryModal(id);}
+function cloneEntry(id){
+  var src=entries.find(function(x){return x.id===id;});
+  if(!src){toast('Entry not found');return;}
+  // Open a fresh New Entry modal first so defaults populate
+  openEntryModal();
+  // Now overwrite the structural fields while keeping date/time/reporter as "today / now / me"
+  setTimeout(function(){
+    $('eShift').value=src.shift||'';
+    $('eDept').value=src.department||'General';
+    $('eCat').value=src.category||'';
+    $('ePri').value=src.priority||'';
+    $('eDesc').value='';// Clear description — user must write the new one
+    $('eAction').value='';
+    $('eStatus').value='Open';// Always start as Open
+    $('eFollowUp').value=src.followUp||'No';
+    $('eNotes').value='';
+    $('eActionType').value=src.actionType||'';
+    $('eInstrument').value=src.instrument||'';
+    $('eReagentLot').value='';// Lot numbers are specific to the occurrence, don't copy
+    $('eTestSystem').value=src.testSystem||'';
+    $('eRootCause').value='';
+    $('eEffReviewDate').value='';
+    $('eEffVerified').value='';
+    $('eEffNotes').value='';
+    onStatusChange();onFollowUpChange();updateCapRequired();
+    // Focus description so user can start typing
+    var desc=$('eDesc');if(desc)desc.focus();
+    toast('Cloned from prior entry — fill in description');
+  },100);
+}
+
+// ═══ COMMENT THREADS ═══
+// Comments stored as e.comments = [{id, author, authorName, authorRole, text, timestamp, isDeleted}]
+// Persisted to SharePoint via CommentsJSON column on ShiftEntries.
+var _activeCommentEntryId=null;
+
+function openCommentThread(eid){
+  var e=entries.find(function(x){return x.id===eid;});
+  if(!e){toast('Entry not found');return;}
+  _activeCommentEntryId=eid;
+  $('commentEntryTitle').textContent=(e.category||'Entry')+' · '+(e.description||'').slice(0,50);
+  renderCommentList();
+  $('commentInput').value='';
+  openSheet('commentBg');
+  setTimeout(function(){var inp=$('commentInput');if(inp)inp.focus();},100);
+}
+
+function closeCommentThread(){closeSheet('commentBg');_activeCommentEntryId=null;}
+
+function renderCommentList(){
+  var host=$('commentList');if(!host)return;
+  var e=entries.find(function(x){return x.id===_activeCommentEntryId;});
+  if(!e){host.innerHTML='';return;}
+  var comments=(e.comments||[]).slice();
+  if(!comments.length){
+    host.innerHTML='<div class="comment-empty"><span class="mi">chat_bubble_outline</span>No comments yet</div><div style="text-align:center;font-size:10px;color:var(--g400);margin-bottom:8px;">Start the discussion — visible to everyone with access</div>';
+    return;
+  }
+  // Sort oldest-first (natural reading order)
+  comments.sort(function(a,b){return(a.timestamp||'').localeCompare(b.timestamp||'');});
+  host.innerHTML=comments.map(function(c){return _commentBubble(c);}).join('');
+  // Scroll to bottom to show latest
+  setTimeout(function(){host.scrollTop=host.scrollHeight;},0);
+}
+
+function _commentBubble(c){
+  var isMine=me&&c.author===me.initials;
+  var canDelete=me&&(c.author===me.initials||isAdm()||isLead());
+  var ts=_formatCommentTime(c.timestamp);
+  var roleBit=c.authorRole?' <span class="comment-role">'+esc(c.authorRole)+'</span>':'';
+  if(c.isDeleted){
+    return '<div class="comment-bubble deleted"><div class="comment-head"><span class="comment-author">'+esc(c.authorName||ln(c.author)||'Someone')+'</span>'+roleBit+'<span class="comment-time">'+esc(ts)+'</span></div><div class="comment-text"><span class="mi mi-xs" style="font-size:12px;vertical-align:middle;">visibility_off</span> Comment deleted</div></div>';
+  }
+  var delBtn=canDelete?'<button class="comment-del" title="Delete" onclick="deleteComment(\''+escJS(c.id)+'\')"><span class="mi" style="font-size:14px;">close</span></button>':'';
+  return '<div class="comment-bubble'+(isMine?' mine':'')+'">'+
+    '<div class="comment-head">'+
+      '<span class="comment-author">'+esc(c.authorName||ln(c.author)||'Someone')+'</span>'+
+      roleBit+
+      '<span class="comment-time">'+esc(ts)+'</span>'+
+    '</div>'+
+    '<div class="comment-text">'+esc(c.text||'')+'</div>'+
+    delBtn+
+    '</div>';
+}
+
+function _formatCommentTime(isoStr){
+  if(!isoStr)return '';
+  var d=new Date(isoStr);if(isNaN(d.getTime()))return '';
+  var now=new Date();
+  var diffMs=now-d;
+  if(diffMs<60*1000)return 'just now';
+  if(diffMs<60*60*1000)return Math.floor(diffMs/60000)+'m ago';
+  var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var msgDay=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  var timeStr=d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  if(msgDay.getTime()===today.getTime())return timeStr+' today';
+  var yesterday=new Date(today);yesterday.setDate(yesterday.getDate()-1);
+  if(msgDay.getTime()===yesterday.getTime())return 'Yesterday '+timeStr;
+  if(d.getFullYear()===now.getFullYear())return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+timeStr;
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+function postComment(){
+  if(!_activeCommentEntryId||!me){toast('Sign in first');return;}
+  var inp=$('commentInput');if(!inp)return;
+  var text=(inp.value||'').trim();
+  if(!text){toast('Comment cannot be empty');return;}
+  if(text.length>2000){toast('Comment too long (max 2000 chars)');return;}
+  var e=entries.find(function(x){return x.id===_activeCommentEntryId;});
+  if(!e){toast('Entry not found');return;}
+  if(!e.comments)e.comments=[];
+  var comment={
+    id:gid(),
+    author:me.initials,
+    authorName:me.fullName||'',
+    authorRole:me.role||'',
+    text:text,
+    timestamp:new Date().toISOString(),
+    isDeleted:false
+  };
+  e.comments.push(comment);
+  e.lastModified=comment.timestamp;
+  inp.value='';
+  renderCommentList();
+  renderLog();// Refresh the row so the count badge updates
+  // Notify entry author (if it's not the commenter) and followUpAssign if set
+  if(e.authorInitials&&e.authorInitials!==me.initials){
+    pNot(e.authorInitials,'info','Comment on your entry',me.fullName+': '+text.slice(0,80),e.id);
+  }
+  if(e.followUpAssign&&e.followUpAssign!==me.initials&&e.followUpAssign!==e.authorInitials){
+    pNot(e.followUpAssign,'info','Comment on entry you follow up',me.fullName+': '+text.slice(0,80),e.id);
+  }
+  addH('edit','Commented on '+(e.category||'entry')+': "'+text.slice(0,40)+(text.length>40?'...':'')+'"','',{entryId:e.id,entryCategory:e.category});
+  spSaveEntry(e).catch(function(err){console.error('Comment save failed:',err);toast('Comment saved locally but SP sync failed');});
+  toast('Comment posted');
+}
+
+function deleteComment(cid){
+  if(!_activeCommentEntryId||!me)return;
+  var e=entries.find(function(x){return x.id===_activeCommentEntryId;});
+  if(!e||!e.comments)return;
+  var c=e.comments.find(function(x){return x.id===cid;});
+  if(!c)return;
+  // Permission check: author, leads, or admins
+  if(c.author!==me.initials&&!isLead()&&!isAdm()){toast('Only the author or leads can delete');return;}
+  if(!confirm('Delete this comment? The deletion is preserved in the thread as a placeholder.'))return;
+  c.isDeleted=true;
+  c.deletedBy=me.initials;
+  c.deletedDate=new Date().toISOString();
+  e.lastModified=c.deletedDate;
+  renderCommentList();
+  renderLog();
+  addH('edit','Deleted comment on '+(e.category||'entry'),'Deletion preserved as placeholder',{entryId:e.id,entryCategory:e.category});
+  spSaveEntry(e).catch(function(err){console.error('Comment delete save failed:',err);});
+  toast('Comment deleted');
+}
 function deleteEntry(id){
   var e=entries.find(x=>x.id===id);
   if(!e)return;
@@ -5278,13 +5979,16 @@ function _renderShSlaScorecard(all){
     }
   });
   var resolved=escalated.length-stillUnresponded;
-  var pct=resolved>0?Math.round(withinSla/resolved*100):100;
-  var cls=pct>=90?'ok':pct>=70?'warn':'bad';
-  var color=cls==='ok'?'var(--green)':cls==='warn'?'var(--amber)':'var(--red)';
+  var hasData=resolved>0;
+  var pct=hasData?Math.round(withinSla/resolved*100):null;
+  var cls=!hasData?'na':pct>=90?'ok':pct>=70?'warn':'bad';
+  var color=!hasData?'var(--g400)':cls==='ok'?'var(--green)':cls==='warn'?'var(--amber)':'var(--red)';
+  var displayVal=hasData?pct+'%':'—';
+  var displayLabel=hasData?'within SLA (lifetime)':'Awaiting first lead response';
   body.innerHTML=
     '<div class="sh-sla-big">'+
-      '<div class="sh-sla-big-val" style="color:'+color+';">'+pct+'%</div>'+
-      '<div class="sh-sla-big-label">within SLA (lifetime)</div>'+
+      '<div class="sh-sla-big-val" style="color:'+color+';font-size:'+(hasData?'42px':'34px')+';">'+displayVal+'</div>'+
+      '<div class="sh-sla-big-label">'+displayLabel+'</div>'+
     '</div>'+
     '<div class="sh-sla-details">'+
       '<div class="sla-line"><span class="k">Total escalations</span><span class="v">'+escalated.length+'</span></div>'+
@@ -5318,6 +6022,13 @@ function _renderShAtRisk(all){
   all.filter(function(e){return e.effReviewDate&&!e.effVerified&&new Date(e.effReviewDate+'T00:00:00')<=new Date();}).forEach(function(e){
     var daysOverdue=Math.floor((now-Date.parse(e.effReviewDate+'T00:00:00'))/86400000);
     items.push({id:e.id,sev:daysOverdue>30?'red':'amber',icon:'fact_check',title:'Eff. Review overdue',desc:(e.category||'—')+': '+(e.description||'').slice(0,60),val:daysOverdue+'d overdue'});
+  });
+  // Category 4: CAP-incomplete (regulatory gap)
+  all.filter(function(e){return capIsRequired(e)&&capIncompleteReasons(e).length>0;}).forEach(function(e){
+    var reasons=capIncompleteReasons(e);
+    // Severity: High priority always red; Resolved + missing eff review = red; otherwise amber
+    var sev=(e.priority==='High'||(e.status==='Resolved'&&reasons.indexOf('Eff. Review Date')>=0))?'red':'amber';
+    items.push({id:e.id,sev:sev,icon:'error',title:'CAP-incomplete: '+(e.category||'—'),desc:'Missing '+reasons.join(', ')+' — '+(e.description||'').slice(0,40),val:reasons.length+' field'+(reasons.length===1?'':'s')});
   });
   // Sort by severity then value
   items.sort(function(a,b){if(a.sev!==b.sev)return a.sev==='red'?-1:1;return 0;});
@@ -5499,10 +6210,46 @@ function _renderShCatPriHeatmap(all){
 }
 
 function _shFilterLog(cat,pri){
-  // Switch to log page — user can see the category/priority filter applied visually via existing UI
+  // Actually apply the filter on the Shift Log page
   switchPage('log');
-  toast('Filtered to: '+cat+' · '+pri+' priority');
-  // Best-effort: if filter UI exists, set it (currently the log doesn't have a formal filter API)
+  setTimeout(function(){
+    var fc=$('fCat'),fp=$('fPri');
+    if(fc){fc.value=cat;}
+    if(fp){fp.value=pri;}
+    // Reset shift + search to show all matches
+    var fs=$('fShift'),sb=$('searchBox');
+    if(fs)fs.value='';
+    if(sb)sb.value='';
+    // Mark that we came from stats so renderLog can show the pill
+    window._statsFilterActive={cat:cat,pri:pri};
+    renderLog();
+    _showStatsFilterPill(cat,pri);
+    // Scroll to active entries section
+    setTimeout(function(){var z=$('activeZone');if(z&&z.scrollIntoView)z.scrollIntoView({behavior:'smooth',block:'start'});},150);
+  },200);
+}
+
+function _showStatsFilterPill(cat,pri){
+  var host=$('statsFilterPill');
+  if(!host){
+    host=document.createElement('div');
+    host.id='statsFilterPill';
+    host.style.cssText='margin:8px 28px 0;padding:8px 12px;background:linear-gradient(135deg,#e0f2f1,#b2dfdb);border:1px solid var(--teal-bdr);border-radius:999px;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--navy);max-width:fit-content;box-shadow:var(--shadow-1);';
+    var pageLog=$('pageLog');
+    if(pageLog&&pageLog.parentNode)pageLog.parentNode.insertBefore(host,pageLog);
+  }
+  host.innerHTML='<span class="mi mi-xs" style="color:var(--teal);">filter_alt</span>Filtered from Stats: <strong>'+esc(cat)+' · '+esc(pri)+' priority</strong><button onclick="_clearStatsFilter()" style="background:var(--white);border:1px solid var(--teal-bdr);color:var(--teal);padding:2px 10px;border-radius:999px;font-size:10px;font-weight:700;cursor:pointer;margin-left:4px;font-family:inherit;display:inline-flex;align-items:center;gap:3px;"><span class="mi mi-xs">close</span>Clear</button>';
+  host.style.display='flex';
+}
+
+function _clearStatsFilter(){
+  window._statsFilterActive=null;
+  var fc=$('fCat'),fp=$('fPri');
+  if(fc)fc.value='';
+  if(fp)fp.value='';
+  renderLog();
+  var host=$('statsFilterPill');
+  if(host)host.style.display='none';
 }
 
 // ═══ SECTION 3: ACTIVITY & TRENDS ═══
@@ -5833,7 +6580,8 @@ function getDashMetrics(){
     else if(s.state==='overdue'){afterSla++;pendingResp++;}
     else pendingResp++;
   });
-  var slaPct=(escalated.length-pendingResp)>0?Math.round(withinSla/(escalated.length-pendingResp)*100):100;
+  var slaHasData=(escalated.length-pendingResp)>0;
+  var slaPct=slaHasData?Math.round(withinSla/(escalated.length-pendingResp)*100):null;
   // CAPA required vs documented
   var capaReq=all.filter(function(e){return e.priority==='High'||['QC Issue','Instrument','Safety','Patient Sample'].indexOf(e.category)>=0;});
   var capaDoc=capaReq.filter(function(e){return e.actionType&&e.actionType!=='None Required'&&e.actionType!==''&&e.rootCause;}).length;
@@ -5877,7 +6625,7 @@ function exportDashPDF(){
     ['Effectiveness Reviews — Completed',''+m.effComp],
     ['Effectiveness Reviews — Overdue',''+m.effOver],
     ['Effectiveness Reviews — Not Yet Due',''+m.effPend],
-    ['Escalation SLA Compliance (lifetime)',m.slaPct+'% ('+m.slaWithin+' within, '+m.slaAfter+' after, '+m.slaPending+' pending)'],
+    ['Escalation SLA Compliance (lifetime)',(m.slaPct===null?'N/A':m.slaPct+'%')+' ('+m.slaWithin+' within, '+m.slaAfter+' after, '+m.slaPending+' pending)'],
     ['Monthly Supervisory Review',getReviewForMonth(curMonth,curYear).length>0?'Completed':'Pending']
   ],styles:{fontSize:9,cellPadding:3,font:'helvetica'},headStyles:{fillColor:[0,121,107],textColor:255,fontStyle:'bold'},
   columnStyles:{0:{fontStyle:'bold',cellWidth:75}},alternateRowStyles:{fillColor:[247,244,239]},margin:{left:lm,right:rm}});
@@ -6205,10 +6953,105 @@ function startApp(){
 var BK_MINS=120;// auto-backup interval in minutes
 runAutoBackup();setInterval(runAutoBackup,BK_MINS*60000);setInterval(uBD,30000);
 setInterval(async function(){try{await loadAllData();lastSyncTime=new Date();uBD();renderAll();pushCheckForNewItems();}catch(e){}},60000);
-['searchBox','fShift','fCat','fPri','fMonth','fYear'].forEach(id=>{$(id).addEventListener(id==='searchBox'?'input':'change',renderLog);});
+['searchBox','fShift','fCat','fPri','fMonth','fYear'].forEach(id=>{$(id).addEventListener(id==='searchBox'?'input':'change',function(){
+  // If the user manually changes any filter, clear the "from Stats" pill
+  if(window._statsFilterActive){
+    window._statsFilterActive=null;
+    var host=$('statsFilterPill');
+    if(host)host.style.display='none';
+  }
+  // Keep the preset label in sync with current filter state
+  if(typeof _clearPresetLabelIfStale==='function')_clearPresetLabelIfStale();
+  renderLog();
+});});
 // Clear CAP field error highlighting on input
 ['eActionType','eInstrument','eReagentLot','eTestSystem','eRootCause','eEffReviewDate'].forEach(function(id){var el=$(id);if(el)el.addEventListener(el.tagName==='SELECT'?'change':'input',function(){this.style.borderColor='';this.style.boxShadow='';updateCapRequired();});});
+
+// Keyboard shortcuts — power-user navigation
+_installKeyboardShortcuts();
 }
+
+function _installKeyboardShortcuts(){
+  document.addEventListener('keydown',function(e){
+    // Skip if user is typing in a field
+    var t=e.target;
+    var inField=t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable);
+    // Escape: close any open sheet/modal or menu, even if focused in a field
+    if(e.key==='Escape'){
+      // Try closing any visible bottom sheet
+      var openSheet_=document.querySelector('.sheet-bg.show, .mandatory-bg.show, .nd-bg.show, .tut-overlay.show');
+      if(openSheet_){openSheet_.classList.remove('show');e.preventDefault();return;}
+      // Close any open dropdown menus
+      var anyMenu=document.querySelector('.exp-menu.show');
+      if(anyMenu){anyMenu.classList.remove('show');e.preventDefault();return;}
+      // Close bell dropdown
+      var bell=$('bellDrop');if(bell&&bell.classList.contains('show')){bell.classList.remove('show');e.preventDefault();return;}
+      return;
+    }
+    if(inField)return;
+    // `/` focuses search (only when on log page)
+    if(e.key==='/'){
+      var logPage=$('pageLog');
+      if(logPage&&logPage.classList.contains('active')){
+        var sb=$('searchBox');if(sb){sb.focus();sb.select();e.preventDefault();}
+      }
+      return;
+    }
+    // Cmd/Ctrl+K: focus search (works any page)
+    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){
+      if(!$('pageLog').classList.contains('active'))switchPage('log');
+      setTimeout(function(){var sb=$('searchBox');if(sb){sb.focus();sb.select();}},50);
+      e.preventDefault();return;
+    }
+    // Cmd/Ctrl+N: new entry (only when on log or ann page)
+    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='n'){
+      var p=document.querySelector('.page.active');
+      if(p&&(p.id==='pageLog'||p.id==='pageAnn')){openEntryModal();e.preventDefault();}
+      return;
+    }
+    // ? shows a cheat sheet
+    if(e.key==='?'&&e.shiftKey){_showShortcutHelp();e.preventDefault();return;}
+    // G then letter: jump to page (common vim-style)
+    if(e.key.toLowerCase()==='g'){
+      _gPending=true;
+      setTimeout(function(){_gPending=false;},700);
+      return;
+    }
+    if(_gPending){
+      _gPending=false;
+      var k=e.key.toLowerCase();
+      var map={a:'ann',s:'stats',l:'log',n:'notifs',u:'audit',d:'admin'};
+      if(map[k]){switchPage(map[k]);e.preventDefault();}
+    }
+  });
+}
+var _gPending=false;
+
+function _showShortcutHelp(){
+  var existing=$('shortcutHelp');
+  if(existing){existing.remove();return;}
+  var overlay=document.createElement('div');
+  overlay.id='shortcutHelp';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .15s ease-out;';
+  overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+  overlay.innerHTML='<div style="background:var(--white);border-radius:var(--rl);max-width:440px;width:100%;padding:22px;box-shadow:var(--shadow-3);"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><h3 style="font-size:15px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:6px;"><span class="mi">keyboard</span>Keyboard Shortcuts</h3><button onclick="this.closest(\'#shortcutHelp\').remove()" style="background:transparent;border:none;cursor:pointer;color:var(--g400);font-size:20px;">×</button></div>'+
+    '<table style="width:100%;font-size:12px;border-collapse:collapse;">'+
+    _kbRow('/','Focus search (Log page)')+
+    _kbRow('Ctrl / ⌘ + K','Jump to Log + focus search')+
+    _kbRow('Ctrl / ⌘ + N','New entry (Log or Announcements)')+
+    _kbRow('Esc','Close open modal or menu')+
+    _kbRow('G then A','Go to Announcements')+
+    _kbRow('G then S','Go to Stats (leads only)')+
+    _kbRow('G then L','Go to Shift Log')+
+    _kbRow('G then N','Go to Notifications')+
+    _kbRow('G then U','Go to Audit')+
+    _kbRow('?','Show/hide this help')+
+    '</table>'+
+    '<div style="font-size:10px;color:var(--g400);margin-top:14px;text-align:center;">Shortcuts are disabled while typing in a field</div>'+
+    '</div>';
+  document.body.appendChild(overlay);
+}
+function _kbRow(k,d){return '<tr><td style="padding:6px 0;padding-right:14px;"><kbd style="font-family:\'JetBrains Mono\',monospace;font-size:10px;background:var(--g100);border:1px solid var(--g200);border-bottom-width:2px;border-radius:4px;padding:2px 6px;color:var(--navy);font-weight:600;white-space:nowrap;">'+esc(k)+'</kbd></td><td style="padding:6px 0;color:var(--g600);">'+esc(d)+'</td></tr>';}
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',startApp);}else{startApp();}
 
 // ═══════════════════════════════════════════
@@ -6589,6 +7432,17 @@ refreshUI=function(){
 <button class="mob-fab" id="mobFab" onclick="openEntryModal()" title="New shift entry">
   <span class="mi">add</span>
 </button>
+
+<!-- BULK ACTION BAR — floats at bottom when entries are selected -->
+<div class="bulk-bar" id="bulkBar" role="toolbar" aria-label="Bulk actions">
+  <span class="count" id="bulkCount">0</span>
+  <span class="bulk-label">selected</span>
+  <button class="b-green" onclick="bulkResolve()" title="Resolve selected"><span class="mi mi-xs">check_circle</span>Resolve</button>
+  <button class="b-amber" onclick="bulkEscalate()" title="Escalate selected"><span class="mi mi-xs">warning</span>Escalate</button>
+  <button onclick="bulkToggleFollowUp()" title="Toggle follow-up flag"><span class="mi mi-xs">flag</span>Follow-up</button>
+  <button class="b-red" onclick="bulkDelete()" title="Delete selected" id="bulkDeleteBtn"><span class="mi mi-xs">delete</span>Delete</button>
+  <button class="b-clear" onclick="bulkClear()" title="Clear selection"><span class="mi mi-xs">close</span>Clear</button>
+</div>
 
 <div class="tut-overlay" id="tutOverlay">
   <div class="tut-backdrop" onclick="tutSkip()"></div>
