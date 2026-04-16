@@ -432,16 +432,22 @@ tr.row-selected td{background:rgba(224,242,241,.6);}
   transition:color var(--dur-short) var(--me-standard);}
 .s-open .stat-val{color:var(--blue);}.s-prog .stat-val{color:var(--amber);}.s-esc .stat-val{color:var(--red);}.s-high .stat-val{color:var(--g700);}.s-res .stat-val{color:var(--green);}
 
-/* Sections */
-.section{border-radius:var(--rr);overflow:hidden;margin-bottom:14px;border:1px solid var(--g200);box-shadow:var(--shadow-1);
-  animation:sectionIn var(--dur-med) var(--me-decelerate) both;}
+/* Sections — no entrance animation because sections rebuild on every filter/sort/dept
+   change. Previously animated with `sectionIn` but that caused visible flicker during
+   filter changes. The page-level `.page.active` animation handles the initial reveal. */
+.section{border-radius:var(--rr);overflow:hidden;margin-bottom:14px;border:1px solid var(--g200);box-shadow:var(--shadow-1);}
 @keyframes sectionIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* During an auto-sync rebuild or a filter/sort/dept/page change, suppress entrance
    animations so the log doesn't flicker. Targets the specific entrance keyframes used
    by log sections, announcement bars, audit days, the monthly review banner, stat
    cards, mobile cards, and CAP expansion rows. Ongoing animations like spinners and
-   pulses are unaffected. */
+   pulses are unaffected.
+
+   We use animation-duration:0s and animation-delay:0s rather than animation:none to
+   avoid re-triggering the animation when the class is removed. With duration 0, the
+   animation runs to completion instantly and the element is marked "already animated"
+   by the browser — subsequent class removal doesn't restart it. */
 body.syncing .section,
 body.syncing .ann-bar,
 body.syncing .aud-day,
@@ -452,7 +458,8 @@ body.syncing .cap-detail-row td,
 body.syncing .aud-snapshot,
 body.syncing .aud-changes,
 body.syncing .page.active{
-  animation:none!important;
+  animation-duration:0.001s!important;
+  animation-delay:0s!important;
 }
 .sec-hdr{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;transition:background var(--dur-short) var(--me-standard),filter var(--dur-short) var(--me-standard);}
 .sec-hdr:hover{filter:brightness(.97);}
@@ -480,7 +487,7 @@ body.syncing .page.active{
 .sec-res table thead th{background:rgba(18,132,90,.06);color:var(--green);}
 
 /* Announcements */
-.ann-bar{margin-bottom:14px;border-radius:var(--rl);border:1px solid var(--g200);overflow:hidden;box-shadow:var(--shadow-1);animation:sectionIn var(--dur-med) var(--me-decelerate) both;}
+.ann-bar{margin-bottom:14px;border-radius:var(--rl);border:1px solid var(--g200);overflow:hidden;box-shadow:var(--shadow-1);}
 .ann-bar-hdr{background:var(--g50);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;border-bottom:1px solid var(--g200);transition:background var(--dur-short) var(--me-standard);}
 .ann-bar-hdr:hover{background:var(--g100);}
 .ann-bar-hdr h3{font-size:12px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:6px;}
@@ -751,11 +758,12 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 .auth-toggle{text-align:center;margin-top:12px;font-size:11px;color:var(--g500);}
 .auth-toggle a{color:var(--teal);font-weight:600;cursor:pointer;}
 
-/* Monthly Supervisory Review */
-.msr-banner{background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:2px solid var(--amber-bdr);border-radius:var(--rl);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;
-  animation:msrFadeIn var(--dur-med) var(--me-decelerate) both;}
+/* Monthly Supervisory Review — no entrance animation or shake because the banner
+   re-renders on every filter/dept/sort change and the movement is visible as flicker.
+   The red/amber color tint + icon is sufficient visual priority. */
+.msr-banner{background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:2px solid var(--amber-bdr);border-radius:var(--rl);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
 @keyframes msrFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.msr-banner.overdue{background:linear-gradient(135deg,var(--red-bg),#fbe2e2);border-color:var(--red-bdr);animation:msrShake var(--dur-long) var(--me-spring) 0.3s both;}
+.msr-banner.overdue{background:linear-gradient(135deg,var(--red-bg),#fbe2e2);border-color:var(--red-bdr);}
 @keyframes msrShake{0%{transform:translateX(0)}15%{transform:translateX(-4px)}30%{transform:translateX(4px)}45%{transform:translateX(-3px)}60%{transform:translateX(2px)}75%{transform:translateX(-1px)}100%{transform:translateX(0)}}
 .msr-banner .msr-ico{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;
   transition:transform var(--dur-short) var(--me-spring);}
@@ -969,7 +977,9 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
     background:var(--white);border-radius:var(--rl);
     padding:12px 14px;border:1px solid var(--g200);
     box-shadow:var(--shadow-1);position:relative;
-    animation:cardIn var(--dur-med) var(--me-decelerate) calc(var(--ci,0)*35ms) both;
+    /* Entrance animation removed — cards re-render on every filter change and the
+       staggered cardIn was visible as flicker. The border-left priority color plus
+       hover transition is sufficient entry affordance. */
   }
   @keyframes cardIn{ from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
   .mob-log-card.priority-high{ border-left:3px solid var(--red); }
@@ -2320,8 +2330,12 @@ function _dataHash(){
 // Render wrappers that suppress the sectionIn entrance animation. Used for filter changes,
 // sort clicks, preset applies, and similar user actions where the entire log rebuilds but
 // nothing meaningful has changed visually — the animation would look like a flicker.
+// Uses a counter instead of direct class removal to handle rapid-fire calls (e.g. typing
+// in the search box). Only the last-scheduled RAF removes the class.
+var _noAnimGen=0;
 function _renderLogNoAnim(){
   document.body.classList.add('syncing');
+  var myGen=++_noAnimGen;
   try{
     renderLog();
     // Mobile log rebuilds cards separately after a 50ms setTimeout in switchPage,
@@ -2329,20 +2343,22 @@ function _renderLogNoAnim(){
     // so all renders happen under the syncing flag.
     if(window.innerWidth<=600&&typeof renderMobileLog==='function')renderMobileLog();
   }finally{
-    // Hold the class for two frames to also cover any microtask-delayed rebuilds
+    // Hold the class for two frames to also cover any microtask-delayed rebuilds.
+    // Only clear if no NEWER call has superseded us.
     requestAnimationFrame(function(){
       requestAnimationFrame(function(){
-        if(!_syncInProgress)document.body.classList.remove('syncing');
+        if(myGen===_noAnimGen&&!_syncInProgress)document.body.classList.remove('syncing');
       });
     });
   }
 }
 function _renderAnnNoAnim(){
   document.body.classList.add('syncing');
+  var myGen=++_noAnimGen;
   try{renderAnn();}finally{
     requestAnimationFrame(function(){
       requestAnimationFrame(function(){
-        if(!_syncInProgress)document.body.classList.remove('syncing');
+        if(myGen===_noAnimGen&&!_syncInProgress)document.body.classList.remove('syncing');
       });
     });
   }
