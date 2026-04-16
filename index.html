@@ -405,24 +405,6 @@ tr.row-selected td{background:rgba(224,242,241,.6);}
   transition:color var(--dur-short) var(--me-standard);}
 .s-open .stat-val{color:var(--blue);}.s-prog .stat-val{color:var(--amber);}.s-esc .stat-val{color:var(--red);}.s-high .stat-val{color:var(--g700);}.s-res .stat-val{color:var(--green);}
 
-/* Dashboard charts */
-.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
-.dash-card{background:var(--white);border-radius:var(--rr);padding:22px 26px;box-shadow:var(--shadow-1);border:1px solid var(--g200);
-  transition:transform var(--dur-short) var(--me-spring),box-shadow var(--dur-short) var(--me-standard),border-color var(--dur-short) var(--me-standard);
-  animation:dashCardIn var(--dur-long) var(--me-decelerate) calc(var(--di,0)*80ms) both;}
-@keyframes dashCardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-.dash-card:hover{box-shadow:0 8px 24px rgba(28,26,22,.1),var(--shadow-1);transform:translateY(-2px);border-color:var(--g300);}
-.dash-card h4{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
-.dash-card h4 .mi{transition:transform var(--dur-short) var(--me-spring);}
-.dash-card:hover h4 .mi{transform:scale(1.15);}
-.dash-card canvas{width:100%!important;max-height:280px;}
-.dash-card.full{grid-column:1/-1;}
-.dash-recent{max-height:280px;overflow-y:auto;padding:0 2px;}
-.dash-recent-item{padding:8px 0;border-bottom:1px solid var(--g100);display:flex;gap:8px;align-items:flex-start;font-size:11px;
-  transition:background var(--dur-micro) var(--me-standard),transform var(--dur-micro) var(--me-standard);}
-.dash-recent-item:hover{background:var(--g50);transform:translateX(2px);}
-.dash-recent-item:last-child{border-bottom:none;}
-
 /* Sections */
 .section{border-radius:var(--rr);overflow:hidden;margin-bottom:14px;border:1px solid var(--g200);box-shadow:var(--shadow-1);
   animation:sectionIn var(--dur-med) var(--me-decelerate) both;}
@@ -882,10 +864,6 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   .stat-card{ padding:12px 14px; }
   .stat-val{ font-size:22px; }
   .stat-label{ font-size:9px; }
-  .dash-grid{ grid-template-columns:1fr;gap:10px; }
-  .dash-card{ padding:14px; }
-  .dash-card canvas{ max-height:200px!important; }
-  .dash-card.full{ grid-column:1; }
   /* Dashboard header: stack on mobile */
   #pageStats>div:first-child{ flex-direction:column;align-items:flex-start;gap:8px; }
 
@@ -1185,7 +1163,6 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   .mob-bottom-nav{ display:none!important; }
   .mob-fab{ display:none!important; }
   .stats{ grid-template-columns:repeat(3,1fr); }
-  .dash-grid{ grid-template-columns:1fr; }
   .container{ padding:16px 20px;padding-bottom:20px; }
   .nav{ padding:0 20px;overflow-x:auto; }
   .form-grid{ grid-template-columns:1fr; }
@@ -1342,7 +1319,6 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
       </div>
     </div>
 
-    <div id="dashSlaWidget" style="display:none;"></div>
   </div>
 
   <!-- ANNOUNCEMENTS -->
@@ -2202,7 +2178,7 @@ let curMonth=new Date().getMonth(),curYear=2026;
 let editId=null,sortKey='date',sortAsc=false;
 let secOpen={esc:true,active:true,res:false,ann:true,resAnn:false};
 let pendingNE=null,highlightId=null,attachments=[],annType='standard',activeMandId=null;
-let chartInstances={};
+let chartInstances={};// dead — kept as no-op shim in case any external code references it
 let _bulkSelected=new Set();// ids of rows currently selected for bulk action
 
 if(!users[ADMIN_INI])users[ADMIN_INI]={fullName:'Jesus Martinez',role:'MLS Lead',password:'admin',isAdmin:true};
@@ -4970,7 +4946,7 @@ if(e.rootCause||e.actionType||e.instrument||e.effVerified){
 var hasCapData=capRow?'<span class="mi mi-xs" style="color:var(--teal);cursor:pointer;margin-left:4px;" title="Show CAP details" onclick="toggleCapRow(\''+escJS(e.id)+'\',event)">verified</span>':'';
 var capIncompleteChip=capIncompleteBadge(e);
 var cbCell='<td class="bulk-col"><input type="checkbox" class="bulk-cb row-cb" '+(isSelected?'checked ':'')+'data-eid="'+esc(e.id)+'" onclick="event.stopPropagation();bulkToggleRow(\''+escJS(e.id)+'\',this.checked)"></td>';
-return'<tr class="'+rCls(e.priority)+(isSelected?' bulk-selected':'')+(capIncompleteChip?' cap-incomplete-row':'')+'" data-eid="'+esc(e.id)+'">'+cbCell+'<td style="white-space:nowrap;font-family:\'JetBrains Mono\',monospace;font-size:10px;">'+fd(e.date)+'</td><td><span class="'+shB(e.shift)+'">'+esc(e.shift)+'</span></td><td style="font-family:\'JetBrains Mono\',monospace;font-size:10px;">'+esc(e.time||'')+'</td><td>'+avH(ini,26)+'</td><td><span class="'+catB(e.category)+'">'+esc(e.category)+'</span></td><td><span class="'+priB(e.priority)+'">'+esc(e.priority)+'</span></td><td class="desc-cell"><div class="cell-txt" onclick="this.classList.toggle(\'expanded\')">'+esc(e.description)+'</div>'+imgs+'</td><td class="desc-cell"><div class="cell-txt" onclick="this.classList.toggle(\'expanded\')">'+esc(e.action||'')+'</div></td><td><span class="'+stB(e.status)+'">'+esc(e.status)+'</span>'+slaChip(e)+capIncompleteChip+hasCapData+'</td><td style="text-align:center;">'+(e.followUp==='Yes'?'<span style="color:var(--red);font-weight:700;">Yes</span>'+fuI:'No')+'</td><td style="white-space:nowrap;">'+_commentBtn(e)+' <button class="btn btn-s" style="padding:2px 6px;font-size:9px;" onclick="cloneEntry(\''+escJS(e.id)+'\')" title="Clone as new entry"><span class="mi mi-xs">content_copy</span></button> '+(canEdit(e)?'<button class="btn btn-s" style="padding:2px 6px;font-size:9px;" onclick="editEntry(\''+escJS(e.id)+'\')"><span class="mi mi-xs">edit</span></button> ':'')+(canDel(e)?'<button class="btn btn-d" style="padding:2px 6px;font-size:9px;" onclick="deleteEntry(\''+escJS(e.id)+'\')"><span class="mi mi-xs">delete</span></button>':'')+((!canEdit(e)&&!canDel(e))?'':'')+'</td></tr>'+capRow;}
+return'<tr class="'+rCls(e.priority)+(isSelected?' bulk-selected':'')+(capIncompleteChip?' cap-incomplete-row':'')+'" data-eid="'+esc(e.id)+'">'+cbCell+'<td style="white-space:nowrap;font-family:\'JetBrains Mono\',monospace;font-size:10px;">'+fd(e.date)+'</td><td><span class="'+shB(e.shift)+'">'+esc(e.shift)+'</span></td><td style="font-family:\'JetBrains Mono\',monospace;font-size:10px;">'+esc(e.time||'')+'</td><td>'+avH(ini,26)+'</td><td><span class="'+catB(e.category)+'">'+esc(e.category)+'</span></td><td><span class="'+priB(e.priority)+'">'+esc(e.priority)+'</span></td><td class="desc-cell"><div class="cell-txt" onclick="this.classList.toggle(\'expanded\')">'+esc(e.description)+'</div>'+imgs+'</td><td class="desc-cell"><div class="cell-txt" onclick="this.classList.toggle(\'expanded\')">'+esc(e.action||'')+'</div></td><td><span class="'+stB(e.status)+'">'+esc(e.status)+'</span>'+slaChip(e)+leadAckChip(e)+capIncompleteChip+hasCapData+'</td><td style="text-align:center;">'+(e.followUp==='Yes'?'<span style="color:var(--red);font-weight:700;">Yes</span>'+fuI:'No')+'</td><td style="white-space:nowrap;">'+_commentBtn(e)+' <button class="btn btn-s" style="padding:2px 6px;font-size:9px;" onclick="cloneEntry(\''+escJS(e.id)+'\')" title="Clone as new entry"><span class="mi mi-xs">content_copy</span></button> '+(canEdit(e)?'<button class="btn btn-s" style="padding:2px 6px;font-size:9px;" onclick="editEntry(\''+escJS(e.id)+'\')"><span class="mi mi-xs">edit</span></button> ':'')+(canDel(e)?'<button class="btn btn-d" style="padding:2px 6px;font-size:9px;" onclick="deleteEntry(\''+escJS(e.id)+'\')"><span class="mi mi-xs">delete</span></button>':'')+((!canEdit(e)&&!canDel(e))?'':'')+'</td></tr>'+capRow;}
 
 function _commentBtn(e){
   var n=(e.comments||[]).length;
@@ -5009,6 +4985,18 @@ function slaChip(e){
   if(s.state==='overdue')return ' <span title="SLA: '+esc(slaLabel(e.priority))+'" style="display:inline-flex;align-items:center;gap:2px;font-size:9px;font-weight:700;color:var(--red);background:var(--red-bg);padding:1px 5px;border-radius:999px;border:1px solid var(--red-bdr);margin-left:4px;"><span class="mi mi-xs" style="font-size:10px;">warning</span>'+esc(fmtDuration(s.remainingMs))+'</span>';
   if(s.state==='approaching')return ' <span title="SLA: '+esc(slaLabel(e.priority))+'" style="display:inline-flex;align-items:center;gap:2px;font-size:9px;font-weight:700;color:#92400e;background:#fef3c7;padding:1px 5px;border-radius:999px;border:1px solid #fbbf24;margin-left:4px;"><span class="mi mi-xs" style="font-size:10px;">hourglass_bottom</span>'+esc(fmtDuration(s.remainingMs))+' left</span>';
   return ' <span title="SLA: '+esc(slaLabel(e.priority))+'" style="display:inline-flex;align-items:center;gap:2px;font-size:9px;font-weight:700;color:var(--green);background:var(--green-bg);padding:1px 5px;border-radius:999px;border:1px solid var(--green-bdr);margin-left:4px;"><span class="mi mi-xs" style="font-size:10px;">schedule</span>'+esc(fmtDuration(s.remainingMs))+' left</span>';
+}
+
+// Historical lead-acknowledgment chip — shown for entries that were once escalated
+// and got a lead response, even after the entry is resolved. Gives reporters
+// visible confirmation their escalation was addressed.
+function leadAckChip(e){
+  if(e.status==='Escalated')return '';// slaChip handles live escalations
+  if(!e.firstLeadResponseDate)return '';
+  var ts=new Date(e.firstLeadResponseDate);
+  var byName=e.firstLeadResponseBy?ln(e.firstLeadResponseBy)||e.firstLeadResponseBy:'a lead';
+  var tip='Lead acknowledged: '+byName+' on '+ts.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  return ' <span title="'+esc(tip)+'" style="display:inline-flex;align-items:center;gap:2px;font-size:9px;font-weight:700;color:var(--teal);background:var(--teal-bg);padding:1px 5px;border-radius:999px;border:1px solid var(--teal-bdr);margin-left:4px;"><span class="mi mi-xs" style="font-size:10px;">verified_user</span>Lead ack</span>';
 }
 
 // === BULK ACTIONS ===
@@ -5182,7 +5170,7 @@ function toggleCapRow(eid,ev){if(ev)ev.stopPropagation();var rows=document.query
 function rSec(zId,cls,lbl,ico,es,ok,exH){var z=$(zId);if(!es.length){z.innerHTML='';return;}var o=secOpen[ok];z.innerHTML='<div class="section '+cls+'"><div class="sec-hdr '+(o?'':'collapsed')+'" onclick="secOpen.'+ok+'=!secOpen.'+ok+';renderLog()"><h3><span class="mi mi-sm">'+ico+'</span> '+lbl+' <span class="cnt">'+es.length+'</span></h3><div>'+(exH||'')+' <span class="mi mi-sm">expand_more</span></div></div><div class="sec-body '+(o?'':'collapsed')+'"><div class="tbl-scroll"><table><thead><tr>'+TH+'</tr></thead><tbody>'+es.map(e=>bR(e)).join('')+'</tbody></table></div></div></div>';}
 
 // === RENDER LOG ===
-function renderLog(){var all=gME(),esc_=all.filter(e=>e.status==='Escalated'),res=all.filter(e=>e.status==='Resolved'),active=gF().filter(e=>e.status!=='Resolved'&&e.status!=='Escalated');rSec('escZone','sec-esc','ESCALATED','warning',esc_,'esc','<span class="esc-sub">Leadership reviewing</span>');if(!active.length&&all.filter(e=>e.status!=='Resolved'&&e.status!=='Escalated').length===0){$('activeZone').innerHTML='<div class="section sec-active"><div class="sec-hdr"><h3><span class="mi mi-sm">assignment</span> Active Entries <span class="cnt">0</span></h3></div><div class="sec-body"><div class="empty"><span class="mi">assignment</span><h3>No entries for '+MONTHS[curMonth]+'</h3></div></div></div>';}else rSec('activeZone','sec-active','Active Entries','assignment',active,'active','');rSec('resZone','sec-res','Resolved','check_circle',res,'res','');renderMonthlyReview();uBell();_syncBulkMasterCheckbox();bulkUpdateBar();}
+function renderLog(){var all=gME(),esc_=all.filter(e=>e.status==='Escalated'),res=all.filter(e=>e.status==='Resolved'),active=gF().filter(e=>e.status!=='Resolved'&&e.status!=='Escalated');rSec('escZone','sec-esc','ESCALATED','warning',esc_,'esc','<span class="esc-sub">Leadership reviewing</span>');if(!active.length&&all.filter(e=>e.status!=='Resolved'&&e.status!=='Escalated').length===0){var isFirstTime=entries.filter(function(e){return !e.isDeleted;}).length===0;var firstTimeHtml=isFirstTime?'<div style="max-width:420px;margin:0 auto;text-align:left;background:var(--g50);border:1px solid var(--g200);border-radius:var(--rl);padding:14px;margin-top:14px;"><div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:8px;display:flex;align-items:center;gap:6px;"><span class="mi mi-sm">lightbulb</span>Quick start examples</div><div style="font-size:11px;color:var(--g600);line-height:1.6;"><div style="margin-bottom:4px;"><strong>QC Issue:</strong> "Sysmex XN-1 Beta out of range - Lot 45678"</div><div style="margin-bottom:4px;"><strong>Instrument:</strong> "Stago STA-R Max #3 motor error 0x42 after startup"</div><div style="margin-bottom:4px;"><strong>Supply:</strong> "Low on cobas 503 ISE diluent - 2 bottles remaining"</div><div><strong>Process:</strong> "Urinalysis sample mislabeled, resolved with patient verification"</div></div></div>':'';var ctaHtml='<button class="btn btn-p" onclick="openEntryModal()" style="margin-top:14px;"><span class="mi mi-xs">add</span>Create first entry</button>';$('activeZone').innerHTML='<div class="section sec-active"><div class="sec-hdr"><h3><span class="mi mi-sm">assignment</span> Active Entries <span class="cnt">0</span></h3></div><div class="sec-body"><div class="empty" style="padding:32px 20px;"><span class="mi" style="font-size:48px;">assignment</span><h3>'+(isFirstTime?'Welcome to the Shift Log':'No entries for '+MONTHS[curMonth])+'</h3><p style="color:var(--g500);font-size:12px;max-width:380px;margin:6px auto 0;">'+(isFirstTime?'Log any shift event — QC issue, instrument problem, safety concern, supply gap, or process note. Entries are visible to the whole team.':'Nothing logged yet this month. If something happens on your shift, log it here.')+'</p>'+ctaHtml+firstTimeHtml+'</div></div></div>';}else rSec('activeZone','sec-active','Active Entries','assignment',active,'active','');rSec('resZone','sec-res','Resolved','check_circle',res,'res','');renderMonthlyReview();uBell();_syncBulkMasterCheckbox();bulkUpdateBar();}
 
 // === ENTRY MODAL ===
 function openEntryModal(id){editId=id||null;attachments=[];$('entryModalTitle').textContent=id?'Edit Entry':'New Entry';$('entrySaveBtn').textContent=id?'Update':'Save';var rb=$('eReporter');if(id){var e=entries.find(x=>x.id===id);if(!e)return;$('eDate').value=e.date;$('eTime').value=e.time;$('eShift').value=e.shift;$('eDept').value=e.department||'General';rb.value=e.reportedBy||ln(e.authorInitials);rb.readOnly=!isLead();rb.style.background=isLead()?'var(--white)':'var(--g100)';$('eCat').value=e.category;$('ePri').value=e.priority;$('eDesc').value=e.description;$('eAction').value=e.action||'';$('eStatus').value=e.status;$('eFollowUp').value=e.followUp||'No';$('eNotes').value=e.notes||'';attachments=(e.attachments||[]).slice();onFollowUpChange();if(e.followUpAssign)setTimeout(()=>{$('eFUAssign').value=e.followUpAssign;},0);onStatusChange();if(e.resolvedBy)setTimeout(()=>{$('eResBy').value=e.resolvedBy;},0);$('eResDate').value=e.resDate||'';$('eActionType').value=e.actionType||'';$('eInstrument').value=e.instrument||'';$('eReagentLot').value=e.reagentLot||'';$('eTestSystem').value=e.testSystem||'';$('eRootCause').value=e.rootCause||'';$('eEffReviewDate').value=e.effReviewDate||'';$('eEffVerified').value=e.effVerified||'';$('eEffNotes').value=e.effNotes||'';}else{var now=new Date();$('eDate').value=now.toISOString().split('T')[0];$('eTime').value=now.toTimeString().slice(0,5);var hr=now.getHours();$('eShift').value=hr<15?'Morning':hr<23?'Evening':'Night';$('eDept').value=curDept||'';rb.value=me?me.fullName:'';rb.readOnly=!isLead();rb.style.background=isLead()?'var(--white)':'var(--g100)';$('eCat').value='';$('ePri').value='';$('eDesc').value='';$('eAction').value='';$('eStatus').value='Open';$('eFollowUp').value='No';$('eNotes').value='';$('eResDate').value='';$('eActionType').value='';$('eInstrument').value='';$('eReagentLot').value='';$('eTestSystem').value='';$('eRootCause').value='';$('eEffReviewDate').value='';$('eEffVerified').value='';$('eEffNotes').value='';onStatusChange();onFollowUpChange();
@@ -5303,13 +5291,15 @@ function _removeDraftBanner(){
 function closeEntryModal(){closeSheet('entryModalBg');editId=null;attachments=[];_stopDraftAutosave();_removeDraftBanner();}
 function saveEntry(){var dt=$('eDate').value,tm=$('eTime').value,sh=$('eShift').value,dept=$('eDept').value,cat=$('eCat').value,pri=$('ePri').value,desc=$('eDesc').value.trim(),rep=$('eReporter').value.trim();if(!dt||!tm||!sh||!dept||!cat||!pri||!desc){toast('Fill required fields');return;}if(!validateCapFields())return;var st=$('eStatus').value,rb=$('eResBy').value,rd=$('eResDate').value,fu=$('eFollowUp').value,fua=fu==='Yes'?$('eFUAssign').value:'';if(rb&&rd&&st!=='Resolved')st='Resolved';var ai=me.initials;if(editId){var o=entries.find(x=>x.id===editId);if(o){if(isLead()&&rep!==o.reportedBy){var ni=li(rep);ai=ni||o.authorInitials;}else ai=o.authorInitials;}}
 // Escalation SLA tracking
-var escDate='',flRespDate='',flRespBy='';
+var escDate='',flRespDate='',flRespBy='',_justAcknowledged=false,_reporterIni='';
 if(editId){
   var _o=entries.find(x=>x.id===editId);
   if(_o){
     escDate=_o.escalatedDate||'';
     flRespDate=_o.firstLeadResponseDate||'';
     flRespBy=_o.firstLeadResponseBy||'';
+    _reporterIni=_o.authorInitials||'';
+    var _hadResponseBefore=!!flRespDate;
     // Status just transitioned TO Escalated: stamp escalation timestamp
     if(st==='Escalated'&&_o.status!=='Escalated'&&!escDate)escDate=new Date().toISOString();
     // Was Escalated and a lead (other than the original author) just edited: stamp first response
@@ -5322,6 +5312,7 @@ if(editId){
       flRespDate=new Date().toISOString();
       flRespBy=me.initials;
     }
+    _justAcknowledged=!_hadResponseBefore&&!!flRespDate;
   }
 }else if(st==='Escalated'){
   // New entry created directly as Escalated
@@ -5332,7 +5323,7 @@ var diffFields=[['status','Status'],['priority','Priority'],['category','Categor
 diffFields.forEach(function(f){var key=f[0],label=f[1],oldVal=String(old[key]||''),newVal=String(en[key]||'');if(oldVal!==newVal)changedFields.push({field:label,from:oldVal,to:newVal});});
 entries[idx]=en;
 var summary=changedFields.length>0?changedFields.map(function(c){return c.field+': '+c.from+' -> '+c.to;}).join('; '):'Minor edit (no field changes)';
-addH('edit','Edited: '+cat+' ('+en.id+')',summary.slice(0,255),{entryId:en.id,entryCategory:cat,changedFields:changedFields});toast('Updated');}}else{entries.push(en);addH('add','New: '+cat+' - "'+desc.slice(0,35)+'..."','Pri:'+pri+', Dept:'+dept+', Shift:'+sh,{entryId:en.id,entryCategory:cat});toast('Added');_clearDraft();var d=new Date(dt+'T00:00:00');if(d.getMonth()!==curMonth){curMonth=d.getMonth();rMT();}}if(en.status==='Escalated')nLeads('escalation','Escalation: '+cat,desc.slice(0,70)+' ('+rep+')',en.id);if(en.followUp==='Yes'&&en.followUpAssign){if(en.followUpAssign!==me.initials)pNot(en.followUpAssign,'followup','Follow-up assigned',cat+': '+desc.slice(0,70),en.id);nLeads('followup','F/U: '+ln(en.followUpAssign),cat+': '+desc.slice(0,50),en.id);}spSaveEntry(en).then(function(){renderAll();}).catch(function(e){toast('Save failed');console.error(e);});pushOnNewEntry(en);closeEntryModal();renderAll();}
+addH('edit','Edited: '+cat+' ('+en.id+')',summary.slice(0,255),{entryId:en.id,entryCategory:cat,changedFields:changedFields});toast('Updated');}}else{entries.push(en);addH('add','New: '+cat+' - "'+desc.slice(0,35)+'..."','Pri:'+pri+', Dept:'+dept+', Shift:'+sh,{entryId:en.id,entryCategory:cat});toast('Added');_clearDraft();var d=new Date(dt+'T00:00:00');if(d.getMonth()!==curMonth){curMonth=d.getMonth();rMT();}}if(en.status==='Escalated')nLeads('escalation','Escalation: '+cat,desc.slice(0,70)+' ('+rep+')',en.id);if(en.followUp==='Yes'&&en.followUpAssign){if(en.followUpAssign!==me.initials)pNot(en.followUpAssign,'followup','Follow-up assigned',cat+': '+desc.slice(0,70),en.id);nLeads('followup','F/U: '+ln(en.followUpAssign),cat+': '+desc.slice(0,50),en.id);}if(_justAcknowledged&&_reporterIni&&_reporterIni!==me.initials){pNot(_reporterIni,'info','Lead acknowledged your escalation',(me.fullName||'A lead')+' responded to: '+cat+' — '+desc.slice(0,60),en.id);}spSaveEntry(en).then(function(){renderAll();}).catch(function(e){toast('Save failed');console.error(e);});pushOnNewEntry(en);closeEntryModal();renderAll();}
 function editEntry(id){var e=entries.find(x=>x.id===id);if(!e)return;if(!canEdit(e)){toast('Cannot edit');return;}openEntryModal(id);}
 function cloneEntry(id){
   var src=entries.find(function(x){return x.id===id;});
@@ -6479,90 +6470,6 @@ function _renderShAnnVol(){
 
 // ═══ EXPORT (renamed + refactored) ═══
 function toggleStatsExp(){$('statsExpMenu').classList.toggle('show');}
-document.addEventListener('click',function(e){if(!e.target.closest('.exp-wrap'))$('statsExpMenu')&&$('statsExpMenu').classList.remove('show');});
-// Keep old dashExp for backward compat in case something still calls it
-function toggleDashExp(){toggleStatsExp();}
-
-function mkChart(id,type,data,opts){if(chartInstances[id]){chartInstances[id].destroy();}var cv=$(id);if(!cv)return;cv.parentElement.style.height='280px';chartInstances[id]=new Chart(cv,{type,data,options:opts});}
-
-function renderSlaWidget(){
-  var container=$('dashSlaWidget');
-  if(!container)return;
-  // Escalated entries awaiting first lead response
-  var escalated=entries.filter(function(e){return e.status==='Escalated'&&!e.isDeleted;});
-  if(!escalated.length){container.innerHTML='';return;}
-  var now=Date.now();
-  var buckets={overdue:[],approaching:[],within:[],responded:[],unknown:[]};
-  escalated.forEach(function(e){
-    var s=escalationSlaState(e,now);
-    buckets[s.state].push({entry:e,sla:s});
-  });
-  var awaiting=buckets.overdue.length+buckets.approaching.length+buckets.within.length+buckets.unknown.length;
-  // Sort overdue by most-overdue first
-  buckets.overdue.sort(function(a,b){return a.sla.remainingMs-b.sla.remainingMs;});
-  buckets.approaching.sort(function(a,b){return a.sla.remainingMs-b.sla.remainingMs;});
-
-  var topOverdue=buckets.overdue.slice(0,5);
-  var topApproaching=buckets.approaching.slice(0,3);
-
-  var html='<div class="dash-card" style="padding:16px;margin-bottom:16px;border-left:4px solid '+(buckets.overdue.length?'var(--red)':buckets.approaching.length?'var(--amber)':'var(--green)')+';">';
-  html+='<h4 style="margin:0 0 10px 0;display:flex;align-items:center;gap:6px;font-size:13px;"><span class="mi mi-sm">alarm</span> Escalation SLA Tracking';
-  html+=' <span style="font-size:10px;font-weight:400;color:var(--g400);margin-left:6px;">'+awaiting+' awaiting response</span></h4>';
-  // Quick counts
-  html+='<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">';
-  html+='<div style="flex:1;min-width:100px;background:var(--red-bg);border:1px solid var(--red-bdr);border-radius:var(--r);padding:8px 10px;"><div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.05em;">Overdue</div><div style="font-size:20px;font-weight:800;color:var(--red);">'+buckets.overdue.length+'</div></div>';
-  html+='<div style="flex:1;min-width:100px;background:#fef3c7;border:1px solid #fbbf24;border-radius:var(--r);padding:8px 10px;"><div style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;">Approaching</div><div style="font-size:20px;font-weight:800;color:#92400e;">'+buckets.approaching.length+'</div></div>';
-  html+='<div style="flex:1;min-width:100px;background:var(--green-bg);border:1px solid var(--green-bdr);border-radius:var(--r);padding:8px 10px;"><div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.05em;">Within SLA</div><div style="font-size:20px;font-weight:800;color:var(--green);">'+buckets.within.length+'</div></div>';
-  html+='<div style="flex:1;min-width:100px;background:var(--g50);border:1px solid var(--g200);border-radius:var(--r);padding:8px 10px;"><div style="font-size:10px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.05em;">Responded</div><div style="font-size:20px;font-weight:800;color:var(--g600);">'+buckets.responded.length+'</div></div>';
-  html+='</div>';
-
-  // Overdue list
-  if(topOverdue.length){
-    html+='<div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:flex;align-items:center;gap:4px;"><span class="mi mi-xs">warning</span> Most Overdue</div>';
-    html+='<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">';
-    topOverdue.forEach(function(x){
-      var e=x.entry,sla=x.sla;
-      html+='<div onclick="jumpToEntry(\''+escJS(e.id)+'\')" style="background:var(--red-bg);border:1px solid var(--red-bdr);border-radius:var(--r);padding:8px 10px;cursor:pointer;display:flex;align-items:center;gap:10px;">';
-      html+='<span class="mi" style="color:var(--red);font-size:16px;">schedule</span>';
-      html+='<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;color:var(--g900);">'+esc(e.priority)+' &middot; '+esc(e.category)+'</div>';
-      html+='<div style="font-size:10px;color:var(--g500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(e.description.slice(0,80))+'</div></div>';
-      html+='<div style="text-align:right;flex-shrink:0;"><div style="font-size:11px;font-weight:800;color:var(--red);">'+esc(fmtDuration(sla.remainingMs))+'</div><div style="font-size:9px;color:var(--g400);">SLA: '+esc(slaLabel(e.priority))+'</div></div>';
-      html+='</div>';
-    });
-    html+='</div>';
-  }
-
-  // Approaching list
-  if(topApproaching.length){
-    html+='<div style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:flex;align-items:center;gap:4px;"><span class="mi mi-xs">hourglass_bottom</span> Approaching SLA</div>';
-    html+='<div style="display:flex;flex-direction:column;gap:6px;">';
-    topApproaching.forEach(function(x){
-      var e=x.entry,sla=x.sla;
-      html+='<div onclick="jumpToEntry(\''+escJS(e.id)+'\')" style="background:#fef3c7;border:1px solid #fbbf24;border-radius:var(--r);padding:8px 10px;cursor:pointer;display:flex;align-items:center;gap:10px;">';
-      html+='<span class="mi" style="color:#92400e;font-size:16px;">hourglass_bottom</span>';
-      html+='<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;color:var(--g900);">'+esc(e.priority)+' &middot; '+esc(e.category)+'</div>';
-      html+='<div style="font-size:10px;color:var(--g500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(e.description.slice(0,80))+'</div></div>';
-      html+='<div style="text-align:right;flex-shrink:0;"><div style="font-size:11px;font-weight:800;color:#92400e;">'+esc(fmtDuration(sla.remainingMs))+' left</div><div style="font-size:9px;color:var(--g400);">SLA: '+esc(slaLabel(e.priority))+'</div></div>';
-      html+='</div>';
-    });
-    html+='</div>';
-  }
-
-  html+='</div>';
-  container.innerHTML=html;
-}
-
-function jumpToEntry(id){
-  const e=entries.find(x=>x.id===id);if(!e){toast('Entry not found');return;}
-  switchPage('log');
-  const d=new Date(e.date+'T00:00:00');if(d.getMonth()!==curMonth){curMonth=d.getMonth();curYear=d.getFullYear();rMT();}
-  if(e.status==='Escalated')secOpen.esc=true;
-  highlightId=id;renderLog();
-  setTimeout(function(){
-    const row=document.querySelector('tr[data-eid="'+id+'"]');
-    if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.classList.add('row-hl');setTimeout(function(){row.classList.remove('row-hl');highlightId=null;},4000);}
-  },200);
-}
 
 function getDashMetrics(){
   var all=entries.filter(function(e){return !e.isDeleted;}),mE=gME(),today=new Date().toISOString().split('T')[0];
