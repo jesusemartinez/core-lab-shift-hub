@@ -323,6 +323,18 @@ select:focus,input[type="text"]:focus,input[type="date"]:focus,input[type="time"
 .chart-box{position:relative;width:100%;height:220px;}
 .chart-box.tall{height:280px;}
 
+/* Stats TOC — sticky horizontal pill nav */
+.stats-toc{position:sticky;top:104px;z-index:80;display:flex;gap:6px;flex-wrap:wrap;background:var(--white);border:1px solid var(--g200);border-radius:999px;padding:5px 6px;margin-bottom:20px;box-shadow:var(--shadow-1);align-items:center;justify-content:center;max-width:max-content;margin-left:auto;margin-right:auto;}
+.stats-toc-link{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;color:var(--g500);text-decoration:none;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;}
+.stats-toc-link:hover{background:var(--g100);color:var(--navy);}
+.stats-toc-link.active{background:var(--teal);color:#fff;}
+.stats-toc-link .mi{font-size:12px;}
+@media(max-width:900px){
+  .stats-toc{display:none;}
+}
+/* Smooth-scroll offset so sticky nav doesn't hide the anchor */
+#stats-ops,#stats-quality,#stats-activity,#stats-reporter,#stats-ann{scroll-margin-top:160px;}
+
 /* ═══ BULK ACTIONS ═══ */
 .bulk-cb{width:16px;height:16px;cursor:pointer;accent-color:var(--teal);flex-shrink:0;}
 .bulk-col{width:38px;text-align:center;padding-left:12px!important;padding-right:6px!important;}
@@ -331,6 +343,21 @@ tr.bulk-selected{background:rgba(0,121,107,.07)!important;outline:2px solid var(
 tr.bulk-selected td{position:relative;}
 tr.cap-incomplete-row td:first-child+td{box-shadow:inset 3px 0 0 #fbbf24;}
 tr.cap-incomplete-row:hover td:first-child+td{box-shadow:inset 3px 0 0 #f59e0b;}
+
+/* CAPA chip picker */
+.cap-chip{display:inline-flex;align-items:flex-start;gap:6px;padding:8px 10px;background:var(--white);border:1.5px solid var(--g200);border-radius:var(--r);cursor:pointer;transition:all .15s;text-align:left;font-family:inherit;min-width:140px;}
+.cap-chip:hover{border-color:var(--teal-bdr);background:var(--teal-bg);}
+.cap-chip.selected{border-color:var(--teal);background:var(--teal-bg);box-shadow:0 0 0 2px var(--teal-bdr);}
+.cap-chip .mi{color:var(--teal);flex-shrink:0;margin-top:1px;}
+.cap-chip > span:last-child{display:flex;flex-direction:column;gap:1px;}
+.cap-chip strong{font-size:11px;font-weight:700;color:var(--navy);}
+.cap-chip .chip-desc{font-size:9px;color:var(--g500);font-weight:400;line-height:1.3;}
+.cap-chip.selected strong{color:var(--teal);}
+.cap-chip-unsure{border-style:dashed;}
+.cap-chip-unsure .mi{color:var(--g400);}
+.cap-chip-unsure strong{color:var(--g600);}
+/* Lead-only CAPA fields — hidden for techs, shown for leads only */
+body:not(.role-lead) .cap-lead-only{display:none!important;}
 
 /* Comment thread */
 .comment-bubble{background:var(--white);border:1px solid var(--g200);border-radius:var(--rl);padding:10px 12px;margin-bottom:8px;box-shadow:var(--shadow-1);position:relative;}
@@ -409,6 +436,10 @@ tr.row-selected td{background:rgba(224,242,241,.6);}
 .section{border-radius:var(--rr);overflow:hidden;margin-bottom:14px;border:1px solid var(--g200);box-shadow:var(--shadow-1);
   animation:sectionIn var(--dur-med) var(--me-decelerate) both;}
 @keyframes sectionIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* During an auto-sync rebuild, suppress entrance animations so the log doesn't flicker every minute.
+   Only applies while body.syncing is set — cleared after render completes. */
+body.syncing .section,body.syncing .ann-bar,body.syncing .aud-day{animation:none!important;}
 .sec-hdr{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;transition:background var(--dur-short) var(--me-standard),filter var(--dur-short) var(--me-standard);}
 .sec-hdr:hover{filter:brightness(.97);}
 .sec-hdr h3{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;}
@@ -1270,8 +1301,17 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
     <!-- Hero KPI strip -->
     <div class="shstats-hero" id="shstatsHero"></div>
 
+    <!-- Sticky TOC (desktop only) -->
+    <nav class="stats-toc" id="statsToc" aria-label="Stats sections">
+      <a class="stats-toc-link" href="#stats-ops" data-section="stats-ops"><span class="mi mi-xs">health_and_safety</span>Operational</a>
+      <a class="stats-toc-link" href="#stats-quality" data-section="stats-quality"><span class="mi mi-xs">verified</span>Quality</a>
+      <a class="stats-toc-link" href="#stats-activity" data-section="stats-activity"><span class="mi mi-xs">trending_up</span>Activity</a>
+      <a class="stats-toc-link" href="#stats-reporter" data-section="stats-reporter"><span class="mi mi-xs">groups</span>Reporters</a>
+      <a class="stats-toc-link" href="#stats-ann" data-section="stats-ann"><span class="mi mi-xs">campaign</span>Announcements</a>
+    </nav>
+
     <!-- Section 1: Operational Health -->
-    <div class="shstats-section">
+    <div class="shstats-section" id="stats-ops">
       <div class="shstats-section-hdr"><h3><span class="mi mi-sm">health_and_safety</span> Operational Health</h3><span class="sec-sub" id="opsSub"></span></div>
       <div class="shstats-grid">
         <div class="sh-card c4" id="shSlaScorecard"><div class="sh-card-hdr"><h4><span class="mi mi-sm">alarm_on</span> Escalation SLA Scorecard</h4><span class="sh-card-sub">lifetime</span></div><div class="sh-card-body" id="shSlaScorecardBody"></div></div>
@@ -1281,7 +1321,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
     </div>
 
     <!-- Section 2: Quality & Compliance -->
-    <div class="shstats-section">
+    <div class="shstats-section" id="stats-quality">
       <div class="shstats-section-hdr"><h3><span class="mi mi-sm">verified</span> Quality &amp; Compliance</h3><span class="sec-sub">CAP · CLIA 42 CFR 493.1252</span></div>
       <div class="shstats-grid">
         <div class="sh-card c4"><div class="sh-card-hdr"><h4><span class="mi mi-sm">task_alt</span> CAPA Documented</h4></div><div class="sh-card-body" id="shCapaBody"></div></div>
@@ -1292,7 +1332,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
     </div>
 
     <!-- Section 3: Activity & Trends -->
-    <div class="shstats-section">
+    <div class="shstats-section" id="stats-activity">
       <div class="shstats-section-hdr"><h3><span class="mi mi-sm">trending_up</span> Activity &amp; Trends</h3><span class="sec-sub">Rolling 12 months</span></div>
       <div class="shstats-grid">
         <div class="sh-card c8"><div class="sh-card-hdr"><h4><span class="mi mi-sm">stacked_bar_chart</span> Monthly Entries by Category</h4></div><div class="sh-card-body"><div class="chart-box"><canvas id="shchartMonthByCat"></canvas></div></div></div>
@@ -1303,7 +1343,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
     </div>
 
     <!-- Section 4: Per-Reporter Activity -->
-    <div class="shstats-section">
+    <div class="shstats-section" id="stats-reporter">
       <div class="shstats-section-hdr"><h3><span class="mi mi-sm">groups</span> Per-Reporter Activity</h3><span class="sec-sub">click column headers to sort</span></div>
       <div class="shstats-grid">
         <div class="sh-card c12"><div class="sh-card-body" id="shReporterTable"></div></div>
@@ -1311,7 +1351,7 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
     </div>
 
     <!-- Section 5: Announcements & Engagement -->
-    <div class="shstats-section">
+    <div class="shstats-section" id="stats-ann">
       <div class="shstats-section-hdr"><h3><span class="mi mi-sm">campaign</span> Announcements &amp; Engagement</h3></div>
       <div class="shstats-grid">
         <div class="sh-card c6"><div class="sh-card-hdr"><h4><span class="mi mi-sm">notifications_active</span> Mandatory Reads</h4><span class="sh-card-sub" id="shMandSub"></span></div><div class="sh-card-body" id="shMandBody"></div></div>
@@ -1465,18 +1505,44 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   <div class="form-item"><label>Department *</label><select id="eDept"><option value="">Select...</option><option>Hematology</option><option>Coagulation</option><option>Chemistry</option><option>Urinalysis</option><option>General</option></select></div>
   <div class="form-item"><label>Reported By *</label><input type="text" id="eReporter"></div>
   <div class="form-item"><label>Category *</label><select id="eCat" onchange="updateCapRequired()"><option value="">Select...</option><option>QC Issue</option><option>Instrument</option><option>Supply</option><option>Safety</option><option>Process</option><option>Patient Sample</option><option>Training</option><option>Administrative</option><option>General</option></select></div>
-  <div class="form-item"><label>Priority *</label><select id="ePri"><option value="">Select...</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+  <div class="form-item"><label>Priority *</label><select id="ePri" onchange="updateCapRequired()"><option value="">Select...</option><option>High</option><option>Medium</option><option>Low</option></select></div>
   <div class="form-item full"><label>Description *</label><textarea id="eDesc"></textarea></div>
-  <div class="form-item full"><label>Action Taken</label><textarea id="eAction"></textarea></div>
-  <div class="form-divider cap-divider" id="capDivider" style="border-top:1.5px dashed var(--g200);position:relative;"><span style="position:absolute;top:-8px;left:12px;background:var(--white);padding:0 8px;font-size:9px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.06em;">CAP Compliance Fields</span></div>
-  <div class="form-item cap-field" id="wrap-actionType"><label id="lbl-actionType">Action Type *</label><select id="eActionType" onchange="updateCapRequired()"><option value="">Select...</option><option>Corrective</option><option>Preventive</option><option>Corrective + Preventive</option><option>None Required</option></select></div>
-  <div class="form-item cap-field" id="wrap-instrument"><label id="lbl-instrument">Instrument / System</label><input type="text" id="eInstrument" placeholder="e.g., Sysmex XN-1, STA-R Max 3"></div>
-  <div class="form-item cap-field" id="wrap-reagentLot"><label id="lbl-reagentLot">Reagent Lot #</label><input type="text" id="eReagentLot" placeholder="e.g., LOT-2026-001"></div>
-  <div class="form-item cap-field" id="wrap-testSystem"><label id="lbl-testSystem">Test System</label><input type="text" id="eTestSystem" placeholder="e.g., CBC, PT/INR, BMP"></div>
-  <div class="form-item full cap-field" id="wrap-rootCause"><label id="lbl-rootCause">Root Cause Analysis</label><textarea id="eRootCause" placeholder="Document the root cause identified through investigation..." style="min-height:50px;"></textarea></div>
-  <div class="form-item cap-field" id="wrap-effReviewDate"><label id="lbl-effReviewDate">Effectiveness Review Due</label><input type="date" id="eEffReviewDate"></div>
-  <div class="form-item cap-field" id="wrap-effVerified"><label>Effectiveness Verified</label><select id="eEffVerified"><option value="">Not Yet Reviewed</option><option>Effective</option><option>Partially Effective</option><option>Not Effective</option><option>N/A</option></select></div>
-  <div class="form-item full cap-field" id="wrap-effNotes"><label>Effectiveness Notes</label><textarea id="eEffNotes" placeholder="Document how effectiveness was evaluated..." style="min-height:36px;"></textarea></div>
+  <div class="form-item full"><label>Action Taken</label><textarea id="eAction" oninput="_maybeSmartDefaultActionType()"></textarea></div>
+  <!-- CAPA COMPLIANCE SECTION — collapsible; hidden entirely when not applicable -->
+  <div class="form-item full cap-section-wrap" id="capSectionWrap" style="display:none;margin:8px 0 0;">
+    <div id="capSectionHeader" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--teal-bg);border:1px solid var(--teal-bdr);border-radius:var(--r);cursor:pointer;" onclick="toggleCapSection()">
+      <span class="mi mi-sm" style="color:var(--teal);">fact_check</span>
+      <div style="flex:1;">
+        <div style="font-size:11px;font-weight:800;color:var(--teal);letter-spacing:.04em;">CAP COMPLIANCE DETAILS</div>
+        <div style="font-size:10px;color:var(--g500);" id="capSectionSub">Click to expand · Required for this entry type</div>
+      </div>
+      <span class="mi mi-sm" id="capSectionChevron" style="color:var(--teal);transition:transform .2s;">expand_more</span>
+    </div>
+    <div id="capSectionBody" style="display:none;border:1px solid var(--teal-bdr);border-top:none;border-radius:0 0 var(--r) var(--r);padding:12px;background:var(--white);">
+      <div style="font-size:10px;color:var(--g500);line-height:1.5;margin-bottom:12px;padding:8px 10px;background:var(--g50);border-radius:var(--r);border-left:3px solid var(--teal);"><span class="mi mi-xs">info</span> <strong>Heads up:</strong> These fields support CAP/CLIA compliance. They can be left blank and completed later by a Lead during monthly review.</div>
+      <!-- Action Type chip picker -->
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:10px;font-weight:700;color:var(--g600);margin-bottom:6px;">Action Type <span style="font-weight:400;color:var(--g400);">· Pick one</span></label>
+        <div class="cap-chips" id="capActionChips" style="display:flex;flex-wrap:wrap;gap:6px;">
+          <button type="button" class="cap-chip" data-val="Corrective" onclick="selectActionType('Corrective')" title="Fixed the immediate problem"><span class="mi mi-xs">build</span><span><strong>Corrective</strong><span class="chip-desc">Fixed the immediate problem</span></span></button>
+          <button type="button" class="cap-chip" data-val="Preventive" onclick="selectActionType('Preventive')" title="Steps to prevent recurrence"><span class="mi mi-xs">shield</span><span><strong>Preventive</strong><span class="chip-desc">Prevents recurrence</span></span></button>
+          <button type="button" class="cap-chip" data-val="Corrective + Preventive" onclick="selectActionType('Corrective + Preventive')" title="Fixed it AND prevented recurrence (most common)"><span class="mi mi-xs">verified</span><span><strong>Both</strong><span class="chip-desc">Most common for lab CAPA</span></span></button>
+          <button type="button" class="cap-chip" data-val="None Required" onclick="selectActionType('None Required')" title="No action needed beyond logging"><span class="mi mi-xs">block</span><span><strong>None Required</strong><span class="chip-desc">Log only, no action</span></span></button>
+          <button type="button" class="cap-chip cap-chip-unsure" data-val="" onclick="selectActionType('')" title="Lead will complete during review"><span class="mi mi-xs">help_outline</span><span><strong>Not sure</strong><span class="chip-desc">Lead will fill in</span></span></button>
+        </div>
+        <select id="eActionType" onchange="updateCapRequired()" style="display:none;"><option value=""></option><option>Corrective</option><option>Preventive</option><option>Corrective + Preventive</option><option>None Required</option></select>
+      </div>
+      <div class="form-grid" style="gap:10px;">
+        <div class="form-item" id="wrap-instrument"><label id="lbl-instrument">Instrument / System</label><input type="text" id="eInstrument" placeholder="e.g., Sysmex XN-1, STA-R Max 3"></div>
+        <div class="form-item" id="wrap-reagentLot"><label id="lbl-reagentLot">Reagent Lot #</label><input type="text" id="eReagentLot" placeholder="e.g., LOT-2026-001"></div>
+        <div class="form-item" id="wrap-testSystem"><label id="lbl-testSystem">Test System</label><input type="text" id="eTestSystem" placeholder="e.g., CBC, PT/INR, BMP"></div>
+        <div class="form-item full" id="wrap-rootCause"><label id="lbl-rootCause" title="Why did this happen? Examples: calibration drift, reagent expired, procedure not followed.">Root Cause <span class="mi mi-xs" style="color:var(--g400);cursor:help;">help_outline</span></label><textarea id="eRootCause" placeholder="Why did this happen? (e.g., calibration drift, expired reagent, procedure gap) — Lead may revise during review" style="min-height:50px;"></textarea></div>
+        <div class="form-item" id="wrap-effReviewDate"><label id="lbl-effReviewDate" title="When we'll check if the action worked. Default = resolve date + 30 days.">Eff. Review Date <span class="mi mi-xs" style="color:var(--g400);cursor:help;">help_outline</span></label><input type="date" id="eEffReviewDate"></div>
+        <div class="form-item cap-lead-only" id="wrap-effVerified"><label title="Filled in at review time by a Lead or QA.">Eff. Verified <span class="mi mi-xs" style="color:var(--g400);cursor:help;">help_outline</span></label><select id="eEffVerified"><option value="">Not Yet Reviewed</option><option>Effective</option><option>Partially Effective</option><option>Not Effective</option><option>N/A</option></select></div>
+        <div class="form-item full cap-lead-only" id="wrap-effNotes"><label title="Filled in at review time by a Lead or QA.">Eff. Notes <span class="mi mi-xs" style="color:var(--g400);cursor:help;">help_outline</span></label><textarea id="eEffNotes" placeholder="Filled in at effectiveness review time" style="min-height:36px;"></textarea></div>
+      </div>
+    </div>
+  </div>
   <div class="form-item full"><label>Attachments</label><div class="attach-area"><input type="file" id="eFiles" accept="image/*" multiple onchange="handleAttach(event)" style="font-size:10px;"><div class="attach-preview" id="attachPreview"></div></div></div>
   <div class="form-divider"></div>
   <div class="form-item"><label>Status</label><select id="eStatus" onchange="onStatusChange()"><option>Open</option><option>In Progress</option><option>Resolved</option><option>Escalated</option></select></div>
@@ -1514,7 +1580,9 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
   <div class="prof-section"><h4>Profile Picture</h4><div class="prof-pic-row"><div class="prof-pic-circle" id="profPicPreview"></div><div><input type="file" id="profPicFile" accept="image/*" onchange="handleProfPic(event)" style="font-size:10px;max-width:180px;"><button class="btn btn-s" style="padding:2px 6px;font-size:9px;margin-top:4px;" onclick="removeProfPic()">Remove</button></div></div></div>
   <div class="prof-section"><h4>Nickname</h4><div class="form-item"><label>Shown instead of initials (max 12 chars)</label><input type="text" id="profNick" maxlength="12" placeholder="e.g., Jesus"></div></div>
   <div class="prof-section" style="border-bottom:none;"><span style="font-size:10px;color:var(--g400);" id="profInfo"></span>
-    <div style="margin-top:10px;"><button class="btn btn-s" style="font-size:10px;padding:6px 12px;" onclick="restartTutorial()"><span class="mi mi-xs">school</span> Restart Tutorial</button></div>
+    <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;"><button class="btn btn-s" style="font-size:10px;padding:6px 12px;" onclick="restartTutorial()"><span class="mi mi-xs">school</span> Restart Tutorial</button>
+    <button class="btn btn-s" id="profAdminLink" style="font-size:10px;padding:6px 12px;display:none;" onclick="closeProfile();switchPage('admin');"><span class="mi mi-xs">admin_panel_settings</span> Admin Panel</button>
+    </div>
   </div>
 </div>
 <div class="modal-ftr"><button class="btn btn-p" onclick="saveProfile()">Save</button><button class="btn btn-s" onclick="closeProfile()">Cancel</button></div>
@@ -1529,7 +1597,9 @@ td.desc-cell .cell-txt:hover{color:var(--teal);}
 <div class="mandatory-bg" id="mandBg">
 <div class="mand-card"><div class="mand-hdr"><div class="mh-icon"><span class="mi">priority_high</span></div><div><div class="mh-title" id="mandTitle">Mandatory Read</div><div class="mh-sub" id="mandSub"></div></div></div>
 <div class="mand-body"><div class="mb-text" id="mandText"></div><div class="mb-meta" id="mandMeta"></div>
-<div class="mb-ack"><div class="mb-ack-label">Type your initials to acknowledge:</div><div class="mb-ack-row"><input type="text" id="mandAckInput" maxlength="4" style="text-transform:uppercase;" onkeydown="if(event.key==='Enter')ackMandatory()"><button onclick="ackMandatory()">Acknowledge</button></div><div class="mb-ack-list" id="mandAckList"></div></div>
+<div class="mb-ack"><div class="mb-ack-label">Type your initials to acknowledge:</div><div class="mb-ack-row"><input type="text" id="mandAckInput" maxlength="4" style="text-transform:uppercase;" onkeydown="if(event.key==='Enter')ackMandatory()"><button onclick="ackMandatory()">Acknowledge</button></div>
+<div style="display:flex;justify-content:center;margin-top:8px;"><button class="btn btn-s" style="font-size:10px;padding:4px 12px;color:var(--g500);" onclick="snoozeMandatory()" title="Dismiss now, remind me in 1 hour"><span class="mi mi-xs">schedule</span>Remind me in 1 hour</button></div>
+<div class="mb-ack-list" id="mandAckList"></div></div>
 </div></div></div>
 
 <!-- COMMENT THREAD SHEET -->
@@ -2178,6 +2248,18 @@ let curMonth=new Date().getMonth(),curYear=2026;
 let editId=null,sortKey='date',sortAsc=false;
 let secOpen={esc:true,active:true,res:false,ann:true,resAnn:false};
 let pendingNE=null,highlightId=null,attachments=[],annType='standard',activeMandId=null;
+// Auto-sync diff-check state: avoid rebuilding the DOM if SharePoint returned identical data.
+// _syncInProgress flag tells renderers to suppress entrance animations when a rebuild IS needed.
+var _lastDataHash='',_syncInProgress=false;
+function _dataHash(){
+  // Lightweight signature: count + lastModified timestamps. Cheap to compute, changes only when
+  // something real changed (new entry, edit, delete, comment, ack, status change, etc).
+  try{
+    var e='';for(var i=0;i<entries.length;i++){var x=entries[i];e+=x.id+':'+(x.lastModified||'')+':'+(x.status||'')+':'+(x.isDeleted?'D':'_')+';';}
+    var a='';for(var j=0;j<announcements.length;j++){var y=announcements[j];a+=y.id+':'+(y.timestamp||y.date||'')+':'+((y.acknowledged||[]).length)+':'+((y.comments||[]).length)+':'+(y.resolved?'R':'_')+':'+(y.isDeleted?'D':'_')+';';}
+    return 'e'+entries.length+'|'+e+'a'+announcements.length+'|'+a;
+  }catch(err){return String(Date.now());}// if anything fails, force a rebuild
+}
 let chartInstances={};// dead — kept as no-op shim in case any external code references it
 let _bulkSelected=new Set();// ids of rows currently selected for bulk action
 
@@ -3357,6 +3439,7 @@ async function initAuth(){
         if(users[ADMIN_INI]&&!users[ADMIN_INI].fullName)users[ADMIN_INI].fullName=_msalName||'Jesus Martinez';
         var freshIni=matchUser(spUser,users)||cachedIni;
         if(applyUser(freshIni)){lastSyncTime=new Date();uBD();refreshUI();renderAll();}
+        _lastDataHash=_dataHash();
       }).catch(function(e){console.warn('BG sync failed:',e);});
       return;
     }
@@ -3395,14 +3478,15 @@ function doLogout(){if(!confirm('Sign out?'))return;if(msalInstance){msalInstanc
 function refreshUI(){
   if(!me)return;
   uHA();uBell();initPushNotifications();
+  document.body.classList.toggle('role-lead',isLead());
   $('navAdmin').style.display=isAdm()?'flex':'none';
   $('navStats').style.display=isLead()?'flex':'none';
   $('clearHistBtn').style.display=isAdm()?'inline-flex':'none';
   $('annBtn').style.display=isLead()?'inline-flex':'none';
   // Mobile nav — driven by CSS class on body, not window.innerWidth
   setHubReady(); // marks auth complete — CSS @media handles mobile detection
-  var mobAdm=$('mobAdmin');
-  if(mobAdm)mobAdm.style.display=isAdm()?'flex':'none';
+  // mobAdmin stays hidden on mobile — admins access Admin via the profile modal
+  // (keeps bottom nav from getting too crowded with 6 buttons)
   var mobSt=$('mobStats');
   if(mobSt)mobSt.style.display=isLead()?'flex':'none';
   var mobFab=$('mobFab');
@@ -3410,6 +3494,8 @@ function refreshUI(){
   var curPId=curP?curP.id:'';
   if(mobFab){if(curPId==='pageLog'||curPId==='pageAnn'){mobFab.classList.add('fab-visible');}else{mobFab.classList.remove('fab-visible');}}
   renderAll();
+  // Seed the sync diff hash so the first auto-sync tick has something to compare against
+  _lastDataHash=_dataHash();
 
 // Restore last tab, but reset to announcements on new day
 var today=new Date().toISOString().split('T')[0];
@@ -3438,6 +3524,7 @@ function openProfile(){
   if(u.picture){p.innerHTML=safeImg(u.picture);p.style.width='56px';p.style.borderRadius='50%';p.style.padding='0';p.style.fontSize='0';}
   else if(u.nickname){p.innerHTML=esc(u.nickname);p.style.width='auto';p.style.minWidth='56px';p.style.borderRadius='28px';p.style.padding='0 14px';p.style.fontSize='16px';}
   else{p.innerHTML=esc(me.initials);p.style.width='56px';p.style.borderRadius='50%';p.style.padding='0';p.style.fontSize='20px';}
+  var adLink=$('profAdminLink');if(adLink)adLink.style.display=isAdm()?'inline-flex':'none';
   openSheet('profModalBg');
 }
 function closeProfile(){
@@ -4541,54 +4628,64 @@ function getCapRequirements(category){
 
 function updateCapRequired(){
   var cat=($('eCat')?$('eCat').value:'')||'';
-  var vis=getCapVisibility(cat);
-  var req=getCapRequirements(cat);
+  var pri=($('ePri')?$('ePri').value:'')||'';
 
-  // Show/hide the divider
-  var divider=$('capDivider');
-  var anyVisible=Object.values(vis).some(function(v){return v;});
-  if(divider){
-    if(anyVisible){
-      divider.classList.add('cap-visible');
-      requestAnimationFrame(function(){requestAnimationFrame(function(){divider.classList.add('cap-show');});});
+  // ═══ TIERED DISCLOSURE ═══
+  // Show CAPA section only when entry is CAPA-required.
+  // Definition: priority=High OR category in {QC Issue, Instrument, Safety, Patient Sample}.
+  // For techs on other entry types, CAPA fields are hidden entirely — cleaner modal, faster entry.
+  var capRequired=(pri==='High')||(['QC Issue','Instrument','Safety','Patient Sample'].indexOf(cat)>=0);
+  var wrap=$('capSectionWrap');
+  var subEl=$('capSectionSub');
+  if(wrap){
+    if(capRequired){
+      wrap.style.display='';
+      if(subEl){
+        // Auto-expand for leads (they need to see/fill these); collapsed for techs with a softer message.
+        if(isLead()){subEl.textContent='Required for this entry type · click to collapse';}
+        else{subEl.textContent='Required for this entry type · can be completed later by a Lead';}
+      }
+      // Auto-expand when shown for leads; keep collapsed for techs (less intimidating)
+      var body=$('capSectionBody');
+      if(body&&isLead()&&body.style.display==='none'){
+        // Only auto-expand on first show — don't re-expand if user manually collapsed
+        if(!wrap.dataset.userToggled)toggleCapSection(true);
+      }
     }else{
-      divider.classList.remove('cap-show');
-      setTimeout(function(){if(!divider.classList.contains('cap-show'))divider.classList.remove('cap-visible');},350);
+      wrap.style.display='none';
+      // Also collapse the body when hiding so state is clean next time
+      var body2=$('capSectionBody');if(body2)body2.style.display='none';
+      var chev=$('capSectionChevron');if(chev)chev.style.transform='';
     }
   }
 
-  // Field visibility map
+  var vis=getCapVisibility(cat);
+  var req=getCapRequirements(cat);
+
+  // Field-level show/hide inside the CAPA section (some fields only relevant to specific categories)
   var wrapMap={
-    actionType:'wrap-actionType',instrument:'wrap-instrument',reagentLot:'wrap-reagentLot',
+    instrument:'wrap-instrument',reagentLot:'wrap-reagentLot',
     testSystem:'wrap-testSystem',rootCause:'wrap-rootCause',effReviewDate:'wrap-effReviewDate',
     effVerified:'wrap-effVerified',effNotes:'wrap-effNotes'
   };
-
-  var delay=0;
   for(var key in wrapMap){
-    var wrap=$(wrapMap[key]);if(!wrap)continue;
-    if(vis[key]){
-      (function(w,d){
-        w.classList.add('cap-visible');
-        setTimeout(function(){requestAnimationFrame(function(){w.classList.add('cap-show');});},d);
-      })(wrap,delay);
-      delay+=40;// stagger each field by 40ms
-    }else{
-      wrap.classList.remove('cap-show');
-      (function(w){setTimeout(function(){if(!w.classList.contains('cap-show'))w.classList.remove('cap-visible');},350);})(wrap);
-    }
+    var wrap2=$(wrapMap[key]);if(!wrap2)continue;
+    wrap2.style.display=vis[key]?'':'none';
   }
 
   // Required indicators on labels
   var labelMap={
-    actionType:'lbl-actionType',instrument:'lbl-instrument',reagentLot:'lbl-reagentLot',
+    instrument:'lbl-instrument',reagentLot:'lbl-reagentLot',
     testSystem:'lbl-testSystem',rootCause:'lbl-rootCause',effReviewDate:'lbl-effReviewDate'
   };
   for(var key in labelMap){
     var lbl=$(labelMap[key]);if(!lbl)continue;
+    // Preserve the help_outline icon if present
+    var hasIcon=/help_outline/.test(lbl.innerHTML);
     var baseName=lbl.textContent.replace(/\s*\*$/,'');
-    if(req[key]){lbl.innerHTML=baseName+' <span style="color:var(--red);font-weight:700;">*</span>';}
-    else{lbl.textContent=baseName;}
+    var iconHtml=hasIcon?' <span class="mi mi-xs" style="color:var(--g400);cursor:help;">help_outline</span>':'';
+    if(req[key]){lbl.innerHTML=baseName+iconHtml+' <span style="color:var(--red);font-weight:700;">*</span>';}
+    else{lbl.innerHTML=baseName+iconHtml;}
   }
 
   // Amber border on required empty fields
@@ -4600,7 +4697,78 @@ function updateCapRequired(){
   }
 }
 
+// ═══ CAPA SECTION TOGGLE ═══
+function toggleCapSection(forceOpen){
+  var body=$('capSectionBody');
+  var chev=$('capSectionChevron');
+  var wrap=$('capSectionWrap');
+  if(!body)return;
+  var willOpen=forceOpen===true?true:body.style.display==='none';
+  body.style.display=willOpen?'':'none';
+  if(chev)chev.style.transform=willOpen?'rotate(180deg)':'';
+  // Track that user manually toggled so auto-expand doesn't fight them
+  if(wrap&&forceOpen!==true)wrap.dataset.userToggled='1';
+}
+
+// ═══ ACTION TYPE CHIP PICKER ═══
+function selectActionType(val){
+  // Update hidden select
+  var sel=$('eActionType');
+  if(sel){sel.value=val;sel.dispatchEvent(new Event('change'));}
+  // Update chip visual state
+  _syncActionChipState();
+  // Clear any error styling since user just made a choice
+  if(sel){sel.style.borderColor='';sel.style.boxShadow='';}
+}
+
+function _syncActionChipState(){
+  var sel=$('eActionType');
+  var current=sel?sel.value:'';
+  var chips=document.querySelectorAll('#capActionChips .cap-chip');
+  chips.forEach(function(c){
+    c.classList.toggle('selected',c.getAttribute('data-val')===current);
+  });
+}
+
+// ═══ SMART DEFAULT: auto-pick Corrective if tech writes action taken on a CAPA-required entry ═══
+function _maybeSmartDefaultActionType(){
+  var sel=$('eActionType');if(!sel)return;
+  // Only apply if nothing is selected yet
+  if(sel.value)return;
+  var action=($('eAction')?$('eAction').value:'').trim();
+  if(!action)return;
+  var cat=($('eCat')?$('eCat').value:'')||'';
+  var pri=($('ePri')?$('ePri').value:'')||'';
+  var capRequired=(pri==='High')||(['QC Issue','Instrument','Safety','Patient Sample'].indexOf(cat)>=0);
+  if(!capRequired)return;
+  // Only auto-default if the CAPA section is currently visible (entry type needs it)
+  var wrap=$('capSectionWrap');
+  if(!wrap||wrap.style.display==='none')return;
+  // Smart-default to Corrective. Tooltip on chip explains it's a starting point.
+  selectActionType('Corrective');
+}
+
+// ═══ AUTO-DEFAULT EFF REVIEW DATE when resolving a CAPA entry ═══
+function _autoDefaultEffReviewDate(){
+  var effEl=$('eEffReviewDate');if(!effEl||effEl.value)return;
+  var st=($('eStatus')?$('eStatus').value:'');if(st!=='Resolved')return;
+  var resDate=($('eResDate')?$('eResDate').value:'')||new Date().toISOString().slice(0,10);
+  var cat=($('eCat')?$('eCat').value:'')||'';
+  var pri=($('ePri')?$('ePri').value:'')||'';
+  var capRequired=(pri==='High')||(['QC Issue','Instrument','Safety','Patient Sample'].indexOf(cat)>=0);
+  if(!capRequired)return;
+  // Add 30 days to resolveDate
+  var d=new Date(resDate+'T12:00:00');
+  d.setDate(d.getDate()+30);
+  effEl.value=d.toISOString().slice(0,10);
+}
+
 function validateCapFields(){
+  // Techs are not required to complete CAPA fields at submit time. The CAP-incomplete
+  // badge on the row flags any missing info so leads can finish during monthly review.
+  // Only leads get hard-stop CAPA validation — they're the ones responsible for closing the loop.
+  if(!isLead())return true;
+
   var cat=($('eCat')?$('eCat').value:'')||'';
   var vis=getCapVisibility(cat);
   var r=getCapRequirements(cat);
@@ -4631,7 +4799,7 @@ function validateCapFields(){
 }
 
 // === MODAL HELPERS ===
-function onStatusChange(){const s=$('eStatus').value,sh=s==='Resolved';['resDivider','resByWrap','resDateWrap'].forEach(id=>$(id).style.display=sh?'':'none');if(sh){if(!$('eResDate').value)$('eResDate').value=new Date().toISOString().split('T')[0];pDD('eResBy');}}
+function onStatusChange(){const s=$('eStatus').value,sh=s==='Resolved';['resDivider','resByWrap','resDateWrap'].forEach(id=>$(id).style.display=sh?'':'none');if(sh){if(!$('eResDate').value)$('eResDate').value=new Date().toISOString().split('T')[0];pDD('eResBy');_autoDefaultEffReviewDate();}}
 function onFollowUpChange(){const fu=$('eFollowUp').value==='Yes';$('fuAssignWrap').style.display=fu?'':'none';if(fu)pDD('eFUAssign');}
 function pDD(id){const s=$(id),cv=s.value;s.innerHTML='<option value="">Select...</option>'+ul().map(u=>'<option value="'+u.ini+'"'+(u.ini===cv?' selected':'')+'>'+esc(u.name)+' ('+u.ini+')</option>').join('');}
 
@@ -4854,7 +5022,7 @@ function renderAnn(){
   es.style.display=hasCont?'none':'block';
 }
 function renderMandZone(){var z=$('mandZone');var ms=announcements.filter(a=>a.annType==='mandatory'&&!a.resolved);if(!ms.length){z.innerHTML='';return;}z.innerHTML=ms.map(a=>{var ack=a.acknowledged||[],iA=me&&ack.includes(me.initials),all=Object.keys(users),na=all.filter(i=>!ack.includes(i));var act='';if(isLead()){act+='<button class="btn btn-s" style="padding:2px 6px;font-size:9px;" onclick="editAnn(\''+a.id+'\')"><span class="mi mi-xs">edit</span></button> ';act+='<button class="btn btn-s" style="padding:2px 6px;font-size:9px;color:var(--green);" onclick="resolveAnn(\''+a.id+'\')"><span class="mi mi-xs">check_circle</span></button> ';}if(isAdm())act+='<button class="btn btn-d" style="padding:2px 6px;font-size:9px;" onclick="deleteAnn(\''+a.id+'\')"><span class="mi mi-xs">delete</span></button> ';var ackH='<div style="margin-top:6px;padding:8px 10px;background:var(--g50);border-radius:var(--r);border:1px solid var(--g200);font-size:10px;"><div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'"><span style="font-weight:700;color:var(--navy);"><span class="mi mi-xs">people</span> Acknowledgments</span><span style="color:var(--g500);">'+ack.length+'/'+all.length+' <span class="mi mi-xs">expand_more</span></span></div><div style="display:none;margin-top:6px;">'+(ack.length?'<div style="margin-bottom:4px;"><span style="font-weight:600;color:var(--green);">Done:</span> '+ack.map(i=>'<span style="display:inline-block;background:var(--green-bg);color:var(--green);padding:1px 5px;border-radius:3px;margin:1px;font-weight:600;">'+esc(ln(i))+'</span>').join('')+'</div>':'')+(na.length?'<div><span style="font-weight:600;color:var(--red);">Pending:</span> '+na.map(i=>'<span style="display:inline-block;background:var(--red-bg);color:var(--red);padding:1px 5px;border-radius:3px;margin:1px;font-weight:600;">'+esc(ln(i))+'</span>').join('')+'</div>':'')+'</div></div>';return'<div style="margin-bottom:10px;border-radius:var(--rl);border:2px solid var(--red-bdr);overflow:hidden;box-shadow:var(--shadow-1);"><div style="background:linear-gradient(135deg,var(--red-bg),#fbe2e2);padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--red-bdr);"><span class="mi" style="color:var(--red);">priority_high</span><div style="flex:1;"><div style="font-size:12px;font-weight:700;color:var(--red);">Mandatory Read</div><div style="font-size:10px;color:var(--g500);">'+fd(a.date)+' &middot; '+esc(a.postedBy)+' &middot; '+ack.length+'/'+all.length+'</div></div>'+(!iA?'<button class="btn btn-d" style="padding:4px 10px;font-size:10px;" onclick="showMandatory(\''+a.id+'\')"><span class="mi mi-xs">visibility</span> Read &amp; Acknowledge</button>':'<span class="badge b-resolved" style="font-size:9px;">&#10003; Acknowledged</span>')+' '+act+'<button class="ann-dismiss" style="position:static;" onclick="dismissAnn(\''+a.id+'\')"><span class="mi mi-xs">close</span></button></div><div style="padding:10px 14px;background:var(--white);font-size:12px;color:var(--g900);line-height:1.5;">'+esc(a.text)+ackH+'</div></div>';}).join('');}
-function renderWelcomeZone(){var z=$('welcomeZone');var ws=announcements.filter(a=>a.annType==='welcome'&&!a.resolved);if(!ws.length){z.innerHTML='';return;}z.innerHTML=ws.map(a=>{var c=a.comments||[],cH=c.map(x=>'<div class="wc-item"><b>'+esc(x.author)+':</b> <span>'+esc(x.text)+'</span></div>').join('');var act='';if(isLead()){act+='<button class="btn btn-s" style="padding:2px 6px;font-size:9px;" onclick="editAnn(\''+a.id+'\')"><span class="mi mi-xs">edit</span></button> ';act+='<button class="btn btn-s" style="padding:2px 6px;font-size:9px;color:var(--green);" onclick="resolveAnn(\''+a.id+'\')"><span class="mi mi-xs">check_circle</span></button> ';}if(isAdm())act+='<button class="btn btn-d" style="padding:2px 6px;font-size:9px;" onclick="deleteAnn(\''+a.id+'\')"><span class="mi mi-xs">delete</span></button> ';return'<div style="margin-bottom:10px;border-radius:var(--rl);overflow:hidden;border:1px solid #b2dfdb;box-shadow:var(--shadow-1);"><div class="ann-welcome"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><span class="ann-type-tag welcome">WELCOME</span><div style="display:flex;align-items:center;gap:2px;">'+act+'<button class="ann-dismiss" style="position:static;" onclick="dismissAnn(\''+a.id+'\')"><span class="mi mi-xs">close</span></button></div></div><div class="wh"><span class="mi" style="font-size:28px;color:#00796B;">celebration</span><div><div class="wt">Welcome, '+esc(a.welcomeName||'')+'!</div></div></div><div class="ws">'+(a.welcomeRole?esc(a.welcomeRole)+' &middot; ':'')+'Posted by '+esc(a.postedBy)+' &middot; '+fd(a.date)+'</div>'+(a.text?'<div class="wtext">'+esc(a.text)+'</div>':'')+'<div class="wc-area"><h5>Welcome Messages ('+c.length+')</h5><div class="wc-list">'+cH+'</div><div class="wc-row"><input type="text" id="wci_'+a.id+'" placeholder="Add a welcome message..." onkeydown="if(event.key===\'Enter\')addWC(\''+a.id+'\')"><button onclick="addWC(\''+a.id+'\')">Send</button></div></div></div></div>';}).join('');}
+function renderWelcomeZone(){var z=$('welcomeZone');var ws=announcements.filter(a=>a.annType==='welcome'&&!a.resolved);if(!ws.length){z.innerHTML='';return;}z.innerHTML=ws.map(a=>{var c=a.comments||[],cH=c.map(x=>'<div class="wc-item"><b>'+esc(x.author)+':</b> <span>'+esc(x.text)+'</span></div>').join('');var act='';if(isLead()){act+='<button class="btn btn-s" style="padding:2px 6px;font-size:9px;" onclick="editAnn(\''+a.id+'\')"><span class="mi mi-xs">edit</span></button> ';act+='<button class="btn btn-s" style="padding:2px 6px;font-size:9px;color:var(--green);" onclick="resolveAnn(\''+a.id+'\')"><span class="mi mi-xs">check_circle</span></button> ';}if(isAdm())act+='<button class="btn btn-d" style="padding:2px 6px;font-size:9px;" onclick="deleteAnn(\''+a.id+'\')"><span class="mi mi-xs">delete</span></button> ';return'<div style="margin-bottom:10px;border-radius:var(--rl);overflow:hidden;border:1px solid #b2dfdb;box-shadow:var(--shadow-1);"><div class="ann-welcome"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><span class="ann-type-tag welcome">WELCOME</span><div style="display:flex;align-items:center;gap:2px;">'+act+'<button class="ann-dismiss" style="position:static;" onclick="dismissAnn(\''+a.id+'\')"><span class="mi mi-xs">close</span></button></div></div><div class="wh"><span class="mi" style="font-size:28px;color:#00796B;">celebration</span><div><div class="wt">Welcome, '+esc(a.welcomeName||'')+'!</div></div></div><div class="ws">'+(a.welcomeRole?esc(a.welcomeRole)+' &middot; ':'')+'Posted by '+esc(a.postedBy)+' &middot; '+fd(a.date)+'</div>'+(a.text?'<div class="wtext">'+esc(a.text)+'</div>':'')+'<div class="wc-area"><h5>Welcome Messages ('+c.length+')</h5><div class="wc-list">'+cH+'</div><div class="wc-row" style="align-items:flex-start;gap:6px;"><textarea id="wci_'+a.id+'" placeholder="Add a welcome message... (Cmd/Ctrl+Enter to send)" rows="2" style="flex:1;min-height:44px;max-height:120px;padding:8px 12px;border:1px solid #b2dfdb;border-radius:var(--r);font-family:inherit;font-size:12px;resize:vertical;" onkeydown="if((event.metaKey||event.ctrlKey)&&event.key===\'Enter\')addWC(\''+a.id+'\')"></textarea><button onclick="addWC(\''+a.id+'\')" style="align-self:stretch;">Send</button></div></div></div></div>';}).join('');}
 function renderStdAnn(){var z=$('annZone'),myD=me?(dismissed[me.initials]||[]):[],stds=announcements.filter(a=>(!a.annType||a.annType==='standard')&&!a.resolved&&!myD.includes(a.id));if(!stds.length){z.innerHTML='';return;}var o=secOpen.ann;z.innerHTML='<div class="ann-bar"><div class="ann-bar-hdr '+(o?'':'collapsed')+'" onclick="secOpen.ann=!secOpen.ann;renderStdAnn()"><h3><span class="mi mi-sm">campaign</span> Announcements <span class="ann-cnt">'+stds.length+'</span></h3><span class="mi mi-sm">expand_more</span></div><div class="ann-list '+(o?'':'collapsed')+'">'+stds.map(function(a){var act='';if(isLead()){act+='<button class="btn btn-s" style="padding:2px 6px;font-size:9px;" onclick="event.stopPropagation();editAnn(\''+a.id+'\')"><span class="mi mi-xs">edit</span></button> ';act+='<button class="btn btn-s" style="padding:2px 6px;font-size:9px;color:var(--green);" onclick="event.stopPropagation();resolveAnn(\''+a.id+'\')"><span class="mi mi-xs">check_circle</span></button> ';}if(isAdm()){act+='<button class="btn btn-d" style="padding:2px 6px;font-size:9px;" onclick="event.stopPropagation();deleteAnn(\''+a.id+'\')"><span class="mi mi-xs">delete</span></button> ';}return'<div class="ann-item"><span class="ann-type-tag standard">UPDATE</span><div class="ann-body"><div class="ann-text">'+esc(a.text)+'</div><div class="ann-meta">'+fd(a.date)+' &middot; '+esc(a.postedBy)+'</div></div><div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">'+act+'<button class="ann-dismiss" onclick="event.stopPropagation();dismissAnn(\''+a.id+'\')"><span class="mi mi-xs">close</span></button></div></div>';}).join('')+'</div></div>';}
 function renderResolvedAnn(){var z=$('resAnnZone');if(!z)return;var rs=announcements.filter(a=>a.resolved);if(!rs.length){z.innerHTML='';return;}var o=secOpen.resAnn;var items=rs.map(a=>{var tl=a.annType==='mandatory'?'MANDATORY':a.annType==='welcome'?'WELCOME':'UPDATE',tc=a.annType||'standard';var ab='';if(isLead()){ab+='<button class="btn btn-s" style="padding:2px 6px;font-size:9px;" onclick="editAnn(\''+a.id+'\')"><span class="mi mi-xs">edit</span></button> ';ab+='<button class="btn btn-s" style="padding:2px 6px;font-size:9px;color:var(--amber);" onclick="unresolveAnn(\''+a.id+'\')"><span class="mi mi-xs">undo</span> Reopen</button> ';}if(isAdm()){ab+='<button class="btn btn-d" style="padding:2px 6px;font-size:9px;" onclick="deleteAnn(\''+a.id+'\')"><span class="mi mi-xs">delete</span></button>';}var h='<div style="padding:12px 14px;background:var(--white);border-bottom:1px solid var(--g100);"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div style="display:flex;align-items:center;gap:6px;"><span class="ann-type-tag '+tc+'">'+tl+'</span><span class="badge b-resolved" style="font-size:8px;">Resolved '+fd(a.resolvedDate||'')+'</span></div><div style="display:flex;align-items:center;gap:4px;">'+ab+'</div></div>';if(a.annType==='welcome'){var c=a.comments||[],cH=c.map(x=>'<div class="wc-item"><b>'+esc(x.author)+':</b> <span>'+esc(x.text)+'</span></div>').join('');h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="mi" style="font-size:24px;color:#00796B;">celebration</span><div style="font-size:14px;font-weight:800;color:#004D40;">Welcome, '+esc(a.welcomeName||'')+'!</div></div><div style="font-size:10px;color:#00695C;margin-bottom:4px;">'+(a.welcomeRole?esc(a.welcomeRole)+' &middot; ':'')+'Posted by '+esc(a.postedBy)+' &middot; '+fd(a.date)+'</div>'+(a.text?'<div style="font-size:12px;color:#1a3a3a;line-height:1.4;margin-bottom:6px;">'+esc(a.text)+'</div>':'')+'<div class="wc-area"><h5>Welcome Messages ('+c.length+')</h5><div class="wc-list" style="max-height:200px;">'+cH+'</div></div>';}else if(a.annType==='mandatory'){var ack=a.acknowledged||[],all=Object.keys(users),na=all.filter(i=>!ack.includes(i));h+='<div style="font-size:12px;color:var(--g900);line-height:1.5;margin-bottom:4px;">'+esc(a.text)+'</div><div style="font-size:10px;color:var(--g500);">'+fd(a.date)+' &middot; '+esc(a.postedBy)+' &middot; '+ack.length+'/'+all.length+'</div><div style="margin-top:6px;font-size:10px;">'+(ack.length?'<div style="margin-bottom:3px;"><span style="font-weight:600;color:var(--green);">Acknowledged ('+ack.length+'):</span> '+ack.map(i=>'<span style="display:inline-block;background:var(--green-bg);color:var(--green);padding:1px 5px;border-radius:3px;margin:1px;font-weight:600;">'+esc(ln(i))+'</span>').join('')+'</div>':'')+(na.length?'<div><span style="font-weight:600;color:var(--red);">Did not ('+na.length+'):</span> '+na.map(i=>'<span style="display:inline-block;background:var(--red-bg);color:var(--red);padding:1px 5px;border-radius:3px;margin:1px;font-weight:600;">'+esc(ln(i))+'</span>').join('')+'</div>':'')+'</div>';}else{h+='<div style="font-size:12px;color:var(--g900);line-height:1.5;">'+esc(a.text)+'</div><div style="font-size:10px;color:var(--g500);margin-top:2px;">'+fd(a.date)+' &middot; '+esc(a.postedBy)+'</div>';}h+='</div>';return h;}).join('');z.innerHTML='<div class="ann-bar" style="border-color:var(--green-bdr);margin-top:14px;"><div class="ann-bar-hdr '+(o?'':'collapsed')+'" style="background:var(--green-bg);border-bottom-color:var(--green-bdr);" onclick="secOpen.resAnn=!secOpen.resAnn;renderResolvedAnn()"><h3 style="color:var(--green);"><span class="mi mi-sm">check_circle</span> Resolved Announcements <span class="ann-cnt" style="background:rgba(18,132,90,.12);color:var(--green);">'+rs.length+'</span></h3><span class="mi mi-sm" style="color:var(--green);">expand_more</span></div><div class="ann-list '+(o?'':'collapsed')+'">'+items+'</div></div>';}
 function dismissAnn(id){if(!me)return;if(!dismissed[me.initials])dismissed[me.initials]=[];dismissed[me.initials].push(id);saveAll();renderAnn();}
@@ -4908,7 +5076,34 @@ function closeAnnModal(){closeSheet('annModalBg');}
 function postAnnouncement(){var t=$('annText').value.trim();if(annType==='welcome'&&!$('annWelcomeName').value.trim()){toast('Enter name');return;}if(!t&&annType!=='welcome'){toast('Enter text');return;}var a={id:gid(),text:t,annType:annType,priority:$('annPri').value,date:new Date().toISOString().split('T')[0],postedBy:me.fullName,postedByIni:me.initials,timestamp:new Date().toISOString()};if(annType==='welcome'){a.welcomeName=$('annWelcomeName').value.trim();a.welcomeRole=$('annWelcomeRole').value.trim();a.comments=[];}if(annType==='mandatory'){a.acknowledged=[me.initials];}announcements.unshift(a);spSaveAnn(a).catch(function(e){console.error('Ann save failed:',e);});pushOnNewAnnouncement(a);addH('add','Announcement ('+annType+'): "'+(t||a.welcomeName||'').slice(0,40)+'..."','');saveAll();closeAnnModal();secOpen.ann=true;renderAnn();if(annType==='welcome'){var sk='rcl7_confetti_seen',sn=ld(sk,{});if(!sn[me.initials])sn[me.initials]=[];sn[me.initials].push(a.id);sv(sk,sn);fireConfetti();}toast(annType==='mandatory'?'Mandatory read posted.':'Posted');}
 
 // === MANDATORY ===
-function checkMandatoryReads(){if(!me)return;var un=announcements.filter(a=>a.annType==='mandatory'&&!a.resolved&&a.acknowledged&&!a.acknowledged.includes(me.initials));if(un.length>0)showMandatory(un[0].id);else checkWelcomeConfetti();}
+function checkMandatoryReads(){if(!me)return;var un=announcements.filter(a=>a.annType==='mandatory'&&!a.resolved&&a.acknowledged&&!a.acknowledged.includes(me.initials)&&!_isMandatorySnoozed(a.id));if(un.length>0)showMandatory(un[0].id);else checkWelcomeConfetti();}
+
+// Snooze storage: per-user, per-announcement timestamp (ms). Only dismisses the auto-popup
+// until the timestamp passes. Banner in the announcements feed still shows.
+function _isMandatorySnoozed(aid){
+  if(!me)return false;
+  try{
+    var raw=localStorage.getItem('rcl7_mand_snooze_'+me.initials);
+    if(!raw)return false;
+    var m=JSON.parse(raw)||{};
+    var until=m[aid];
+    if(!until)return false;
+    return Date.now()<until;
+  }catch(e){return false;}
+}
+function snoozeMandatory(){
+  if(!me||!activeMandId)return;
+  try{
+    var key='rcl7_mand_snooze_'+me.initials;
+    var raw=localStorage.getItem(key);
+    var m=raw?JSON.parse(raw):{};
+    m[activeMandId]=Date.now()+60*60*1000;// 1 hour
+    localStorage.setItem(key,JSON.stringify(m));
+  }catch(e){}
+  closeSheet('mandBg','show');
+  activeMandId=null;
+  toast('Reminded in 1 hour');
+}
 function showMandatory(aid){var a=announcements.find(x=>x.id===aid);if(!a)return;activeMandId=aid;$('mandTitle').textContent='Mandatory Read';$('mandSub').textContent='By '+a.postedBy+' on '+fd(a.date);$('mandText').textContent=a.text;$('mandMeta').textContent=a.priority+' Priority';var ack=a.acknowledged||[],all=Object.keys(users),na=all.filter(i=>!ack.includes(i));var lH='';if(ack.length)lH+='<div style="margin-bottom:4px;"><span style="font-weight:600;color:var(--green);">Done ('+ack.length+'):</span> '+ack.map(i=>'<span style="display:inline-block;background:var(--green-bg);color:var(--green);padding:1px 5px;border-radius:3px;margin:1px;font-weight:600;">'+esc(ln(i))+'</span>').join('')+'</div>';if(na.length)lH+='<div><span style="font-weight:600;color:var(--red);">Pending ('+na.length+'):</span> '+na.map(i=>'<span style="display:inline-block;background:var(--red-bg);color:var(--red);padding:1px 5px;border-radius:3px;margin:1px;font-weight:600;">'+esc(ln(i))+'</span>').join('')+'</div>';$('mandAckList').innerHTML=lH||'No users.';$('mandAckInput').value='';openSheet('mandBg','show');$('mandAckInput').focus();}
 function ackMandatory(){var ini=$('mandAckInput').value.trim().toUpperCase();if(!ini){toast('Enter initials');return;}if(!me||ini!==me.initials){toast('Enter YOUR initials: '+me.initials);return;}var a=announcements.find(x=>x.id===activeMandId);if(!a)return;if(!a.acknowledged)a.acknowledged=[];if(a.acknowledged.includes(ini)){toast('Already done');return;}a.acknowledged.push(ini);addH('edit','Acknowledged: "'+a.text.slice(0,30)+'..."','By '+ln(ini));saveAll();closeSheet('mandBg','show');activeMandId=null;renderAnn();toast('Acknowledged');setTimeout(checkMandatoryReads,400);}
 
@@ -5175,7 +5370,10 @@ function renderLog(){var all=gME(),esc_=all.filter(e=>e.status==='Escalated'),re
 // === ENTRY MODAL ===
 function openEntryModal(id){editId=id||null;attachments=[];$('entryModalTitle').textContent=id?'Edit Entry':'New Entry';$('entrySaveBtn').textContent=id?'Update':'Save';var rb=$('eReporter');if(id){var e=entries.find(x=>x.id===id);if(!e)return;$('eDate').value=e.date;$('eTime').value=e.time;$('eShift').value=e.shift;$('eDept').value=e.department||'General';rb.value=e.reportedBy||ln(e.authorInitials);rb.readOnly=!isLead();rb.style.background=isLead()?'var(--white)':'var(--g100)';$('eCat').value=e.category;$('ePri').value=e.priority;$('eDesc').value=e.description;$('eAction').value=e.action||'';$('eStatus').value=e.status;$('eFollowUp').value=e.followUp||'No';$('eNotes').value=e.notes||'';attachments=(e.attachments||[]).slice();onFollowUpChange();if(e.followUpAssign)setTimeout(()=>{$('eFUAssign').value=e.followUpAssign;},0);onStatusChange();if(e.resolvedBy)setTimeout(()=>{$('eResBy').value=e.resolvedBy;},0);$('eResDate').value=e.resDate||'';$('eActionType').value=e.actionType||'';$('eInstrument').value=e.instrument||'';$('eReagentLot').value=e.reagentLot||'';$('eTestSystem').value=e.testSystem||'';$('eRootCause').value=e.rootCause||'';$('eEffReviewDate').value=e.effReviewDate||'';$('eEffVerified').value=e.effVerified||'';$('eEffNotes').value=e.effNotes||'';}else{var now=new Date();$('eDate').value=now.toISOString().split('T')[0];$('eTime').value=now.toTimeString().slice(0,5);var hr=now.getHours();$('eShift').value=hr<15?'Morning':hr<23?'Evening':'Night';$('eDept').value=curDept||'';rb.value=me?me.fullName:'';rb.readOnly=!isLead();rb.style.background=isLead()?'var(--white)':'var(--g100)';$('eCat').value='';$('ePri').value='';$('eDesc').value='';$('eAction').value='';$('eStatus').value='Open';$('eFollowUp').value='No';$('eNotes').value='';$('eResDate').value='';$('eActionType').value='';$('eInstrument').value='';$('eReagentLot').value='';$('eTestSystem').value='';$('eRootCause').value='';$('eEffReviewDate').value='';$('eEffVerified').value='';$('eEffNotes').value='';onStatusChange();onFollowUpChange();
 // Check for a draft from a previous unsaved session
-_checkDraftRestore();}updateCapRequired();rAP();openSheet('entryModalBg');_startDraftAutosave();}
+_checkDraftRestore();}
+// Reset any user-toggled state on the CAPA section so it re-auto-expands appropriately
+var _capWrap=$('capSectionWrap');if(_capWrap)delete _capWrap.dataset.userToggled;
+updateCapRequired();_syncActionChipState();rAP();openSheet('entryModalBg');_startDraftAutosave();}
 
 // ═══ DRAFT AUTOSAVE ═══
 // Saves unsaved new-entry form state to localStorage every 2s while modal is open.
@@ -5349,7 +5547,7 @@ function cloneEntry(id){
     $('eEffReviewDate').value='';
     $('eEffVerified').value='';
     $('eEffNotes').value='';
-    onStatusChange();onFollowUpChange();updateCapRequired();
+    onStatusChange();onFollowUpChange();updateCapRequired();_syncActionChipState();
     // Focus description so user can start typing
     var desc=$('eDesc');if(desc)desc.focus();
     toast('Cloned from prior entry — fill in description');
@@ -5847,6 +6045,34 @@ function renderStats(){
   _renderShActivity(all);
   _renderShReporterTable(all,mE);
   _renderShEngagement();
+  _installStatsTocObserver();
+}
+
+// Stats TOC observer — highlights the section most visible in viewport
+var _statsTocObserver=null;
+function _installStatsTocObserver(){
+  if(!('IntersectionObserver' in window))return;
+  // Disable on mobile where TOC isn't shown
+  if(window.matchMedia&&window.matchMedia('(max-width:900px)').matches)return;
+  // Dispose any prior observer
+  if(_statsTocObserver){try{_statsTocObserver.disconnect();}catch(e){}_statsTocObserver=null;}
+  var sections=document.querySelectorAll('#stats-ops,#stats-quality,#stats-activity,#stats-reporter,#stats-ann');
+  if(!sections.length)return;
+  var links=document.querySelectorAll('.stats-toc-link');
+  function highlight(id){
+    links.forEach(function(l){l.classList.toggle('active',l.getAttribute('data-section')===id);});
+  }
+  // Track visibility ratios; highlight the most-visible section
+  var ratios={};
+  _statsTocObserver=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){ratios[en.target.id]=en.intersectionRatio;});
+    var bestId=null,bestR=0;
+    Object.keys(ratios).forEach(function(k){if(ratios[k]>bestR){bestR=ratios[k];bestId=k;}});
+    if(bestId&&bestR>0)highlight(bestId);
+  },{rootMargin:'-160px 0px -40% 0px',threshold:[0,0.2,0.5,0.8,1]});
+  sections.forEach(function(s){_statsTocObserver.observe(s);});
+  // Default highlight: first section
+  highlight('stats-ops');
 }
 
 // Alias for backward compat (anything still calling renderDash)
@@ -6859,7 +7085,30 @@ function startApp(){
   initAuth();rMT();uClk();setInterval(uClk,60000);
 var BK_MINS=120;// auto-backup interval in minutes
 runAutoBackup();setInterval(runAutoBackup,BK_MINS*60000);setInterval(uBD,30000);
-setInterval(async function(){try{await loadAllData();lastSyncTime=new Date();uBD();renderAll();pushCheckForNewItems();}catch(e){}},60000);
+setInterval(async function(){
+  try{
+    await loadAllData();
+    lastSyncTime=new Date();
+    uBD();
+    // Diff-check: skip DOM rebuild if data hash hasn't changed since last sync.
+    // Also flag the render as "from sync" so the entrance animation is suppressed.
+    var newHash=_dataHash();
+    if(newHash!==_lastDataHash){
+      _lastDataHash=newHash;
+      _syncInProgress=true;
+      document.body.classList.add('syncing');
+      try{renderAll();}finally{
+        // Remove the class on next frame so any just-created elements finish their animation-free render,
+        // then future user-initiated renders get their entrance animation back.
+        requestAnimationFrame(function(){
+          _syncInProgress=false;
+          document.body.classList.remove('syncing');
+        });
+      }
+    }
+    pushCheckForNewItems();
+  }catch(e){}
+},60000);
 ['searchBox','fShift','fCat','fPri','fMonth','fYear'].forEach(id=>{$(id).addEventListener(id==='searchBox'?'input':'change',function(){
   // If the user manually changes any filter, clear the "from Stats" pill
   if(window._statsFilterActive){
