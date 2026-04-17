@@ -49,7 +49,18 @@
 html,body{height:100%;font-family:var(--font-body);background:var(--surface);color:var(--on-surface);font-size:14px;line-height:1.5}
 .app{display:flex;height:100vh;overflow:hidden}
 .sidebar{width:240px;background:var(--surface-container);border-right:1px solid var(--outline-variant);display:flex;flex-direction:column;flex-shrink:0}
-.sidebar-hdr{padding:20px 20px 16px}.sidebar-hdr h1{font-family:var(--font);font-size:17px;font-weight:700}.sidebar-hdr .sub{font-size:11px;color:var(--on-surface-variant);margin-top:2px;font-weight:500}
+.sidebar-hdr{padding:20px 20px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;position:relative;}
+.sidebar-hdr h1{font-family:var(--font);font-size:17px;font-weight:700}
+.sidebar-hdr .sub{font-size:11px;color:var(--on-surface-variant);margin-top:2px;font-weight:500}
+/* Apps launcher — replaces the old Quick Links sidebar section so the main
+   nav has room to breathe. Matches pattern on Scanner / Shift Hub / Schedule. */
+.apps-launcher-btn{width:32px;height:32px;flex-shrink:0;border-radius:50%;background:var(--surface-high);color:var(--on-surface-variant);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--dur-short) var(--me-standard),transform var(--dur-short) var(--me-spring),color var(--dur-short) var(--me-standard);}
+.apps-launcher-btn:hover{background:var(--primary-container);color:var(--on-primary-container);transform:scale(1.08);}
+.apps-launcher-btn .material-icons-outlined{font-size:18px;}
+.apps-menu{position:absolute;top:100%;right:12px;margin-top:4px;background:var(--surface);border:1px solid var(--outline-variant);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.2);padding:6px;min-width:180px;z-index:400;}
+.apps-menu a{display:flex;align-items:center;gap:10px;padding:10px 12px;color:var(--on-surface);font-size:13px;font-weight:600;text-decoration:none;border-radius:8px;font-family:var(--font);transition:background var(--dur-short) var(--me-standard);}
+.apps-menu a:hover{background:var(--surface-high);}
+.apps-menu a .material-icons-outlined{font-size:18px;color:var(--primary);}
 .sidebar-nav{flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:2px}
 .nav-btn{display:flex;align-items:center;gap:12px;padding:11px 16px;border:none;background:transparent;color:var(--on-surface-variant);font-size:13px;font-weight:500;font-family:var(--font);cursor:pointer;border-radius:var(--radius-full);
   transition:background var(--dur-short) var(--me-standard),color var(--dur-short) var(--me-standard);text-align:left;width:100%}
@@ -549,7 +560,24 @@ input[type=number]{-moz-appearance:textfield}
 </div>
 <div class="app" id="app" style="display:none">
   <aside class="sidebar">
-    <div class="sidebar-hdr"><h1>Inventory Dashboard</h1><div class="sub">Renton Core Lab</div></div>
+    <div class="sidebar-hdr">
+      <div>
+        <h1>Inventory Dashboard</h1>
+        <div class="sub">Renton Core Lab</div>
+      </div>
+      <!-- Apps launcher: cross-app nav without crowding the sidebar. Matches
+           the Shift Hub / Schedule header pattern. Opens sibling apps in new
+           tabs so the dashboard state is preserved. -->
+      <button class="apps-launcher-btn" onclick="toggleAppsMenu(event)" title="Other Core Lab apps" aria-label="Other apps">
+        <span class="material-icons-outlined">apps</span>
+      </button>
+      <div id="apps-menu" class="apps-menu" style="display:none;">
+        <a href="inventory-scanner.html" target="_blank"><span class="material-icons-outlined">qr_code_scanner</span>Scanner</a>
+        <a href="index.html" target="_blank"><span class="material-icons-outlined">dashboard</span>Shift Hub</a>
+        <a href="schedule.html" target="_blank"><span class="material-icons-outlined">calendar_month</span>Schedule</a>
+        <a href="contacts.html" target="_blank"><span class="material-icons-outlined">contact_phone</span>Contacts</a>
+      </div>
+    </div>
     <nav class="sidebar-nav">
       <button class="nav-btn active" onclick="showView('stock')"><span class="material-icons-outlined">inventory_2</span>Stock Overview</button>
       <div class="sub-nav show" id="stock-subnav">
@@ -604,14 +632,6 @@ input[type=number]{-moz-appearance:textfield}
       </div>
       <button class="nav-btn" onclick="showView('log')"><span class="material-icons-outlined">receipt_long</span>Transaction Log</button>
       <button class="nav-btn" id="nav-backup" onclick="showView('backup')" style="display:none"><span class="material-icons-outlined">backup</span>Backup &amp; Restore</button>
-      <!-- Cross-app quick links. Separator keeps them visually distinct from the
-           main nav. Opens sibling apps in a new tab so the user keeps their
-           dashboard state. -->
-      <div style="margin:12px 8px 8px;padding-top:12px;border-top:1px solid var(--outline-variant);font-size:10px;font-weight:700;color:var(--on-surface-variant);letter-spacing:.06em;text-transform:uppercase;">Quick Links</div>
-      <button class="nav-btn" onclick="window.open('inventory-scanner.html','_blank')"><span class="material-icons-outlined">qr_code_scanner</span>Scanner</button>
-      <button class="nav-btn" onclick="window.open('index.html','_blank')"><span class="material-icons-outlined">dashboard</span>Shift Hub</button>
-      <button class="nav-btn" onclick="window.open('schedule.html','_blank')"><span class="material-icons-outlined">calendar_month</span>Schedule</button>
-      <button class="nav-btn" onclick="window.open('contacts.html','_blank')"><span class="material-icons-outlined">contact_phone</span>Contacts</button>
     </nav>
     <div class="sidebar-footer"><div class="name" id="side-user"></div><div id="side-sp">Connecting...</div><div style="margin-top:10px;font-size:8px;color:var(--outline-variant);letter-spacing:.02em;opacity:.5">&copy; 2026 Jesus Martinez. All rights reserved.</div></div>
   </aside>
@@ -944,6 +964,27 @@ async function loadAllData(){
   }
   hideLoad();
 }
+
+// Apps launcher popover (sibling Renton Core Lab apps). Matches the pattern
+// used in Shift Hub, Schedule, and Scanner. Outside-click and Esc close it.
+function toggleAppsMenu(e){
+  if(e)e.stopPropagation();
+  var menu=document.getElementById('apps-menu');
+  if(!menu)return;
+  menu.style.display=menu.style.display==='none'?'block':'none';
+}
+document.addEventListener('click',function(e){
+  var menu=document.getElementById('apps-menu');
+  if(!menu||menu.style.display==='none')return;
+  if(e.target.closest('.apps-launcher-btn')||e.target.closest('#apps-menu'))return;
+  menu.style.display='none';
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    var menu=document.getElementById('apps-menu');
+    if(menu)menu.style.display='none';
+  }
+});
 
 // VIEWS
 var currentView='stock';var viewTitles={stock:'Stock Overview',trends:'Usage Trends',expiry:'Expiry & Waste Risk',forecast:'Forecasting',log:'Transaction Log',backup:'Backup & Restore'};
