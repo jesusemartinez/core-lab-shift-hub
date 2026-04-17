@@ -1802,13 +1802,33 @@ function holidayToSP(h){
 }
 
 // Notification SP mapping
+// Notification SP mapping
+// IsRead and IsArchived are Edm.Boolean columns in SP. Values must be native
+// JS booleans (true/false), NOT the strings 'Yes'/'No'. Sending strings produces
+// "Cannot convert a primitive value to the expected type 'Edm.Boolean'" errors.
+// When SharePoint displays them in the list view, the UI renders true as "Yes"
+// and false as "No" — which is why the column visually shows "Yes"/"No" even
+// though the underlying type is boolean.
 function spToNotif(item,fm){
   var g=function(n){return spVal(item,n,fm);};
-  return{id:item.Title||'',_spId:item.Id,recipient:g('Recipient')||'',notifType:g('NotifType')||'',message:g('Message')||'',isRead:(g('IsRead')||'No')==='Yes',isArchived:(g('IsArchived')||'No')==='Yes',relatedId:g('RelatedId')||'',relatedTab:g('RelatedTab')||'',created:g('Created')||item.Created||''};
+  var rd=g('IsRead'),ar=g('IsArchived');
+  return{
+    id:item.Title||'',
+    _spId:item.Id,
+    recipient:g('Recipient')||'',
+    notifType:g('NotifType')||'',
+    message:g('Message')||'',
+    // Coerce boolean from either real bool, 'Yes'/'No', 'true'/'false', or 1/0
+    isRead:(rd===true||rd==='Yes'||rd==='true'||rd===1),
+    isArchived:(ar===true||ar==='Yes'||ar==='true'||ar===1),
+    relatedId:g('RelatedId')||'',
+    relatedTab:g('RelatedTab')||'',
+    created:g('Created')||item.Created||''
+  };
 }
 function notifToSP(n){
   var fm=_fieldMaps['ScheduleNotifications']||{};
-  return spSet(fm,[['Title',n.id],['Recipient',n.recipient],['NotifType',n.notifType],['Message',n.message],['IsRead',n.isRead?'Yes':'No'],['IsArchived',n.isArchived?'Yes':'No'],['RelatedId',n.relatedId||''],['RelatedTab',n.relatedTab||'']]);
+  return spSet(fm,[['Title',n.id],['Recipient',n.recipient],['NotifType',n.notifType],['Message',n.message],['IsRead',!!n.isRead],['IsArchived',!!n.isArchived],['RelatedId',n.relatedId||''],['RelatedTab',n.relatedTab||'']]);
 }
 
 // Audit SP mapping
@@ -6161,7 +6181,7 @@ async function handleNotifClick(id){
     try{
       var fm=await discoverFields('ScheduleNotifications');
       var readKey=fm.IsRead||'IsRead';
-      var payload={};payload[readKey]='Yes';
+      var payload={};payload[readKey]=true;
       if(n._spId){await spUpdate('ScheduleNotifications',n._spId,payload);}
       else{var sp=await spGet('ScheduleNotifications',"Title eq '"+id+"'");if(sp.length){n._spId=sp[0].Id;await spUpdate('ScheduleNotifications',sp[0].Id,payload);}}
     }catch(e){}
@@ -6234,7 +6254,7 @@ async function archiveNotif(id,archiveWholeGroup){
     var readKey=fm.IsRead||'IsRead';
     console.log('[archive] field map:',{archKey:archKey,readKey:readKey,fullMap:fm});
     for(var j=0;j<toArchive.length;j++){
-      var payload={};payload[archKey]='Yes';payload[readKey]='Yes';
+      var payload={};payload[archKey]=true;payload[readKey]=true;
       console.log('[archive] payload for '+toArchive[j].id+':',payload);
       try{
         if(toArchive[j]._spId){await spUpdate('ScheduleNotifications',toArchive[j]._spId,payload);persistOK++;}
@@ -6272,7 +6292,7 @@ async function markAllRead(e){
     var fm=await discoverFields('ScheduleNotifications');
     var readKey=fm.IsRead||'IsRead';
     for(var i=0;i<unread.length;i++){
-      var payload={};payload[readKey]='Yes';
+      var payload={};payload[readKey]=true;
       if(unread[i]._spId){await spUpdate('ScheduleNotifications',unread[i]._spId,payload);}
       else{
         try{var sp=await spGet('ScheduleNotifications',"Title eq '"+unread[i].id+"'");if(sp.length){unread[i]._spId=sp[0].Id;await spUpdate('ScheduleNotifications',sp[0].Id,payload);}}catch(se){}
@@ -6295,7 +6315,7 @@ async function archiveAllRead(){
     var fm=await discoverFields('ScheduleNotifications');
     var archKey=fm.IsArchived||'IsArchived';
     for(var i=0;i<readOnes.length;i++){
-      var payload={};payload[archKey]='Yes';
+      var payload={};payload[archKey]=true;
       if(readOnes[i]._spId){await spUpdate('ScheduleNotifications',readOnes[i]._spId,payload);}
     }
   }catch(e){}
