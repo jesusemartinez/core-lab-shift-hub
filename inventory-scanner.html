@@ -702,7 +702,7 @@ html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);
     <div class="scan-icon-box"><span class="material-icons-outlined" style="font-size:52px;color:var(--md-primary)">qr_code_scanner</span></div>
     <div class="scan-hint">Point barcode scanner at label,<br>or type/paste a barcode below</div>
   </div>
-  <div class="camera-view" id="camera-view"><video id="camera-video" playsinline autoplay muted></video><div class="cam-overlay"><div class="cam-frame"></div></div><button class="cam-close" onclick="stopCamera()">Close</button></div>
+  <div class="camera-view" id="camera-view"><video id="camera-video" playsinline autoplay muted></video><div class="cam-overlay"><div class="cam-frame"></div></div><button class="cam-close" onclick="stopCamera()">Close</button><button class="cam-close" id="cam-torch-btn" onclick="toggleTorch()" style="display:none;right:auto;left:16px;"><span class="material-icons-outlined">flashlight_off</span></button></div>
   <input type="file" id="cam-file" accept="image/*" capture="environment" style="display:none" onchange="handleCamFile(this)">
   <div class="scan-bottom">
     <div class="scan-input-row">
@@ -745,8 +745,10 @@ html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);
     <div class="card" style="grid-column:1/-1">
       <div class="card-title">Update Stock</div>
       <div class="action-tabs"><button class="action-tab" id="tab-receive" onclick="selectTab('receive')"><span class="material-icons-outlined">add_circle</span>Receive</button><button class="action-tab" id="tab-remove" onclick="selectTab('remove')"><span class="material-icons-outlined">remove_circle</span>Remove</button><button class="action-tab" id="tab-adjust" onclick="selectTab('adjust')"><span class="material-icons-outlined">tune</span>Adjust</button></div>
-      <div class="action-form" id="form-receive"><div class="field"><label>Quantity to Add</label><div class="qty-row"><button onclick="stepQ('q-receive',-1)">&minus;</button><input type="number" id="q-receive" value="1" min="0" step="0.1"><button onclick="stepQ('q-receive',1)">+</button></div></div><div class="field"><label>Lot Number <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><input type="text" id="lot-receive" placeholder="e.g. LOT-2026-001"></div><div class="field"><label>Expiry Date <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><input type="date" id="exp-receive"></div><button class="btn btn-receive" onclick="submitAction('receive')"><span class="material-icons-outlined" style="font-size:20px">check_circle</span>Confirm Receive</button></div>
-      <div class="action-form" id="form-remove"><div class="field"><label>Quantity to Remove</label><div class="qty-row"><button onclick="stepQ('q-remove',-1)">&minus;</button><input type="number" id="q-remove" value="1" min="0" step="0.1"><button onclick="stepQ('q-remove',1)">+</button></div></div><div class="field"><label>Reason Code <span style="color:var(--md-error);font-weight:600">*</span></label><div class="chip-row" id="chips-remove"><div class="chip selected" data-code="Patient use" onclick="pickReason(this)">Patient use</div><div class="chip" data-code="Expired" onclick="pickReason(this)">Expired</div><div class="chip" data-code="Opened life exceeded" onclick="pickReason(this)">Opened life exceeded</div><div class="chip" data-code="QC failure" data-narrative="1" onclick="pickReason(this)">QC failure</div><div class="chip" data-code="Damaged" data-narrative="1" onclick="pickReason(this)">Damaged</div><div class="chip" data-code="Other" data-narrative="1" onclick="pickReason(this)">Other</div></div></div><div class="field"><label id="reason-remove-label">Notes <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><textarea id="reason-remove" placeholder="Additional details..."></textarea><div class="narrative-note" id="narrative-note-remove"><span class="material-icons-outlined">info</span>Narrative required: describe the details of the QC failure, damage, or other reason.</div></div><button class="btn btn-remove" onclick="submitAction('remove')"><span class="material-icons-outlined" style="font-size:20px">check_circle</span>Confirm Remove</button></div>
+      <div class="action-form" id="form-receive"><div class="field"><label>Quantity to Add</label><div class="qty-row"><button onclick="stepQ('q-receive',-1)">&minus;</button><input type="number" id="q-receive" value="1" min="0" step="0.1"><button onclick="stepQ('q-receive',1)">+</button></div></div><div class="field"><label>Lot Number <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><input type="text" id="lot-receive" placeholder="e.g. LOT-2026-001"></div><div class="field"><label>Expiry Date <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><input type="date" id="exp-receive" onchange="checkExpiryWarn()"></div><!-- EXPIRY WARN BANNER — shown when entered expiry is on/before today. User must
+      acknowledge to save. CAP-compliant: documents the anomaly without hard-blocking
+      legitimate cases (e.g., receiving expired stock to return to vendor). --><div id="exp-warn-receive" class="exp-warn" style="display:none;background:var(--adjust-surface);border:1px solid rgba(124,88,0,.3);border-radius:var(--radius-md);padding:10px 12px;margin:4px 0;"><div style="font-size:11px;font-weight:700;color:var(--adjust);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;display:flex;align-items:center;gap:4px;"><span class="material-icons-outlined" style="font-size:14px">warning</span><span id="exp-warn-title">Expiry date is past</span></div><div id="exp-warn-msg" style="font-size:12px;color:var(--adjust);line-height:1.4;margin-bottom:8px;"></div><label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--adjust);cursor:pointer;"><input type="checkbox" id="exp-ack-receive" style="margin:0;width:16px;height:16px;"> I acknowledge this reagent has already expired and will document appropriately.</label></div><button class="btn btn-receive" onclick="submitAction('receive')"><span class="material-icons-outlined" style="font-size:20px">check_circle</span>Confirm Receive</button></div>
+      <div class="action-form" id="form-remove"><div class="field"><label>Quantity to Remove</label><div class="qty-row"><button onclick="stepQ('q-remove',-1)">&minus;</button><input type="number" id="q-remove" value="1" min="0" step="0.1"><button onclick="stepQ('q-remove',1)">+</button></div></div><div class="field"><label>Reason Code <span style="color:var(--md-error);font-weight:600">*</span></label><div class="chip-row" id="chips-remove"><div class="chip selected" data-code="Patient use" onclick="pickReason(this)">Patient use</div><div class="chip" data-code="QC run" onclick="pickReason(this)">QC run</div><div class="chip" data-code="Calibration run" onclick="pickReason(this)">Calibration run</div><div class="chip" data-code="Expired" onclick="pickReason(this)">Expired</div><div class="chip" data-code="Opened life exceeded" onclick="pickReason(this)">Opened life exceeded</div><div class="chip" data-code="QC failure" data-narrative="1" onclick="pickReason(this)">QC failure</div><div class="chip" data-code="Damaged" data-narrative="1" onclick="pickReason(this)">Damaged</div><div class="chip" data-code="Other" data-narrative="1" onclick="pickReason(this)">Other</div></div></div><div class="field"><label id="reason-remove-label">Notes <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><textarea id="reason-remove" placeholder="Additional details..."></textarea><div class="narrative-note" id="narrative-note-remove"><span class="material-icons-outlined">info</span>Narrative required: describe the details of the QC failure, damage, or other reason.</div></div><button class="btn btn-remove" onclick="submitAction('remove')"><span class="material-icons-outlined" style="font-size:20px">check_circle</span>Confirm Remove</button></div>
       <div class="action-form" id="form-adjust"><div style="font-size:13px;color:var(--md-on-surface-variant);padding:4px 0;font-weight:500">Set the exact current stock count.</div><div class="field"><label>New Stock Count</label><div class="qty-row"><button onclick="stepQ('q-adjust',-1)">&minus;</button><input type="number" id="q-adjust" value="0" min="0" step="0.1"><button onclick="stepQ('q-adjust',1)">+</button></div></div><div class="field"><label>Reason <span style="color:var(--md-outline);font-weight:400">(optional)</span></label><textarea id="reason-adjust" placeholder="e.g. Physical count, discrepancy..."></textarea></div><button class="btn btn-adjust" onclick="submitAction('adjust')"><span class="material-icons-outlined" style="font-size:20px">check_circle</span>Set Stock Count</button></div>
     </div>
   </div>
@@ -772,6 +774,25 @@ html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);
       <button class="btn btn-purple" style="flex:1" onclick="saveMobEdit()"><span class="material-icons-outlined" style="font-size:18px">save</span> Save</button>
       <button class="btn btn-ghost" style="flex:1" onclick="closeMobEdit()">Cancel</button>
     </div>
+  </div>
+</div>
+
+<!-- NEW INVENTORY ROW CONFIRMATION — replaces the silent autoCreateInvRow side-effect.
+     When a scanned catalog item has no inventory record yet, the user must now
+     explicitly confirm creation and pick a department (pre-filled from the catalog). -->
+<div class="mob-edit-bg" id="invCreateBg" onclick="if(event.target===this)closeInvCreate()" style="z-index:200;">
+  <div class="mob-edit-sheet" onclick="event.stopPropagation()" style="max-width:440px;margin:0 auto;">
+    <div class="mob-edit-handle"></div>
+    <div class="mob-edit-hdr"><span style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--md-on-surface)">Create Inventory Record?</span><button class="mob-edit-close" onclick="closeInvCreate()"><span class="material-icons-outlined">close</span></button></div>
+    <div class="mob-edit-body" style="grid-template-columns:1fr;">
+      <div style="font-size:13px;color:var(--md-on-surface-variant);line-height:1.5;padding-bottom:8px;" id="invCreateMsg"></div>
+      <div class="mob-ef mob-ef-full"><label>Department</label><select id="invc-instrument"><option value="Chemistry">Chemistry</option><option value="Hematology">Hematology</option><option value="Coagulation">Coagulation</option><option value="Urinalysis">Urinalysis</option><option value="Laboratory Supplies">Laboratory Supplies</option><option value="Office Supplies">Office Supplies</option></select></div>
+      <div class="mob-ef"><label>Item Type</label><select id="invc-type"><option value="Reagent">Reagent</option><option value="QC Material">QC Material</option><option value="Calibrator">Calibrator</option><option value="Control">Control</option><option value="Consumable">Consumable</option><option value="Supply">Supply</option><option value="Part">Part</option></select></div>
+      <div class="mob-ef"><label>Unit</label><select id="invc-unit"><option value="L">L</option><option value="mL">mL</option><option value="vial">vial</option><option value="kit">kit</option><option value="btl">btl</option><option value="box">box</option><option value="pk">pk</option><option value="ea">ea</option></select></div>
+      <div class="mob-ef"><label>Min PAR</label><input type="number" id="invc-par" min="0" step="0.5" value="1"></div>
+      <div class="mob-ef"><label>Daily Use</label><input type="number" id="invc-daily" min="0" step="0.1" value="0"></div>
+    </div>
+    <div class="mob-edit-footer"><button class="btn btn-purple" style="flex:1" onclick="confirmInvCreate()"><span class="material-icons-outlined" style="font-size:18px">add_circle</span> Create Record</button><button class="btn btn-ghost" style="flex:1" onclick="closeInvCreate()">Cancel</button></div>
   </div>
 </div>
 
@@ -814,7 +835,9 @@ html,body{height:100%;font-family:var(--font-body);background:var(--md-surface);
     <div style="font-size:14px;color:var(--md-on-surface-variant);text-align:center;max-width:280px;line-height:1.6;font-weight:500">Inventory updated and transaction logged.</div>
     <div class="success-log" id="success-log"></div>
   </div>
-  <div class="footer"><button class="btn btn-purple" onclick="goScan()"><span class="material-icons-outlined" style="font-size:20px">qr_code_scanner</span>Scan Another Item</button></div>
+  <div class="footer" style="flex-direction:column;gap:10px;"><!-- UNDO: 30-second window to reverse the last action. Only appears for submitAction
+    flows (receive/remove/adjust), not for manual-entry submissions (which would need
+    a multi-step rollback through both inventory and catalog writes). --><button class="btn btn-ghost" id="undo-btn" onclick="undoLastAction()" style="display:none;color:var(--md-error);border:1px solid rgba(180,30,30,.3);"><span class="material-icons-outlined" style="font-size:18px">undo</span> Undo last action <span id="undo-count" style="font-size:11px;opacity:.7;"></span></button><button class="btn btn-purple" onclick="goScan()"><span class="material-icons-outlined" style="font-size:20px">qr_code_scanner</span>Scan Another Item</button></div>
 </div>
 </main>
 
@@ -1046,15 +1069,94 @@ async function lookupBarcode(){
     if(safeCatID){invData=await spFetch(SP.lists.inventory,'?$top=1&$select='+sel+'&$filter='+encodeURIComponent("field_12 eq '"+safeCatID+"'"));}
     if(!invData||!invData.value||!invData.value.length){var safeTitle=(catRow.Title||'').replace(/'/g,"''");invData=await spFetch(SP.lists.inventory,'?$top=1&$select='+sel+'&$filter='+encodeURIComponent("Title eq '"+safeTitle+"'"));}
     var invRow=invData.value?.[0]||null;
-    if(!invRow)invRow=await autoCreateInvRow(catRow);
+    if(!invRow){
+      // Catalog hit but no inventory row: surface the decision to the user with a
+      // modal. Replaces the old silent autoCreateInvRow side-effect where scanning
+      // would spawn default-filled records in SP without the user knowing.
+      hideLoad();
+      promptInvCreate(catRow,parsed);
+      return;
+    }
     currentItem=invRow;
     if(parsed.expiry){document.getElementById('exp-receive').value=parsed.expiry;}
     if(parsed.lot){document.getElementById('lot-receive').value=parsed.lot;}
-    renderItem();hideLoad();goScreen('screen-item');
-  }catch(e){hideLoad();var msg=e.message||'Unknown error';if(msg.indexOf('SP ')===0){try{var j=JSON.parse(msg.slice(msg.indexOf('{')));msg='SP Error: '+(j.error?.message?.value||msg).slice(0,80);}catch(_){}}showToast(msg.slice(0,80),true);}
+    renderItem();checkExpiryWarn();hideLoad();goScreen('screen-item');
+  }catch(e){hideLoad();showToast(formatSPError(e),true);}
 }
-async function autoCreateInvRow(catRow){
-  var fields=cf({Instrument:catRow[CAT.Instrument]||'XN',ItemType:'Reagent',Unit:catRow[CAT.Unit]||'ea',InStock:0,MinPAR:1,DailyUse:0,CatalogID:catRow[CAT.CatalogID]||'',IsActive:'Yes'},INV);
+// Holds pending catalog row + parsed barcode while the user decides whether to
+// create an inventory record. Kept at module scope so confirmInvCreate can access.
+var _pendingCatRow=null,_pendingParsed=null;
+
+function promptInvCreate(catRow,parsed){
+  _pendingCatRow=catRow;_pendingParsed=parsed;
+  var catInst=catRow[CAT.Instrument]||'';
+  var name=catRow.Title||'this item';
+  setEl('invCreateMsg','"'+name+'" is in the catalog but has no inventory record yet. Creating one will add it to stock tracking. Confirm the details below.');
+  // Pre-fill dropdowns from catalog where possible
+  var instSel=document.getElementById('invc-instrument');
+  if(instSel){
+    // Map legacy instrument strings to current department names
+    var deptMap={'XN':'Hematology','DI-60':'Hematology','Stago':'Coagulation','UN':'Urinalysis','Roche':'Chemistry','Lab Supplies':'Laboratory Supplies'};
+    var mapped=deptMap[catInst]||catInst;
+    // Only set if the option exists in the dropdown
+    var opts=Array.prototype.slice.call(instSel.options).map(function(o){return o.value;});
+    instSel.value=opts.indexOf(mapped)>=0?mapped:'Chemistry';
+  }
+  var unitSel=document.getElementById('invc-unit');
+  if(unitSel){
+    var catUnit=catRow[CAT.Unit]||'ea';
+    var unitOpts=Array.prototype.slice.call(unitSel.options).map(function(o){return o.value;});
+    unitSel.value=unitOpts.indexOf(catUnit)>=0?catUnit:'ea';
+  }
+  // Reset type + PAR + daily to defaults
+  var typeSel=document.getElementById('invc-type');if(typeSel)typeSel.value='Reagent';
+  setVal('invc-par','1');
+  setVal('invc-daily','0');
+  document.getElementById('invCreateBg').classList.add('show');
+}
+
+function closeInvCreate(){
+  document.getElementById('invCreateBg').classList.remove('show');
+  _pendingCatRow=null;_pendingParsed=null;
+  // User backed out: return to scan screen cleanly
+  goScan();
+}
+
+async function confirmInvCreate(){
+  if(!_pendingCatRow){closeInvCreate();return;}
+  var catRow=_pendingCatRow,parsed=_pendingParsed;
+  var inst=getVal('invc-instrument')||'Chemistry';
+  var type=getVal('invc-type')||'Reagent';
+  var unit=getVal('invc-unit')||'ea';
+  var par=parseFloat(getVal('invc-par'))||1;
+  var daily=parseFloat(getVal('invc-daily'))||0;
+  showLoad('Creating inventory record...');
+  try{
+    var invRow=await autoCreateInvRow(catRow,{Instrument:inst,ItemType:type,Unit:unit,MinPAR:par,DailyUse:daily});
+    document.getElementById('invCreateBg').classList.remove('show');
+    _pendingCatRow=null;_pendingParsed=null;
+    currentItem=invRow;
+    if(parsed&&parsed.expiry)document.getElementById('exp-receive').value=parsed.expiry;
+    if(parsed&&parsed.lot)document.getElementById('lot-receive').value=parsed.lot;
+    renderItem();checkExpiryWarn();hideLoad();goScreen('screen-item');
+    showToast('Inventory record created',false);
+  }catch(e){hideLoad();showToast(formatSPError(e),true);}
+}
+
+// Now accepts optional overrides from the create-record modal so user choices apply.
+// Legacy signature (catRow only) still works — falls back to the old defaults.
+async function autoCreateInvRow(catRow,opts){
+  opts=opts||{};
+  var fields=cf({
+    Instrument:opts.Instrument||catRow[CAT.Instrument]||'Chemistry',
+    ItemType:opts.ItemType||'Reagent',
+    Unit:opts.Unit||catRow[CAT.Unit]||'ea',
+    InStock:0,
+    MinPAR:opts.MinPAR!=null?opts.MinPAR:1,
+    DailyUse:opts.DailyUse!=null?opts.DailyUse:0,
+    CatalogID:catRow[CAT.CatalogID]||'',
+    IsActive:'Yes'
+  },INV);
   fields.Title=catRow.Title;var res=await spPost(SP.lists.inventory,fields);var json=await res.json();var nr=json.d||json;nr.Title=catRow.Title;
   var safe=(catRow.Title||'').replace(/'/g,"''");
   var sel='Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9,field_10,field_11,field_12,field_13';
@@ -1074,11 +1176,14 @@ function renderItem(){
   if(orderEl){var os,oc,ob;if(stock<=0){os='OUT OF STOCK';oc='var(--out)';ob='var(--out-bg)';}else if(stock<par){os='ORDER NOW';oc='var(--order)';ob='var(--order-bg)';}else if(par>0&&stock<par*1.5){os='WATCH';oc='var(--watch)';ob='var(--watch-bg)';}else{os='OK';oc='var(--ok)';ob='var(--ok-bg)';}orderEl.textContent=os;orderEl.style.color=oc;orderEl.style.background=ob;}
   var wasteEl=document.getElementById('m-waste');
   if(wasteEl){if(life>0&&days!==null){var ratio=days/life;var wr,wc,wb;if(ratio>1.5){wr='HIGH';wc='var(--out)';wb='var(--out-bg)';}else if(ratio>1){wr='MEDIUM';wc='var(--watch)';wb='var(--watch-bg)';}else{wr='LOW';wc='var(--ok)';wb='var(--ok-bg)';}wasteEl.textContent=wr;wasteEl.style.color=wc;wasteEl.style.background=wb;}else{wasteEl.textContent='';wasteEl.style.color='var(--md-on-surface-variant)';wasteEl.style.background='transparent';}}
-  var eb=document.getElementById('edit-btn');if(eb)eb.style.display='inline-flex';
+  var eb=document.getElementById('edit-btn');if(eb)eb.style.display=isAdmin?'inline-flex':'none';
   selectTab(null);
   document.getElementById('q-receive').value=1;document.getElementById('q-remove').value=1;document.getElementById('q-adjust').value=parseFloat(iv(currentItem,'InStock'))||0;
   document.getElementById('lot-receive').value='';document.getElementById('exp-receive').value='';document.getElementById('reason-remove').value='';document.getElementById('reason-adjust').value='';
   resetRemoveForm();
+  // Reset expiry warning state when switching items
+  var expAck=document.getElementById('exp-ack-receive');if(expAck)expAck.checked=false;
+  var expWarn=document.getElementById('exp-warn-receive');if(expWarn)expWarn.style.display='none';
 }
 
 function selectTab(action){currentTab=action;['receive','remove','adjust'].forEach(function(a){var tab=document.getElementById('tab-'+a);var form=document.getElementById('form-'+a);if(tab)tab.className='action-tab'+(action===a?' active-'+a:'');if(form)form.className='action-form'+(action===a?' show':'');});}
@@ -1123,9 +1228,25 @@ function resetRemoveForm(){
 async function submitAction(action){
   if(!currentItem){showToast('No item selected',true);return;}
   var qty,lot='',expiry='',reason='',reasonCode='';var oldStock=parseFloat(iv(currentItem,'InStock'))||0;var newStock,delta;
-  if(action==='receive'){qty=parseFloat(document.getElementById('q-receive').value)||0;lot=document.getElementById('lot-receive').value.trim();expiry=document.getElementById('exp-receive').value;newStock=oldStock+qty;delta=qty;}
+  if(action==='receive'){
+    qty=parseFloat(document.getElementById('q-receive').value)||0;
+    if(qty<=0){showToast('Quantity must be greater than 0',true);return;}
+    lot=document.getElementById('lot-receive').value.trim();
+    expiry=document.getElementById('exp-receive').value;
+    // Expiry warning gate: if expiry is on or before today, require ack before saving
+    if(expiry&&expiry<=_todayISO()){
+      var ack=document.getElementById('exp-ack-receive');
+      if(!ack||!ack.checked){
+        showToast('Tick the expiry acknowledgment to save',true);
+        var w=document.getElementById('exp-warn-receive');if(w)w.scrollIntoView({behavior:'smooth',block:'center'});
+        return;
+      }
+    }
+    newStock=oldStock+qty;delta=qty;
+  }
   else if(action==='remove'){
     qty=parseFloat(document.getElementById('q-remove').value)||0;
+    if(qty<=0){showToast('Quantity must be greater than 0',true);return;}
     reason=document.getElementById('reason-remove').value.trim();
     reasonCode=getSelectedReason();
     if(!reasonCode){showToast('Select a reason code',true);return;}
@@ -1135,23 +1256,132 @@ async function submitAction(action){
       var ta=document.getElementById('reason-remove');if(ta)ta.focus();
       return;
     }
-    newStock=Math.max(0,oldStock-qty);delta=-qty;
+    // Clamp delta to actual removed amount. Previously this silently wrote -qty
+    // to the log even when oldStock-qty would go negative, creating an accounting
+    // discrepancy (log said -10 but only 3 were removed). Now delta matches what
+    // actually came off the shelf, and we surface the shortfall to the user.
+    var actualQty=Math.min(qty,oldStock);
+    if(actualQty<qty){
+      showToast('Only '+actualQty+' in stock — logged actual removed amount',true);
+    }
+    newStock=oldStock-actualQty;delta=-actualQty;
   }
-  else{qty=parseFloat(document.getElementById('q-adjust').value)||0;reason=document.getElementById('reason-adjust').value.trim();newStock=qty;delta=qty-oldStock;}
+  else{
+    qty=parseFloat(document.getElementById('q-adjust').value)||0;
+    reason=document.getElementById('reason-adjust').value.trim();
+    newStock=qty;delta=qty-oldStock;
+    // Adjust with non-trivial delta requires a reason (CAP-aligned). Threshold is 5
+    // units either way. Trivial tweaks (e.g., re-counting from 12 to 13) don't need
+    // narrative; large swings must be documented.
+    if(Math.abs(delta)>ADJUST_REASON_THRESHOLD && !reason){
+      showToast('Adjustments > '+ADJUST_REASON_THRESHOLD+' units need a reason',true);
+      var taj=document.getElementById('reason-adjust');if(taj)taj.focus();
+      return;
+    }
+  }
   showLoad('Updating inventory...');
+  var patchSucceeded=false;
   try{
     var patchData=cf({InStock:newStock},INV);if(lot)patchData[INV.LotNumber]=lot;if(expiry)patchData[INV.ExpiryDate]=expiry;
     await spPatch(SP.lists.inventory,currentItem.Id,patchData);
+    patchSucceeded=true;
     var acct=msalInstance?.getActiveAccount();var scannedBy=acct?(acct.name||acct.username||''):'';var today=new Date().toISOString().slice(0,10);var actionLabel=action.charAt(0).toUpperCase()+action.slice(1);
     var logData=cf({Action:actionLabel,QuantityDelta:delta,QuantityAfter:newStock,LotNumber:lot||'',ExpiryDate:expiry||'',Timestamp:new Date().toISOString(),ReasonNote:reason||'',ReasonCode:reasonCode||'',ScannedBy:scannedBy},LOG);
     logData.Title=currentItem.Title+' — '+actionLabel+' — '+today;
-    await spPost(SP.lists.log,logData);
-    lastEntry={item:currentItem.Title,action:actionLabel,delta:delta>0?'+'+delta:String(delta),newStock,lot:lot||'—',scannedBy,time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})};
+    // Log write is critical for audit. One retry on transient failure; if it still
+    // fails, revert the inventory patch so the physical and recorded states match.
+    // Prevents the "stock updated but no audit trail" scenario that would surface
+    // in a CAP inspection.
+    try{
+      await spPost(SP.lists.log,logData);
+    }catch(logErr){
+      console.warn('Log write failed, retrying once:',logErr.message);
+      try{
+        await spPost(SP.lists.log,logData);
+      }catch(retryErr){
+        // Log write is durably failing. Revert the inventory patch and surface a
+        // loud error so the user knows not to trust the submission.
+        try{
+          var revertData=cf({InStock:oldStock},INV);
+          await spPatch(SP.lists.inventory,currentItem.Id,revertData);
+          hideLoad();
+          showToast('Audit log failed — inventory reverted. '+formatSPError(retryErr),true);
+        }catch(revertErr){
+          // Both log and revert failed: inventory is now in an inconsistent state.
+          // This is the worst case — surface everything we know so the user can
+          // manually reconcile.
+          hideLoad();
+          showToast('Log AND revert failed. Stock may be out of sync — check Dashboard. '+formatSPError(retryErr),true);
+        }
+        return;
+      }
+    }
+    lastEntry={item:currentItem.Title,action:actionLabel,delta:delta>0?'+'+delta:String(delta),newStock,lot:lot||'—',scannedBy,time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+      // Snapshot for undo: original stock + item ref so we can reverse the delta
+      _undoOldStock:oldStock,_undoItemId:currentItem.Id,_undoDelta:delta};
     hideLoad();showSuccess();
-  }catch(e){hideLoad();showToast('Submit failed: '+(e.message||'').slice(0,50),true);}
+  }catch(e){
+    hideLoad();
+    showToast(formatSPError(e),true);
+  }
+}
+
+// Adjust threshold: reason required when |delta| exceeds this many units. Trivial
+// re-counts (1-2 units off) save without friction; larger swings need narrative.
+var ADJUST_REASON_THRESHOLD=5;
+
+function _todayISO(){return new Date().toISOString().slice(0,10);}
+
+// Shows the expiry warning banner if the date field holds an already-expired value.
+// Also resets the ack checkbox whenever the date changes (force fresh acknowledgment).
+function checkExpiryWarn(){
+  var input=document.getElementById('exp-receive');
+  var warn=document.getElementById('exp-warn-receive');
+  var ack=document.getElementById('exp-ack-receive');
+  var msg=document.getElementById('exp-warn-msg');
+  if(!input||!warn)return;
+  if(ack)ack.checked=false;
+  var val=input.value;
+  if(!val){warn.style.display='none';return;}
+  var today=_todayISO();
+  if(val<=today){
+    var days=Math.floor((new Date(today).getTime()-new Date(val).getTime())/86400000);
+    if(msg)msg.textContent=val+' is '+(days===0?'today':days+' day'+(days===1?'':'s')+' ago')+'. Verify this is correct before receiving.';
+    warn.style.display='block';
+  }else{
+    // Also warn if expiry is within 30 days — less urgent, different message
+    var diffDays=Math.floor((new Date(val).getTime()-new Date(today).getTime())/86400000);
+    if(diffDays<=30){
+      if(msg)msg.textContent=val+' expires in '+diffDays+' day'+(diffDays===1?'':'s')+'. Confirm the lot has useful life remaining.';
+      var title=document.getElementById('exp-warn-title');if(title)title.textContent='Expiry is near';
+      warn.style.display='block';
+    }else{warn.style.display='none';}
+  }
+}
+
+// Parses a SharePoint error object to surface the useful message. Falls back to a
+// trimmed version of the raw error if parsing fails. Replaces the old 50-char slice.
+function formatSPError(e){
+  var raw=e&&e.message?e.message:String(e||'Unknown error');
+  // Strip "SP 400: " / "SP 500: " prefix
+  var prefixMatch=raw.match(/^SP \d+:\s*/);
+  var body=prefixMatch?raw.slice(prefixMatch[0].length):raw;
+  // Try to parse embedded JSON for d.error.message.value
+  var jsonStart=body.indexOf('{');
+  if(jsonStart>=0){
+    try{
+      var obj=JSON.parse(body.slice(jsonStart));
+      var val=obj&&obj.error&&obj.error.message&&obj.error.message.value;
+      if(val)return (prefixMatch?prefixMatch[0]:'')+val.slice(0,120);
+    }catch(_){}
+  }
+  return raw.slice(0,120);
 }
 
 function toggleEdit(){
+  // Admin-only: non-admins cannot edit catalog/inventory metadata. This is a
+  // defense-in-depth guard in addition to hiding the Edit button in renderItem().
+  if(!isAdmin){showToast('Edits are admin-only',true);return;}
   // Mobile: open bottom sheet
   if(window.innerWidth<768){openMobEdit();return;}
   // Desktop: inline expand
@@ -1186,13 +1416,13 @@ async function saveMobEdit(){
     currentItem.Title=name;currentItem[INV.MinPAR]=par;currentItem[INV.DailyUse]=daily;
     currentItem[INV.OpenLifeDays]=life;currentItem[INV.ItemType]=type;currentItem[INV.IsActive]=active;
     closeMobEdit();renderItem();hideLoad();showToast('Saved',false);
-  }catch(e){hideLoad();showToast('Save failed: '+(e.message||'').slice(0,40),true);}
+  }catch(e){hideLoad();showToast(formatSPError(e),true);}
 }
 async function saveEdits(){
   if(!currentItem)return;var name=document.getElementById('e-name').value.trim();var par=parseFloat(document.getElementById('e-par').value)||0;var daily=parseFloat(document.getElementById('e-daily').value)||0;var life=parseFloat(document.getElementById('e-life').value)||0;var type=document.getElementById('e-type').value;var active=document.getElementById('e-active').checked?'Yes':'No';
   if(!name){showToast('Name is required',true);return;}
   showLoad('Saving...');
-  try{var pd=cf({MinPAR:par,DailyUse:daily,OpenLifeDays:life,ItemType:type,IsActive:active},INV);pd.Title=name;await spPatch(SP.lists.inventory,currentItem.Id,pd);currentItem.Title=name;currentItem[INV.MinPAR]=par;currentItem[INV.DailyUse]=daily;currentItem[INV.OpenLifeDays]=life;currentItem[INV.ItemType]=type;currentItem[INV.IsActive]=active;cancelEdit();renderItem();hideLoad();showToast('Saved',false);}catch(e){hideLoad();showToast('Save failed: '+(e.message||'').slice(0,40),true);}
+  try{var pd=cf({MinPAR:par,DailyUse:daily,OpenLifeDays:life,ItemType:type,IsActive:active},INV);pd.Title=name;await spPatch(SP.lists.inventory,currentItem.Id,pd);currentItem.Title=name;currentItem[INV.MinPAR]=par;currentItem[INV.DailyUse]=daily;currentItem[INV.OpenLifeDays]=life;currentItem[INV.ItemType]=type;currentItem[INV.IsActive]=active;cancelEdit();renderItem();hideLoad();showToast('Saved',false);}catch(e){hideLoad();showToast(formatSPError(e),true);}
 }
 
 function fillManualFromBarcode(parsed,raw){
@@ -1208,13 +1438,28 @@ function fillManualFromBarcode(parsed,raw){
   // Auto-lookup product info via UPCitemdb for UPC/EAN/GTIN barcodes
   var lookupCode=parsed.innerUPC||parsed.catalogNumber||parsed.gtinRaw||'';
   if(lookupCode&&/^\d{8,14}$/.test(lookupCode)){
+    // Show a "looking up..." hint so the user knows a lookup is in progress
+    if(al){
+      var priorHTML=al.innerHTML;
+      al.innerHTML=priorHTML+' <span id="upc-lookup-status" style="font-size:11px;color:var(--md-outline);display:inline-flex;align-items:center;gap:4px;margin-left:6px;"><span class="material-icons-outlined" style="font-size:12px;animation:spin 1s linear infinite;">sync</span>Searching online...</span>';
+    }
     upcLookup(lookupCode).then(function(info){
+      var statusEl=document.getElementById('upc-lookup-status');if(statusEl)statusEl.remove();
       if(info){
         if(info.title&&!getVal('m-name'))setVal('m-name',info.title);
         if(info.brand){var cur=getVal('m-notes');setVal('m-notes',(cur?cur+' · ':'')+info.brand);}
         if(al&&info.title)al.innerHTML='Barcode not in catalog. Product identified: <strong>'+esc(info.title)+'</strong>. Confirm and add.';
+      }else{
+        // All three UPC services returned nothing. Surface this so the user doesn't
+        // wait for an auto-fill that's never coming.
+        if(al){
+          var noResultMsg=' <span style="font-size:11px;color:var(--md-outline);margin-left:6px;"><span class="material-icons-outlined" style="font-size:12px;vertical-align:text-bottom;">info</span> No product data found online — enter name manually.</span>';
+          al.innerHTML=al.innerHTML+noResultMsg;
+        }
       }
-    }).catch(function(){});
+    }).catch(function(){
+      var statusEl=document.getElementById('upc-lookup-status');if(statusEl)statusEl.remove();
+    });
   }
 }
 async function upcLookup(code){
@@ -1263,8 +1508,8 @@ async function submitManual(addToCatalog){
   try{
     if(addToCatalog&&barcode){var cd=cf({CatalogID:catalogID,BarcodeString:barcode,CatalogNumber:catnum||barcode,Instrument:inst,Unit:unit,Manufacturer:'Other',BarcodeType:parsed?parsed.barcodeType:'Unknown',GS1ParsesExpiry:parsed&&parsed.expiry?'Yes':'No',GS1ParsesLot:parsed&&parsed.lot?'Yes':'No',Notes:notes||'Added via scanner — '+today},CAT);cd.Title=name;await spPost(SP.lists.catalog,cd);var autoType=(inst==='Laboratory Supplies'||inst==='Office Supplies')?'Supply':'Reagent';var id=cf({Instrument:inst,ItemType:autoType,Unit:unit,InStock:qty,MinPAR:1,DailyUse:0,CatalogID:catalogID,IsActive:'Yes'},INV);id.Title=name;await spPost(SP.lists.inventory,id);}
     var acct=msalInstance?.getActiveAccount();var scannedBy=acct?(acct.name||acct.username||''):'';var ld=cf({Action:'Received',QuantityDelta:qty,QuantityAfter:qty,LotNumber:lot||'',ExpiryDate:expiry||'',Timestamp:new Date().toISOString(),ReasonNote:notes||'',ScannedBy:scannedBy},LOG);ld.Title=name+' — Received — '+today;await spPost(SP.lists.log,ld);
-    lastEntry={item:name,action:'Received',delta:'+'+qty,newStock:qty,lot:lot||'—',scannedBy,time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})};lastRaw='';lastParsedGS1=null;hideLoad();showSuccess();
-  }catch(e){hideLoad();showToast('Failed: '+(e.message||'').slice(0,50),true);}
+    lastEntry={item:name,action:'Received',delta:'+'+qty,newStock:qty,lot:lot||'—',scannedBy,time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),_addedToCatalog:addToCatalog};lastRaw='';lastParsedGS1=null;hideLoad();showSuccess();
+  }catch(e){hideLoad();showToast(formatSPError(e),true);}
 }
 
 function showSuccess(){
@@ -1272,12 +1517,142 @@ function showSuccess(){
   if(log)log.innerHTML=[['Item',lastEntry.item],['Action',lastEntry.action],['Change',lastEntry.delta],['New Stock',lastEntry.newStock],['Lot',lastEntry.lot],['Scanned By',lastEntry.scannedBy||'—'],['Time',lastEntry.time]].map(function(r){return'<div class="log-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>';}).join('');
   trackScan(lastEntry.item,lastEntry.action,parseFloat(lastEntry.delta)||0,lastEntry.newStock,lastEntry.lot);
   goScreen('screen-success');
+  startUndoTimer();
 }
 
-var camStream=null,bdDetector=null,camFrame=null;
-async function startCamera(){if(!('BarcodeDetector'in window)){document.getElementById('cam-file').click();return;}try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});var vid=document.getElementById('camera-video');vid.srcObject=camStream;document.getElementById('camera-view').style.display='block';var cb=document.getElementById('cam-btn');if(cb){cb.innerHTML='<span class="material-icons-outlined">stop_circle</span>';cb.onclick=stopCamera;}bdDetector=new BarcodeDetector({formats:['code_128','code_39','data_matrix','ean_13','ean_8','qr_code','upc_a','upc_e']});scanFrame(vid);}catch(e){console.error('Camera:',e);document.getElementById('cam-file').click();}}
-async function scanFrame(vid){if(!camStream)return;try{var bc=await bdDetector.detect(vid);if(bc&&bc.length>0){document.getElementById('scan-input').value=bc[0].rawValue;stopCamera();showToast('Barcode scanned');lookupBarcode();return;}}catch(e){}camFrame=requestAnimationFrame(()=>scanFrame(vid));}
-function stopCamera(){if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}if(camFrame){cancelAnimationFrame(camFrame);camFrame=null;}var cv=document.getElementById('camera-view');if(cv)cv.style.display='none';var cb=document.getElementById('cam-btn');if(cb){cb.innerHTML='<span class="material-icons-outlined">photo_camera</span>';cb.onclick=startCamera;}}
+// Undo timer — 30 seconds after a submitAction, the Undo button is available.
+// After the window expires or the user scans something else, the last action is
+// frozen and cannot be reversed through the UI. Undo writes a compensating log
+// entry (doesn't delete the original) so the audit trail remains intact.
+var UNDO_WINDOW_MS=30000;
+var _undoTimer=null,_undoExpires=0,_undoTick=null;
+
+function startUndoTimer(){
+  var btn=document.getElementById('undo-btn');var cnt=document.getElementById('undo-count');
+  if(!btn||!cnt)return;
+  // Only allow undo for standard submitAction flows (which set _undoItemId)
+  if(!lastEntry||!lastEntry._undoItemId){btn.style.display='none';return;}
+  btn.style.display='inline-flex';
+  _undoExpires=Date.now()+UNDO_WINDOW_MS;
+  if(_undoTimer)clearTimeout(_undoTimer);
+  if(_undoTick)clearInterval(_undoTick);
+  var tickFn=function(){
+    var secs=Math.max(0,Math.ceil((_undoExpires-Date.now())/1000));
+    cnt.textContent='('+secs+'s)';
+    if(secs<=0){btn.style.display='none';clearInterval(_undoTick);_undoTick=null;}
+  };
+  tickFn();
+  _undoTick=setInterval(tickFn,1000);
+  _undoTimer=setTimeout(function(){btn.style.display='none';_undoTimer=null;},UNDO_WINDOW_MS);
+}
+
+function cancelUndoTimer(){
+  if(_undoTimer){clearTimeout(_undoTimer);_undoTimer=null;}
+  if(_undoTick){clearInterval(_undoTick);_undoTick=null;}
+  var btn=document.getElementById('undo-btn');if(btn)btn.style.display='none';
+}
+
+async function undoLastAction(){
+  if(!lastEntry||!lastEntry._undoItemId){showToast('Nothing to undo',true);return;}
+  if(Date.now()>_undoExpires){showToast('Undo window expired',true);return;}
+  cancelUndoTimer();
+  showLoad('Reversing last action...');
+  try{
+    // Restore original stock on the inventory row
+    var patchData=cf({InStock:lastEntry._undoOldStock},INV);
+    await spPatch(SP.lists.inventory,lastEntry._undoItemId,patchData);
+    // Write a compensating log entry (don't delete the original — preserves audit)
+    var acct=msalInstance?.getActiveAccount();var scannedBy=acct?(acct.name||acct.username||''):'';
+    var today=new Date().toISOString().slice(0,10);
+    var reverseDelta=-(lastEntry._undoDelta||0);
+    var logData=cf({Action:'Undo',QuantityDelta:reverseDelta,QuantityAfter:lastEntry._undoOldStock,LotNumber:'',ExpiryDate:'',Timestamp:new Date().toISOString(),ReasonNote:'Reversed '+lastEntry.action+' within 30s window',ReasonCode:'Undo',ScannedBy:scannedBy},LOG);
+    logData.Title=lastEntry.item+' — Undo — '+today;
+    await spPost(SP.lists.log,logData);
+    hideLoad();showToast('Action reversed',false);
+    lastEntry={};// Clear so a second undo click does nothing
+    goScan();
+  }catch(e){hideLoad();showToast(formatSPError(e),true);}
+}
+
+var camStream=null,bdDetector=null,camFrame=null,camStartMs=0,_camTorchOn=false;
+
+// Camera scan times out after this duration to prevent infinite rAF loops on
+// unreadable labels (battery drain on mobile). User can re-tap the camera button
+// to try again. 30s felt right: long enough for a few repositioning attempts,
+// short enough not to cook the phone.
+var CAM_TIMEOUT_MS=30000;
+
+async function startCamera(){
+  if(!('BarcodeDetector'in window)){document.getElementById('cam-file').click();return;}
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    var vid=document.getElementById('camera-video');
+    vid.srcObject=camStream;
+    document.getElementById('camera-view').style.display='block';
+    var cb=document.getElementById('cam-btn');
+    if(cb){cb.innerHTML='<span class="material-icons-outlined">stop_circle</span>';cb.onclick=stopCamera;}
+    // Show torch toggle if the track supports it (fix #8)
+    updateTorchUI();
+    bdDetector=new BarcodeDetector({formats:['code_128','code_39','data_matrix','ean_13','ean_8','qr_code','upc_a','upc_e']});
+    camStartMs=Date.now();
+    scanFrame(vid);
+  }catch(e){console.error('Camera:',e);document.getElementById('cam-file').click();}
+}
+
+async function scanFrame(vid){
+  if(!camStream)return;
+  // Bail out after timeout — prevents infinite rAF drain on unreadable barcodes
+  if(Date.now()-camStartMs>CAM_TIMEOUT_MS){
+    stopCamera();
+    showToast('Could not read barcode — try repositioning, better lighting, or type manually',true);
+    return;
+  }
+  try{
+    var bc=await bdDetector.detect(vid);
+    if(bc&&bc.length>0){
+      document.getElementById('scan-input').value=bc[0].rawValue;
+      stopCamera();showToast('Barcode scanned');lookupBarcode();return;
+    }
+  }catch(e){}
+  camFrame=requestAnimationFrame(function(){scanFrame(vid);});
+}
+
+function stopCamera(){
+  if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}
+  if(camFrame){cancelAnimationFrame(camFrame);camFrame=null;}
+  _camTorchOn=false;
+  var cv=document.getElementById('camera-view');if(cv)cv.style.display='none';
+  var cb=document.getElementById('cam-btn');if(cb){cb.innerHTML='<span class="material-icons-outlined">photo_camera</span>';cb.onclick=startCamera;}
+  var tb=document.getElementById('cam-torch-btn');if(tb)tb.style.display='none';
+}
+
+// Toggles phone flashlight during active camera scan. Only available on mobile
+// devices that expose torch via MediaStreamTrack constraints. Falls back gracefully
+// (button stays hidden) on devices that don't support it.
+async function toggleTorch(){
+  if(!camStream)return;
+  var track=camStream.getVideoTracks()[0];
+  if(!track)return;
+  try{
+    _camTorchOn=!_camTorchOn;
+    await track.applyConstraints({advanced:[{torch:_camTorchOn}]});
+    var tb=document.getElementById('cam-torch-btn');
+    if(tb)tb.innerHTML='<span class="material-icons-outlined">'+(_camTorchOn?'flashlight_on':'flashlight_off')+'</span>';
+  }catch(e){console.warn('Torch not supported:',e);showToast('Torch not supported on this device',true);}
+}
+
+function updateTorchUI(){
+  var tb=document.getElementById('cam-torch-btn');if(!tb)return;
+  if(!camStream){tb.style.display='none';return;}
+  var track=camStream.getVideoTracks()[0];
+  if(!track){tb.style.display='none';return;}
+  // Check capabilities; if torch isn't in the supported set, hide the button
+  var caps=track.getCapabilities?track.getCapabilities():{};
+  if('torch' in caps){
+    tb.style.display='';
+    tb.innerHTML='<span class="material-icons-outlined">flashlight_off</span>';
+  }else{tb.style.display='none';}
+}
 async function handleCamFile(input){var file=input.files[0];if(!file)return;if('BarcodeDetector'in window){try{var bm=await createImageBitmap(file);var d=new BarcodeDetector({formats:['code_128','code_39','data_matrix','ean_13','ean_8','qr_code','upc_a','upc_e']});var bc=await d.detect(bm);if(bc&&bc.length>0){document.getElementById('scan-input').value=bc[0].rawValue;showToast('Barcode detected');lookupBarcode();input.value='';return;}}catch(e){console.warn('Img decode:',e);}}showToast('Could not read barcode — type manually',true);input.value='';}
 
 function goScreen(id){
@@ -1291,6 +1666,8 @@ function goScreen(id){
 function goScan(){
   // Reset all state
   currentItem=null;currentTab=null;lastRaw='';lastParsedGS1=null;
+  // Cancel any pending undo timer and hide the undo button (it's scoped to one action)
+  cancelUndoTimer();
   // Clear scan input
   var si2=document.getElementById('scan-input');if(si2)si2.value='';
   // Clear item screen fields
@@ -1301,6 +1678,9 @@ function goScan(){
   // Clear action forms
   ['q-receive','q-remove','q-adjust'].forEach(function(id){setVal(id,id==='q-adjust'?'0':'1');});
   setVal('lot-receive','');setVal('exp-receive','');setVal('reason-remove','');setVal('reason-adjust','');
+  // Reset expiry warning (fix #2 defense): ack cleared + banner hidden on every return
+  var expAck=document.getElementById('exp-ack-receive');if(expAck)expAck.checked=false;
+  var expWarn=document.getElementById('exp-warn-receive');if(expWarn)expWarn.style.display='none';
   resetRemoveForm();
   // Clear manual entry form
   resetManual();
@@ -1321,7 +1701,9 @@ function goScan(){
   });
 }
 function stepQ(id,d){var el=document.getElementById(id);if(el)el.value=Math.max(0,Math.round(((parseFloat(el.value)||0)+d)*100)/100);}
-function stepF(id,d){var el=document.getElementById(id);if(el)el.value=Math.max(0,Math.round(((parseFloat(el.value)||0)+d)*100)/100);}
+// stepF is an alias for stepQ; historically they diverged on decimal step behavior
+// but the implementations converged. Kept for HTML compatibility.
+var stepF=stepQ;
 function setEl(id,val){var el=document.getElementById(id);if(el)el.textContent=val;}
 function setVal(id,val){var el=document.getElementById(id);if(el)el.value=val;}
 function getVal(id){var el=document.getElementById(id);return el?el.value:'';}
@@ -1424,13 +1806,27 @@ var allInvCache=[];
 function trackScan(itemName,action,delta,newStock,lot){
   sessionScans.unshift({name:itemName,action:action,delta:delta,newStock:newStock,lot:lot||'',time:new Date()});
   if(sessionScans.length>30)sessionScans.pop();
+  // Prune entries older than 4 hours. A tab left open overnight shouldn't still
+  // show scans from the prior shift as "this session" — those entries become
+  // noise and obscure whatever's happening right now.
+  var cutoff=Date.now()-SESSION_MAX_AGE_MS;
+  sessionScans=sessionScans.filter(function(s){return s.time.getTime()>=cutoff;});
   sessionStats.scans++;
   var al=action.toLowerCase();
   if(al.indexOf('receive')>=0)sessionStats.received++;
   else if(al.indexOf('remove')>=0)sessionStats.removed++;
-  if(al.indexOf('new')>=0)sessionStats.newItems++;
+  // "New" chip was previously checking action for "new" substring which never
+  // matched (actions are Received/Removed/Adjust/Undo). Now it's driven by the
+  // _addedToCatalog flag set in submitManual when a new item is added to the
+  // catalog. Read via module-level lastEntry so the call site doesn't need to
+  // pass extra args.
+  if(lastEntry&&lastEntry._addedToCatalog)sessionStats.newItems++;
   renderPanel();
 }
+
+// Session scans older than this are dropped from the Recent Scans panel on next
+// render. Keeps the panel fresh without requiring manual clear.
+var SESSION_MAX_AGE_MS=4*60*60*1000;// 4 hours
 
 function renderPanel(){
   // Recent scans - detailed cards
@@ -1462,41 +1858,10 @@ function renderPanel(){
   setEl('stat-new',sessionStats.newItems);
 }
 
-// Quick search
-var _psTimer;
-function panelSearch(q){
-  clearTimeout(_psTimer);
-  var results=document.getElementById('panel-search-results');
-  if(!results)return;
-  if(!q||q.length<2){results.className='panel-search-results';results.innerHTML='';return;}
-  _psTimer=setTimeout(function(){
-    if(allInvCache.length===0){
-      results.innerHTML='<div class="recent-empty">Loading inventory...</div>';
-      results.className='panel-search-results show';
-      // Retry once after 2s in case panel data is still loading
-      setTimeout(function(){if(allInvCache.length>0)panelSearch(document.getElementById('panel-search-input')?.value||q);},2000);
-      return;
-    }
-    var words=q.toLowerCase().split(/\s+/).filter(function(w){return w.length>0;});
-    var matches=allInvCache.filter(function(r){
-      var title=(r.Title||'').toLowerCase().replace(/[®™©]/g,'');
-      return words.every(function(w){return title.indexOf(w)>=0;});
-    }).slice(0,8);
-    if(matches.length===0){results.innerHTML='<div class="recent-empty">No items found</div>';results.className='panel-search-results show';return;}
-    results.innerHTML=matches.map(function(r){
-      var stock=parseFloat(r.field_4)||0;var par=parseFloat(r.field_5)||0;
-      var dept=r.field_1||iv(r,'Instrument')||'';
-      var statusText=stock<=0?'OUT':stock<par?'LOW':'OK';
-      var statusColor=stock<=0?'var(--out)':stock<par?'var(--order)':'var(--ok)';
-      return'<div class="psr-item panel-nav-item" data-title="'+esc(r.Title)+'" title="Click to open item">'+
-        '<div class="psr-name">'+esc(r.Title)+'</div>'+
-        '<div class="psr-meta">'+esc(dept)+' · Stock: <strong style="color:'+statusColor+'">'+stock+'</strong> · PAR: '+par+' · '+statusText+
-        ' <span style="float:right;font-size:10px;color:var(--md-primary);font-weight:600">Open →</span></div>'+
-      '</div>';
-    }).join('');
-    results.className='panel-search-results show';
-  },200);
-}
+// Quick search (panel) — REMOVED. The panel-search input was migrated into the
+// scan input's typeahead (scanTypeaheadSearch, ~line 1473). The old panelSearch
+// function and its CSS classes (.panel-search-wrap, .panel-search, .psr-item, etc.)
+// have been deleted as of the Renton apps audit.
 
 // Paginated SP list fetch using the same spFetch that powers the main scanner
 async function spFetchAll(listName,sel,filter){
